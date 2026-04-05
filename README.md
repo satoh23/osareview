@@ -33,10 +33,12 @@
 
 ## ディレクトリ構成（予定）
 
-### フロントエンド (`src/`)
+リポジトリは pnpm workspace のルートです。デスクトップアプリ（Vite + Tauri）は `apps/desktop/` にあります。
+
+### フロントエンド (`apps/desktop/src/`)
 
 ```text
-src/
+apps/desktop/src/
   app/
     main.tsx        # エントリーポイント
     providers/      # Theme, QueryClient, グローバル状態など
@@ -73,10 +75,10 @@ src/
   widgets/          # レイアウトや複合コンポーネント（必要になったら追加）
 ```
 
-### バックエンド / Tauri (`src-tauri/`)
+### バックエンド / Tauri (`apps/desktop/src-tauri/`)
 
 ```text
-src-tauri/
+apps/desktop/src-tauri/
   src/
     main.rs         # Tauri エントリポイント
     app/

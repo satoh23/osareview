@@ -1,2 +1,5 @@
 dist
+apps/desktop/dist
 src-tauri/target
+apps/desktop/src-tauri/target
+cdk.out
