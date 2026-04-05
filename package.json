@@ -2,15 +2,22 @@
   "name": "comment-dock",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter @comment-dock/desktop dev",
-    "build": "pnpm --filter @comment-dock/desktop build",
-    "preview": "pnpm --filter @comment-dock/desktop preview",
-    "tauri": "pnpm --filter @comment-dock/desktop tauri",
+    "dev": "pnpm -r --parallel --if-present run dev",
+    "dev:desktop": "pnpm --filter @comment-dock/desktop dev",
+    "build": "pnpm -r --if-present run build",
+    "preview": "pnpm -r --if-present run preview",
+    "tauri": "pnpm -r --if-present run tauri",
+    "check-types": "pnpm -r --if-present run check-types",
+    "lint": "eslint .",
     "format": "pnpm exec prettier --write .",
     "prepare": "husky install"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.1.0",
+    "eslint-config-prettier": "^10.1.8",
     "husky": "^8.0.0",
-    "prettier": "^3.8.1"
+    "prettier": "^3.8.1",
+    "typescript-eslint": "^8.58.0"
   }
 }
