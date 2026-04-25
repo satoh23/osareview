@@ -38,7 +38,7 @@ export function mapYouTubeLiveChatMessagesToComments(
             .type as keyof typeof YOUTUBE_MESSAGE_TYPE_TO_COMMENT_EVENT_TYPE
         ];
 
-      const publishedAt = new Date(message.snippet.publishedAt);
+      const publishedAt = new Date(message.snippet.published_at);
       if (Number.isNaN(publishedAt.getTime())) {
         return null;
       }
@@ -47,15 +47,15 @@ export function mapYouTubeLiveChatMessagesToComments(
         id: message.id,
         source: COMMENT_SOURCES.YOUTUBE,
         author: {
-          id: message.authorDetails.channelId,
-          name: message.authorDetails.displayName,
+          id: message.author_details.channel_id,
+          name: message.author_details.display_name,
         },
-        text: message.snippet.displayMessage,
+        text: message.snippet.display_message,
         publishedAt,
         eventType,
         monetaryAmount: mapMonetaryAmount(
-          message.snippet.superChatDetails ??
-            message.snippet.superStickerDetails,
+          message.snippet.super_chat_details ??
+            message.snippet.super_sticker_details,
         ),
       };
 
@@ -72,7 +72,7 @@ function mapMonetaryAmount(
     return undefined;
   }
 
-  const amountMicros = Number(detail.amountMicros);
+  const amountMicros = Number(detail.amount_micros);
   if (!Number.isFinite(amountMicros)) {
     return undefined;
   }

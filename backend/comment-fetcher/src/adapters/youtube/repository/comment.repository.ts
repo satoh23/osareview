@@ -28,7 +28,7 @@ export class YouTubeCommentRepository implements CommentRepository {
     })) {
       yield {
         comments: mapYouTubeLiveChatMessagesToComments(response),
-        nextPageToken: response.nextPageToken,
+        nextPageToken: response.next_page_token,
       };
     }
   }

@@ -10,22 +10,21 @@ test("APIレスポンスを共通コメント配列へ変換しページ情報�
       yield {
         kind: "youtube#liveChatMessageListResponse" as const,
         etag: "etag",
-        nextPageToken: "next-token",
-        pollingIntervalMillis: 2000,
+        next_page_token: "next-token",
         items: [
           {
             id: "m1",
             snippet: {
               type: "textMessageEvent" as const,
-              liveChatId: "chat-1",
-              authorChannelId: "author-1",
-              publishedAt: "2026-04-25T12:00:00Z",
-              hasDisplayContent: true,
-              displayMessage: "hello",
+              live_chat_id: "chat-1",
+              author_channel_id: "author-1",
+              published_at: "2026-04-25T12:00:00Z",
+              has_display_content: true,
+              display_message: "hello",
             },
-            authorDetails: {
-              channelId: "author-1",
-              displayName: "alice",
+            author_details: {
+              channel_id: "author-1",
+              display_name: "alice",
             },
           },
         ],

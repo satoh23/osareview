@@ -11,15 +11,15 @@ function createBaseMessage(
     id: "msg-1",
     snippet: {
       type: "textMessageEvent",
-      liveChatId: "chat-1",
-      authorChannelId: "author-1",
-      publishedAt: "2026-04-25T12:00:00Z",
-      hasDisplayContent: true,
-      displayMessage: "hello",
+      live_chat_id: "chat-1",
+      author_channel_id: "author-1",
+      published_at: "2026-04-25T12:00:00Z",
+      has_display_content: true,
+      display_message: "hello",
     },
-    authorDetails: {
-      channelId: "author-1",
-      displayName: "alice",
+    author_details: {
+      channel_id: "author-1",
+      display_name: "alice",
     },
     ...overrides,
   };
@@ -43,13 +43,13 @@ test("superChatEvent は monetaryAmount を含む super_chat へ変換される"
   const message = createBaseMessage({
     snippet: {
       type: "superChatEvent",
-      liveChatId: "chat-1",
-      authorChannelId: "author-1",
-      publishedAt: "2026-04-25T12:00:00Z",
-      hasDisplayContent: true,
-      displayMessage: "thanks",
-      superChatDetails: {
-        amountMicros: "2500000",
+      live_chat_id: "chat-1",
+      author_channel_id: "author-1",
+      published_at: "2026-04-25T12:00:00Z",
+      has_display_content: true,
+      display_message: "thanks",
+      super_chat_details: {
+        amount_micros: "2500000",
         currency: "JPY",
       },
     },
@@ -69,11 +69,11 @@ test("newSponsorEvent は subscription へ変換される", () => {
   const message = createBaseMessage({
     snippet: {
       type: "newSponsorEvent",
-      liveChatId: "chat-1",
-      authorChannelId: "author-1",
-      publishedAt: "2026-04-25T12:00:00Z",
-      hasDisplayContent: true,
-      displayMessage: "joined",
+      live_chat_id: "chat-1",
+      author_channel_id: "author-1",
+      published_at: "2026-04-25T12:00:00Z",
+      has_display_content: true,
+      display_message: "joined",
     },
   });
 
@@ -90,11 +90,11 @@ test("未知のメッセージ種別は null を返す", () => {
   const message = createBaseMessage({
     snippet: {
       type: "unknownNewType",
-      liveChatId: "chat-1",
-      authorChannelId: "author-1",
-      publishedAt: "2026-04-25T12:00:00Z",
-      hasDisplayContent: true,
-      displayMessage: "unknown",
+      live_chat_id: "chat-1",
+      author_channel_id: "author-1",
+      published_at: "2026-04-25T12:00:00Z",
+      has_display_content: true,
+      display_message: "unknown",
     },
   });
 
@@ -116,11 +116,11 @@ test("list 変換は null を除外する", () => {
         id: "skip-1",
         snippet: {
           type: "unknownNewType",
-          liveChatId: "chat-1",
-          authorChannelId: "author-1",
-          publishedAt: "2026-04-25T12:00:00Z",
-          hasDisplayContent: true,
-          displayMessage: "unknown",
+          live_chat_id: "chat-1",
+          author_channel_id: "author-1",
+          published_at: "2026-04-25T12:00:00Z",
+          has_display_content: true,
+          display_message: "unknown",
         },
       }),
     ],

@@ -1,35 +1,18 @@
 /**
- * YouTube Data API v3 liveChatMessages.list レスポンスのうち、
- * 現時点のクライアント実装で必要なフィールドに絞ったプロバイダ固有DTO。
+ * YouTube Data API v3 liveChatMessages.streamList レスポンスのうち、
+ * 現時点の実装で必要なフィールドに絞ったプロバイダ固有DTO。
  *
- * メモ（将来の拡張で再追加しうる取得可能項目）:
- * - response.pageInfo.totalResults / resultsPerPage
- *   -> 検索結果の総件数と、1ページあたり件数（ページング表示や監視用途）。
- * - item.kind / item.etag
- *   -> リソース種別とETag（キャッシュ制御や差分検知の補助情報）。
- * - authorDetails.channelUrl / profileImageUrl / isVerified / isChatOwner /
- *   isChatSponsor / isChatModerator
- *   -> 投稿者プロフィールURL、アイコン、認証済み/配信者/メンバー/モデレーター属性。
- * - superChatDetails.amountDisplayString / tier / userComment
- *   -> 表示用金額文字列、購入ティア、ユーザーコメント。
- * - superStickerDetails.superStickerMetadata / amountDisplayString / tier
- *   -> ステッカー識別情報、表示用金額文字列、購入ティア。
- * - memberMilestoneChatDetails.userComment / memberLevelName
- *   -> 継続マイルストーン時のユーザーコメントとメンバーランク名。
- *
- * このDTOは「今使う最小集合」を保つ方針のため、上記はコメントのみ保持する。
- * 参照: https://developers.google.com/youtube/v3/live/docs/liveChatMessages/list
- * 参照: https://developers.google.com/youtube/v3/live/docs/liveChatMessages
+ * 注意:
+ * - gRPC + proto-loader(keepCase: true) で受けるため、フィールド名は snake_case。
+ * - DTO層は外部API仕様に寄せ、業務判断は mapper/usecase 層で行う。
  */
 export type YouTubeLiveChatMessagesListResponseDto = {
   /** リソース種別。固定で youtube#liveChatMessageListResponse */
   kind: "youtube#liveChatMessageListResponse";
   /** レスポンスのETag */
   etag: string;
-  /** 次回リクエストまで待つ推奨ミリ秒 */
-  pollingIntervalMillis?: number;
-  /** 次ページ取得用トークン */
-  nextPageToken?: string;
+  /** 再接続時に使う次ページトークン */
+  next_page_token?: string;
   /** チャットメッセージ一覧 */
   items: YouTubeLiveChatMessageDto[];
 };
@@ -41,7 +24,7 @@ export type YouTubeLiveChatMessageDto = {
   /** メッセージ本体情報 */
   snippet: YouTubeLiveChatMessageSnippetDto;
   /** 投稿者情報 */
-  authorDetails: YouTubeLiveChatAuthorDetailsDto;
+  author_details: YouTubeLiveChatAuthorDetailsDto;
 };
 
 /** メッセージ本文・イベント種別などの本体情報 */
@@ -49,21 +32,21 @@ export type YouTubeLiveChatMessageSnippetDto = {
   /** メッセージ種別（例: textMessageEvent, superChatEvent） */
   type: YouTubeLiveChatMessageType;
   /** 所属するライブチャットID */
-  liveChatId: string;
+  live_chat_id: string;
   /** 投稿者のチャンネルID */
-  authorChannelId: string;
+  author_channel_id: string;
   /** 投稿日時（RFC3339 文字列） */
-  publishedAt: string;
+  published_at: string;
   /** 画面表示可能な本文を持つかどうか */
-  hasDisplayContent: boolean;
+  has_display_content: boolean;
   /** 表示用本文（絵文字含む） */
-  displayMessage: string;
+  display_message: string;
   /** type=superChatEvent のときに付与 */
-  superChatDetails?: YouTubeSuperChatDetailsDto;
+  super_chat_details?: YouTubeSuperChatDetailsDto;
   /** type=superStickerEvent のときに付与 */
-  superStickerDetails?: YouTubeSuperStickerDetailsDto;
+  super_sticker_details?: YouTubeSuperStickerDetailsDto;
   /** type=memberMilestoneChatEvent のときに付与 */
-  memberMilestoneChatDetails?: YouTubeMemberMilestoneChatDetailsDto;
+  member_milestone_chat_details?: YouTubeMemberMilestoneChatDetailsDto;
 };
 
 /**
@@ -93,15 +76,15 @@ export type YouTubeLiveChatMessageType =
 /** 投稿者情報 */
 export type YouTubeLiveChatAuthorDetailsDto = {
   /** 投稿者チャンネルID */
-  channelId: string;
+  channel_id: string;
   /** 表示名 */
-  displayName: string;
+  display_name: string;
 };
 
 /** スーパーチャット詳細 */
 export type YouTubeSuperChatDetailsDto = {
   /** 金額（マイクロ単位。1,000,000 = 1通貨単位） */
-  amountMicros: string;
+  amount_micros: string;
   /** 通貨コード（ISO 4217） */
   currency: string;
 };
@@ -109,7 +92,7 @@ export type YouTubeSuperChatDetailsDto = {
 /** スーパーステッカー詳細 */
 export type YouTubeSuperStickerDetailsDto = {
   /** 金額（マイクロ単位） */
-  amountMicros: string;
+  amount_micros: string;
   /** 通貨コード（ISO 4217） */
   currency: string;
 };
@@ -117,5 +100,5 @@ export type YouTubeSuperStickerDetailsDto = {
 /** メンバー継続マイルストーンイベント詳細 */
 export type YouTubeMemberMilestoneChatDetailsDto = {
   /** 継続月数 */
-  memberMonth?: number;
+  member_month?: number;
 };
