@@ -32,9 +32,9 @@ export class YouTubeApiClient {
     private readonly configProvider: YouTubeConfigProvider,
   ) {}
 
-  async fetchLiveChatMessages(
+  async *fetchLiveChatMessages(
     input: FetchYouTubeLiveChatMessagesInput,
-  ): Promise<YouTubeLiveChatMessagesListResponseDto> {
+  ): AsyncIterable<YouTubeLiveChatMessagesListResponseDto> {
     const accessToken = await this.accessTokenProvider.getAccessToken();
     if (!accessToken) {
       throw new Error(
@@ -90,36 +90,65 @@ export class YouTubeApiClient {
       ) => grpc.ClientReadableStream<YouTubeLiveChatMessagesListResponseDto>;
     };
 
-    // TODO: usecases/repository の契約を stream 前提（AsyncIterable等）へ移行したら、
-    // TODO: ここは「最初の1件だけ返す」暫定実装を廃止し、継続受信をそのまま上位へ流す。
-    // TODO: 現在は既存インターフェース（Promiseで1件返却）維持のために stream を即 cancel している。
-    return await new Promise<YouTubeLiveChatMessagesListResponseDto>(
-      (resolve, reject) => {
-        const stream = streamClient.StreamList(request, metadata);
+    // streamList はイベント駆動（data/end/error）なので、
+    // 状態変数で AsyncIterable へ橋渡しする
+    const stream = streamClient.StreamList(request, metadata);
+    // 受信チャンクを一時的に貯めるキュー
+    const queue: YouTubeLiveChatMessagesListResponseDto[] = [];
+    // end 到達フラグ。true になったら新規受信は終了
+    let done = false;
+    // エラーを保持し、for-await 側で throw して上位へ伝播する
+    let streamError: Error | null = null;
+    // for-await 側が「次のデータ待ち」中に保持する resume 関数
+    let wakeup: (() => void) | null = null;
 
-        let resolved = false;
+    // data/end/error 受信時に待機中の for-await を起こす。
+    const notify = () => {
+      if (wakeup) {
+        const fn = wakeup;
+        wakeup = null;
+        fn();
+      }
+    };
 
-        stream.on("data", (chunk: YouTubeLiveChatMessagesListResponseDto) => {
-          if (resolved) {
-            return;
+    stream.on("data", (chunk: YouTubeLiveChatMessagesListResponseDto) => {
+      queue.push(chunk);
+      notify();
+    });
+    stream.on("error", (error: Error) => {
+      streamError = error;
+      done = true;
+      notify();
+    });
+    stream.on("end", () => {
+      done = true;
+      notify();
+    });
+
+    try {
+      while (true) {
+        if (queue.length > 0) {
+          const chunk = queue.shift();
+          if (chunk) {
+            yield chunk;
           }
-          resolved = true;
-          stream.cancel();
-          resolve(chunk);
+          continue;
+        }
+
+        if (streamError) {
+          throw streamError;
+        }
+
+        if (done) {
+          break;
+        }
+
+        await new Promise<void>((resolve) => {
+          wakeup = resolve;
         });
-        stream.on("error", (error: Error) => {
-          if (resolved) {
-            return;
-          }
-          reject(error);
-        });
-        stream.on("end", () => {
-          if (resolved) {
-            return;
-          }
-          reject(new Error("YouTube streamList ended without any messages."));
-        });
-      },
-    );
+      }
+    } finally {
+      stream.cancel();
+    }
   }
 }

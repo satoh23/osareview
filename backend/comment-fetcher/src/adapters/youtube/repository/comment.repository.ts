@@ -22,14 +22,14 @@ export class YouTubeCommentRepository implements CommentRepository {
   async *streamComments(
     input: FetchCommentsInput,
   ): AsyncIterable<FetchCommentsResult> {
-    const response = await this.apiClient.fetchLiveChatMessages({
+    for await (const response of this.apiClient.fetchLiveChatMessages({
       liveChatId: input.liveChatId,
       pageToken: input.pageToken,
-    });
-
-    yield {
-      comments: mapYouTubeLiveChatMessagesToComments(response),
-      nextPageToken: response.nextPageToken,
-    };
+    })) {
+      yield {
+        comments: mapYouTubeLiveChatMessagesToComments(response),
+        nextPageToken: response.nextPageToken,
+      };
+    }
   }
 }

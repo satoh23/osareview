@@ -17,10 +17,12 @@ test("accessToken が無い場合はエラーを投げる", async () => {
     },
   );
 
-  await assert.rejects(
-    () => client.fetchLiveChatMessages({ liveChatId: "chat-id" }),
-    /YouTube access token is missing from AccessTokenProvider/,
-  );
+  await assert.rejects(async () => {
+    const stream = client.fetchLiveChatMessages({ liveChatId: "chat-id" });
+    for await (const _chunk of stream) {
+      break;
+    }
+  }, /YouTube access token is missing from AccessTokenProvider/);
 });
 
 test.skip("streamList接続の正常系テスト（後でgRPCモック化）", async () => {
@@ -37,10 +39,13 @@ test.skip("streamList接続の正常系テスト（後でgRPCモック化）", a
     },
   );
 
-  await client.fetchLiveChatMessages({
+  const stream = client.fetchLiveChatMessages({
     liveChatId: "live-chat-id",
     pageToken: "next-page",
   });
+  for await (const _chunk of stream) {
+    break;
+  }
 
   assert.ok(client);
 });

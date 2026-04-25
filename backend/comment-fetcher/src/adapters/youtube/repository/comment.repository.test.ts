@@ -6,8 +6,8 @@ import type { FetchCommentsResult } from "../../../usecases/youtube-comment-coll
 
 test("APIレスポンスを共通コメント配列へ変換しページ情報を返す", async () => {
   const apiClient = {
-    async fetchLiveChatMessages() {
-      return {
+    async *fetchLiveChatMessages() {
+      yield {
         kind: "youtube#liveChatMessageListResponse" as const,
         etag: "etag",
         nextPageToken: "next-token",
