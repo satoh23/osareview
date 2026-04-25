@@ -1,0 +1,22 @@
+syntax = "proto2";
+
+package youtube.api.v3;
+
+service V3DataLiveChatMessageService {
+  rpc StreamList (LiveChatMessageListRequest) returns (stream LiveChatMessageListResponse) {}
+}
+
+message LiveChatMessageListRequest {
+  optional string live_chat_id = 1;
+  optional string hl = 2;
+  optional uint32 profile_image_size = 3;
+  optional uint32 max_results = 4;
+  optional string page_token = 5;
+  repeated string part = 6;
+}
+
+message LiveChatMessageListResponse {
+  optional string kind = 200;
+  optional string etag = 201;
+  optional string next_page_token = 100602;
+}

@@ -2,11 +2,12 @@ import type { YouTubeLiveChatMessagesListResponseDto } from "../dto/raw.dto.js";
 import { inject, injectable } from "tsyringe";
 import { YOUTUBE_DI_TOKENS } from "../access-token/di-tokens.js";
 import type { AccessTokenProvider } from "../../../infrastructure/auth/access-token-provider.js";
-import { SHARED_DI_TOKENS } from "../../../infrastructure/http/http-client.js";
-import type { HttpClient } from "../../../infrastructure/http/http-client.js";
 import type { YouTubeConfigProvider } from "../../../infrastructure/config/youtube-api-base-url.js";
+import grpc from "@grpc/grpc-js";
+import protoLoader from "@grpc/proto-loader";
+import { fileURLToPath } from "node:url";
 
-export type FetchYouTubeLiveChatMessagesInput = {
+type FetchYouTubeLiveChatMessagesInput = {
   liveChatId: string;
   pageToken?: string;
 };
@@ -27,8 +28,6 @@ export class YouTubeApiClient {
   constructor(
     @inject(YOUTUBE_DI_TOKENS.accessTokenProvider)
     private readonly accessTokenProvider: AccessTokenProvider,
-    @inject(SHARED_DI_TOKENS.httpClient)
-    private readonly httpClient: HttpClient,
     @inject(YOUTUBE_DI_TOKENS.configProvider)
     private readonly configProvider: YouTubeConfigProvider,
   ) {}
@@ -43,35 +42,84 @@ export class YouTubeApiClient {
       );
     }
 
-    const query = new URLSearchParams({
-      part: "id,snippet,authorDetails",
-      liveChatId: input.liveChatId,
-      maxResults: "2000",
-    });
-
-    if (input.pageToken) {
-      query.set("pageToken", input.pageToken);
-    }
-
-    const url = `${this.configProvider.getDataApiBaseUrl()}/liveChatMessages?${query.toString()}`;
-
-    const response = await this.httpClient(url, {
-      method: "GET",
-      headers: {
-        // TODO: 正式版では AccessTokenProvider から取得した有効トークンを使用し、
-        // TODO: 必要に応じて期限切れ時の再取得（refresh）フローへ接続する。
-        Authorization: `Bearer ${accessToken}`,
-        Accept: "application/json",
+    const packageDefinition = protoLoader.loadSync(
+      fileURLToPath(new URL("./stream_list.proto", import.meta.url)),
+      {
+        keepCase: true,
+        longs: String,
+        enums: String,
+        defaults: true,
+        oneofs: true,
       },
-    });
+    );
+    // protoファイルからgRPCクライアントの型情報作成
+    const loaded = grpc.loadPackageDefinition(packageDefinition) as {
+      youtube: {
+        api: {
+          v3: {
+            V3DataLiveChatMessageService: grpc.ServiceClientConstructor;
+          };
+        };
+      };
+    };
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(
-        `YouTube API request failed: ${response.status} ${response.statusText} ${errorBody}`,
-      );
-    }
+    const apiBaseUrl = new URL(this.configProvider.getDataApiBaseUrl());
+    const target = `${apiBaseUrl.hostname}:${apiBaseUrl.port || "443"}`;
 
-    return (await response.json()) as YouTubeLiveChatMessagesListResponseDto;
+    // gRPCクライアント生成
+    const client = new loaded.youtube.api.v3.V3DataLiveChatMessageService(
+      target,
+      grpc.credentials.createSsl(),
+    ) as grpc.Client;
+
+    const metadata = new grpc.Metadata();
+    metadata.set("authorization", `Bearer ${accessToken}`);
+    metadata.set("x-goog-api-format-version", "2");
+
+    const request = {
+      live_chat_id: input.liveChatId,
+      page_token: input.pageToken,
+      part: ["id", "snippet", "authorDetails"],
+      max_results: 2000,
+    };
+
+    const streamClient = client as grpc.Client & {
+      StreamList: (
+        req: Record<string, unknown>,
+        md: grpc.Metadata,
+      ) => grpc.ClientReadableStream<YouTubeLiveChatMessagesListResponseDto>;
+    };
+
+    // TODO: usecases/repository の契約を stream 前提（AsyncIterable等）へ移行したら、
+    // TODO: ここは「最初の1件だけ返す」暫定実装を廃止し、継続受信をそのまま上位へ流す。
+    // TODO: 現在は既存インターフェース（Promiseで1件返却）維持のために stream を即 cancel している。
+    return await new Promise<YouTubeLiveChatMessagesListResponseDto>(
+      (resolve, reject) => {
+        const stream = streamClient.StreamList(request, metadata);
+
+        let resolved = false;
+
+        stream.on("data", (chunk: YouTubeLiveChatMessagesListResponseDto) => {
+          if (resolved) {
+            return;
+          }
+          resolved = true;
+          stream.cancel();
+          resolve(chunk);
+        });
+        stream.on("error", (error: Error) => {
+          if (resolved) {
+            return;
+          }
+          reject(error);
+        });
+        stream.on("end", () => {
+          if (resolved) {
+            return;
+          }
+          reject(new Error("YouTube streamList ended without any messages."));
+        });
+      },
+    );
   }
 }
