@@ -2,6 +2,10 @@
  * ワークスペース共通の型・ユーティリティなどを置くパッケージです。
  */
 
+export {
+  COMMENT_EVENT_TYPES,
+  COMMENT_SOURCES,
+} from "./comment/comment-types.js";
 export type {
   CommentEventType,
   CommentSource,
