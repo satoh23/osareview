@@ -7,7 +7,7 @@ export type MonetaryAmount = {
 };
 
 /**
- * 取得元に依存しない、collector内の共通ドメイン。
+ * 取得元に依存しない、comment-fetcher内の共通ドメイン。
  * ユースケース層はこの型だけを扱う。
  */
 export type Comment = {

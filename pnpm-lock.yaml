@@ -66,7 +66,7 @@ importers:
         specifier: ^7.0.4
         version: 7.3.1(@types/node@22.19.17)(tsx@4.21.0)
 
-  backend/collector:
+  backend/comment-fetcher:
     dependencies:
       "@comment-dock/shared":
         specifier: workspace:*
@@ -82,7 +82,7 @@ importers:
         specifier: ~5.8.3
         version: 5.8.3
 
-  backend/websocket-control:
+  backend/comment-delivery:
     devDependencies:
       "@types/node":
         specifier: ^22.19.3

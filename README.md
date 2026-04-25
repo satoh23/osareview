@@ -43,8 +43,8 @@
 │     ├─ src/          # フロントエンド（React）
 │     └─ src-tauri/    # デスクトップ統合層（Tauri / Rust）
 ├─ backend/
-│  ├─ collector/       # コメント取得・正規化
-│  └─ websocket-control/ # コメント配信・中継
+│  ├─ comment-fetcher/ # コメント取得・正規化
+│  └─ comment-delivery/ # コメント配信・中継
 ├─ packages/
 │  └─ shared/          # ランタイム間で共有する契約（DTOなど）
 └─ infra/
