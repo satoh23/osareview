@@ -4,8 +4,10 @@
 
 export type {
   CommentEventType,
-  CommentMonetaryAmountDto,
   CommentSource,
+} from "./comment/comment-types.js";
+export type {
+  CommentMonetaryAmountDto,
   CommentViewDto,
-} from "./comment/comment-view.dto";
-export type { UserSummaryDto } from "./user/user-summary.dto";
+} from "./comment/comment-view.dto.js";
+export type { UserSummaryDto } from "./user/user-summary.dto.js";

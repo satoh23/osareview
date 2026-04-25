@@ -1,8 +1,5 @@
-import type { UserSummaryDto } from "../user/user-summary.dto";
-
-export type CommentSource = "youtube" | "twitch";
-
-export type CommentEventType = "normal" | "super_chat" | "subscription";
+import type { UserSummaryDto } from "../user/user-summary.dto.js";
+import type { CommentEventType, CommentSource } from "./comment-types.js";
 
 export type CommentMonetaryAmountDto = {
   currency: string;

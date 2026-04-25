@@ -66,6 +66,34 @@ importers:
         specifier: ^7.0.4
         version: 7.3.1(@types/node@22.19.17)(tsx@4.21.0)
 
+  backend/collector:
+    dependencies:
+      "@comment-dock/shared":
+        specifier: workspace:*
+        version: link:../../packages/shared
+    devDependencies:
+      "@types/node":
+        specifier: ^22.19.3
+        version: 22.19.17
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+
+  backend/websocket-control:
+    devDependencies:
+      "@types/node":
+        specifier: ^22.19.3
+        version: 22.19.17
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+
   infra/cdk:
     dependencies:
       aws-cdk-lib:
@@ -90,30 +118,6 @@ importers:
 
   packages/shared:
     devDependencies:
-      typescript:
-        specifier: ~5.8.3
-        version: 5.8.3
-
-  backend/collector:
-    devDependencies:
-      "@types/node":
-        specifier: ^22.19.3
-        version: 22.19.17
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
-      typescript:
-        specifier: ~5.8.3
-        version: 5.8.3
-
-  backend/websocket-control:
-    devDependencies:
-      "@types/node":
-        specifier: ^22.19.3
-        version: 22.19.17
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
