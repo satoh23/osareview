@@ -2,6 +2,7 @@ import "reflect-metadata";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { YouTubeCommentRepository } from "./comment.repository.js";
+import type { FetchCommentsResult } from "../../../usecases/youtube-comment-collection/comment-repository.interface.js";
 
 test("APIレスポンスを共通コメント配列へ変換しページ情報を返す", async () => {
   const apiClient = {
@@ -33,10 +34,16 @@ test("APIレスポンスを共通コメント配列へ変換しページ情報�
   };
 
   const repository = new YouTubeCommentRepository(apiClient);
-  const result = await repository.fetchComments({ liveChatId: "chat-1" });
+  const results: FetchCommentsResult[] = [];
+  for await (const chunk of repository.streamComments({
+    liveChatId: "chat-1",
+  })) {
+    results.push(chunk);
+  }
+  const result = results[0];
 
+  assert.ok(result);
   assert.equal(result.comments.length, 1);
   assert.equal(result.comments[0]?.id, "m1");
   assert.equal(result.nextPageToken, "next-token");
-  assert.equal(result.pollingIntervalMillis, 2000);
 });

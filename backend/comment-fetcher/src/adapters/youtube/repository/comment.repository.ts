@@ -19,16 +19,17 @@ export class YouTubeCommentRepository implements CommentRepository {
     private readonly apiClient: YouTubeCommentApi,
   ) {}
 
-  async fetchComments(input: FetchCommentsInput): Promise<FetchCommentsResult> {
+  async *streamComments(
+    input: FetchCommentsInput,
+  ): AsyncIterable<FetchCommentsResult> {
     const response = await this.apiClient.fetchLiveChatMessages({
       liveChatId: input.liveChatId,
       pageToken: input.pageToken,
     });
 
-    return {
+    yield {
       comments: mapYouTubeLiveChatMessagesToComments(response),
       nextPageToken: response.nextPageToken,
-      pollingIntervalMillis: response.pollingIntervalMillis,
     };
   }
 }

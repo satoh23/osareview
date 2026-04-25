@@ -8,9 +8,8 @@ export type FetchCommentsInput = {
 export type FetchCommentsResult = {
   comments: Comment[];
   nextPageToken?: string;
-  pollingIntervalMillis?: number;
 };
 
 export interface CommentRepository {
-  fetchComments(input: FetchCommentsInput): Promise<FetchCommentsResult>;
+  streamComments(input: FetchCommentsInput): AsyncIterable<FetchCommentsResult>;
 }
