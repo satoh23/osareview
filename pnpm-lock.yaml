@@ -66,11 +66,7 @@ importers:
         specifier: ^7.0.4
         version: 7.3.1(@types/node@22.19.17)(tsx@4.21.0)
 
-  backend/comment-fetcher:
-    dependencies:
-      "@comment-dock/shared":
-        specifier: workspace:*
-        version: link:../../packages/shared
+  backend/comment-delivery:
     devDependencies:
       "@types/node":
         specifier: ^22.19.3
@@ -82,7 +78,17 @@ importers:
         specifier: ~5.8.3
         version: 5.8.3
 
-  backend/comment-delivery:
+  backend/comment-fetcher:
+    dependencies:
+      "@comment-dock/shared":
+        specifier: workspace:*
+        version: link:../../packages/shared
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      tsyringe:
+        specifier: ^4.10.0
+        version: 4.10.0
     devDependencies:
       "@types/node":
         specifier: ^22.19.3
@@ -1802,6 +1808,12 @@ packages:
       }
     engines: { node: ">=0.10.0" }
 
+  reflect-metadata@0.2.2:
+    resolution:
+      {
+        integrity: sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==,
+      }
+
   resolve-pkg-maps@1.0.0:
     resolution:
       {
@@ -1897,6 +1909,12 @@ packages:
       "@swc/wasm":
         optional: true
 
+  tslib@1.14.1:
+    resolution:
+      {
+        integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==,
+      }
+
   tsx@4.21.0:
     resolution:
       {
@@ -1904,6 +1922,13 @@ packages:
       }
     engines: { node: ">=18.0.0" }
     hasBin: true
+
+  tsyringe@4.10.0:
+    resolution:
+      {
+        integrity: sha512-axr3IdNuVIxnaK5XGEUFTu3YmAQ6lllgrvqfEoR16g/HGnYY/6We4oWENtAnzK6/LpJ2ur9PAb80RBt7/U4ugw==,
+      }
+    engines: { node: ">= 6.0.0" }
 
   type-check@0.4.0:
     resolution:
@@ -2916,6 +2941,8 @@ snapshots:
 
   react@19.2.4: {}
 
+  reflect-metadata@0.2.2: {}
+
   resolve-pkg-maps@1.0.0: {}
 
   rollup@4.60.1:
@@ -2992,12 +3019,18 @@ snapshots:
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
 
+  tslib@1.14.1: {}
+
   tsx@4.21.0:
     dependencies:
       esbuild: 0.27.4
       get-tsconfig: 4.13.7
     optionalDependencies:
       fsevents: 2.3.3
+
+  tsyringe@4.10.0:
+    dependencies:
+      tslib: 1.14.1
 
   type-check@0.4.0:
     dependencies:

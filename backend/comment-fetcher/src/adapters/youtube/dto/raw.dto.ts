@@ -1,6 +1,23 @@
 /**
  * YouTube Data API v3 liveChatMessages.list レスポンスのうち、
- * 現時点で必要なフィールドに絞ったプロバイダ固有DTO。
+ * 現時点のクライアント実装で必要なフィールドに絞ったプロバイダ固有DTO。
+ *
+ * メモ（将来の拡張で再追加しうる取得可能項目）:
+ * - response.pageInfo.totalResults / resultsPerPage
+ *   -> 検索結果の総件数と、1ページあたり件数（ページング表示や監視用途）。
+ * - item.kind / item.etag
+ *   -> リソース種別とETag（キャッシュ制御や差分検知の補助情報）。
+ * - authorDetails.channelUrl / profileImageUrl / isVerified / isChatOwner /
+ *   isChatSponsor / isChatModerator
+ *   -> 投稿者プロフィールURL、アイコン、認証済み/配信者/メンバー/モデレーター属性。
+ * - superChatDetails.amountDisplayString / tier / userComment
+ *   -> 表示用金額文字列、購入ティア、ユーザーコメント。
+ * - superStickerDetails.superStickerMetadata / amountDisplayString / tier
+ *   -> ステッカー識別情報、表示用金額文字列、購入ティア。
+ * - memberMilestoneChatDetails.userComment / memberLevelName
+ *   -> 継続マイルストーン時のユーザーコメントとメンバーランク名。
+ *
+ * このDTOは「今使う最小集合」を保つ方針のため、上記はコメントのみ保持する。
  * 参照: https://developers.google.com/youtube/v3/live/docs/liveChatMessages/list
  * 参照: https://developers.google.com/youtube/v3/live/docs/liveChatMessages
  */
@@ -13,23 +30,12 @@ export type YouTubeLiveChatMessagesListResponseDto = {
   pollingIntervalMillis?: number;
   /** 次ページ取得用トークン */
   nextPageToken?: string;
-  /** ページング情報 */
-  pageInfo?: {
-    /** 総件数 */
-    totalResults: number;
-    /** 1ページあたり件数 */
-    resultsPerPage: number;
-  };
   /** チャットメッセージ一覧 */
   items: YouTubeLiveChatMessageDto[];
 };
 
 /** liveChatMessages リソースの1件 */
 export type YouTubeLiveChatMessageDto = {
-  /** リソース種別。固定で youtube#liveChatMessage */
-  kind: "youtube#liveChatMessage";
-  /** メッセージリソースのETag */
-  etag: string;
   /** メッセージID（重複排除キーとして利用可） */
   id: string;
   /** メッセージ本体情報 */
@@ -88,20 +94,8 @@ export type YouTubeLiveChatMessageType =
 export type YouTubeLiveChatAuthorDetailsDto = {
   /** 投稿者チャンネルID */
   channelId: string;
-  /** 投稿者チャンネルURL */
-  channelUrl?: string;
   /** 表示名 */
   displayName: string;
-  /** プロフィール画像URL */
-  profileImageUrl?: string;
-  /** 認証済みチャンネルか */
-  isVerified?: boolean;
-  /** 配信オーナー本人か */
-  isChatOwner?: boolean;
-  /** メンバー（スポンサー）か */
-  isChatSponsor?: boolean;
-  /** モデレーターか */
-  isChatModerator?: boolean;
 };
 
 /** スーパーチャット詳細 */
@@ -110,41 +104,18 @@ export type YouTubeSuperChatDetailsDto = {
   amountMicros: string;
   /** 通貨コード（ISO 4217） */
   currency: string;
-  /** YouTube側の表示済み文字列（例: ¥1,000） */
-  amountDisplayString?: string;
-  /** 購入ティア */
-  tier?: number;
-  /** 購入者コメント */
-  userComment?: string;
 };
 
 /** スーパーステッカー詳細 */
 export type YouTubeSuperStickerDetailsDto = {
-  /** ステッカーのメタ情報 */
-  superStickerMetadata?: {
-    /** 代替テキスト */
-    altText?: string;
-    /** 代替テキスト言語 */
-    altTextLanguage?: string;
-    /** ステッカーID */
-    stickerId?: string;
-  };
   /** 金額（マイクロ単位） */
   amountMicros: string;
   /** 通貨コード（ISO 4217） */
   currency: string;
-  /** YouTube側の表示済み文字列 */
-  amountDisplayString?: string;
-  /** 購入ティア */
-  tier?: number;
 };
 
 /** メンバー継続マイルストーンイベント詳細 */
 export type YouTubeMemberMilestoneChatDetailsDto = {
-  /** ユーザーコメント */
-  userComment?: string;
   /** 継続月数 */
   memberMonth?: number;
-  /** メンバーレベル名 */
-  memberLevelName?: string;
 };
