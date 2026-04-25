@@ -12,6 +12,25 @@ type FetchYouTubeLiveChatMessagesInput = {
   pageToken?: string;
 };
 
+// gRPC本体を直接importしたままだとテストで差し替えづらいため、
+// streamList呼び出しに必要な依存（proto読み込み/クライアント生成/metadata）を
+// ひとかたまりのruntimeとして注入可能にしている。
+type StreamListRuntime = {
+  loadSync: typeof protoLoader.loadSync;
+  loadPackageDefinition: typeof grpc.loadPackageDefinition;
+  createSsl: typeof grpc.credentials.createSsl;
+  Metadata: typeof grpc.Metadata;
+};
+
+// 本番実行時に使うデフォルトruntime。
+// テスト時はコンストラクタ第3引数でモックruntimeを渡して差し替える。
+const DEFAULT_STREAM_LIST_RUNTIME: StreamListRuntime = {
+  loadSync: protoLoader.loadSync,
+  loadPackageDefinition: grpc.loadPackageDefinition,
+  createSsl: grpc.credentials.createSsl,
+  Metadata: grpc.Metadata,
+};
+
 /**
  * YouTube Data API v3 クライアント（liveChatMessages.list 専用）。
  *
@@ -30,6 +49,7 @@ export class YouTubeApiClient {
     private readonly accessTokenProvider: AccessTokenProvider,
     @inject(YOUTUBE_DI_TOKENS.configProvider)
     private readonly configProvider: YouTubeConfigProvider,
+    private readonly streamListRuntime: StreamListRuntime = DEFAULT_STREAM_LIST_RUNTIME,
   ) {}
 
   async *fetchLiveChatMessages(
@@ -42,7 +62,7 @@ export class YouTubeApiClient {
       );
     }
 
-    const packageDefinition = protoLoader.loadSync(
+    const packageDefinition = this.streamListRuntime.loadSync(
       fileURLToPath(new URL("./stream_list.proto", import.meta.url)),
       {
         keepCase: true,
@@ -53,7 +73,9 @@ export class YouTubeApiClient {
       },
     );
     // protoファイルからgRPCクライアントの型情報作成
-    const loaded = grpc.loadPackageDefinition(packageDefinition) as {
+    const loaded = this.streamListRuntime.loadPackageDefinition(
+      packageDefinition,
+    ) as {
       youtube: {
         api: {
           v3: {
@@ -69,10 +91,10 @@ export class YouTubeApiClient {
     // gRPCクライアント生成
     const client = new loaded.youtube.api.v3.V3DataLiveChatMessageService(
       target,
-      grpc.credentials.createSsl(),
+      this.streamListRuntime.createSsl(),
     ) as grpc.Client;
 
-    const metadata = new grpc.Metadata();
+    const metadata = new this.streamListRuntime.Metadata();
     metadata.set("authorization", `Bearer ${accessToken}`);
     metadata.set("x-goog-api-format-version", "2");
 

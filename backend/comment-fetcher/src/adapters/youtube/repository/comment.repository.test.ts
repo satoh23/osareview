@@ -29,6 +29,28 @@ test("APIレスポンスを共通コメント配列へ変換しページ情報�
           },
         ],
       };
+      yield {
+        kind: "youtube#liveChatMessageListResponse" as const,
+        etag: "etag-2",
+        next_page_token: "next-token-2",
+        items: [
+          {
+            id: "m2",
+            snippet: {
+              type: "textMessageEvent" as const,
+              live_chat_id: "chat-1",
+              author_channel_id: "author-2",
+              published_at: "2026-04-25T12:00:01Z",
+              has_display_content: true,
+              display_message: "world",
+            },
+            author_details: {
+              channel_id: "author-2",
+              display_name: "bob",
+            },
+          },
+        ],
+      };
     },
   };
 
@@ -39,10 +61,9 @@ test("APIレスポンスを共通コメント配列へ変換しページ情報�
   })) {
     results.push(chunk);
   }
-  const result = results[0];
-
-  assert.ok(result);
-  assert.equal(result.comments.length, 1);
-  assert.equal(result.comments[0]?.id, "m1");
-  assert.equal(result.nextPageToken, "next-token");
+  assert.equal(results.length, 2);
+  assert.equal(results[0]?.comments[0]?.id, "m1");
+  assert.equal(results[0]?.nextPageToken, "next-token");
+  assert.equal(results[1]?.comments[0]?.id, "m2");
+  assert.equal(results[1]?.nextPageToken, "next-token-2");
 });
