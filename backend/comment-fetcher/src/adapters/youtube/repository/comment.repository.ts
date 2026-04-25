@@ -1,7 +1,7 @@
 import type { YouTubeApiClient } from "../client/api.client.js";
 import { inject, injectable } from "tsyringe";
 import { mapYouTubeLiveChatMessagesToComments } from "../mapper/comment.mapper.js";
-import { YOUTUBE_DI_TOKENS } from "../auth/di-tokens.js";
+import { YOUTUBE_DI_TOKENS } from "../access-token/di-tokens.js";
 import type {
   CommentRepository,
   FetchCommentsInput,

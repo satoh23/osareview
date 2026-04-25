@@ -1,9 +1,9 @@
 import type { YouTubeLiveChatMessagesListResponseDto } from "../dto/raw.dto.js";
 import { inject, injectable } from "tsyringe";
-import { YOUTUBE_DI_TOKENS } from "../auth/di-tokens.js";
-import type { AccessTokenProvider } from "../../../shared/auth/access-token-provider.js";
-import { SHARED_DI_TOKENS } from "../../../shared/http/http-client.js";
-import type { HttpClient } from "../../../shared/http/http-client.js";
+import { YOUTUBE_DI_TOKENS } from "../access-token/di-tokens.js";
+import type { AccessTokenProvider } from "../../../infrastructure/auth/access-token-provider.js";
+import { SHARED_DI_TOKENS } from "../../../infrastructure/http/http-client.js";
+import type { HttpClient } from "../../../infrastructure/http/http-client.js";
 
 const YOUTUBE_DATA_API_BASE_URL = "https://www.googleapis.com/youtube/v3";
 
