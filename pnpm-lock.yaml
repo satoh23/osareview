@@ -94,7 +94,7 @@ importers:
         specifier: ~5.8.3
         version: 5.8.3
 
-  services/collector:
+  backend/collector:
     devDependencies:
       "@types/node":
         specifier: ^22.19.3
@@ -106,7 +106,7 @@ importers:
         specifier: ~5.8.3
         version: 5.8.3
 
-  services/websocket-control:
+  backend/websocket-control:
     devDependencies:
       "@types/node":
         specifier: ^22.19.3
