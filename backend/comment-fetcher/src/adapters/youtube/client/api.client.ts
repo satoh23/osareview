@@ -4,8 +4,7 @@ import { YOUTUBE_DI_TOKENS } from "../access-token/di-tokens.js";
 import type { AccessTokenProvider } from "../../../infrastructure/auth/access-token-provider.js";
 import { SHARED_DI_TOKENS } from "../../../infrastructure/http/http-client.js";
 import type { HttpClient } from "../../../infrastructure/http/http-client.js";
-
-const YOUTUBE_DATA_API_BASE_URL = "https://www.googleapis.com/youtube/v3";
+import type { YouTubeConfigProvider } from "../../../infrastructure/config/youtube-api-base-url.js";
 
 export type FetchYouTubeLiveChatMessagesInput = {
   liveChatId: string;
@@ -30,6 +29,8 @@ export class YouTubeApiClient {
     private readonly accessTokenProvider: AccessTokenProvider,
     @inject(SHARED_DI_TOKENS.httpClient)
     private readonly httpClient: HttpClient,
+    @inject(YOUTUBE_DI_TOKENS.configProvider)
+    private readonly configProvider: YouTubeConfigProvider,
   ) {}
 
   async fetchLiveChatMessages(
@@ -52,7 +53,7 @@ export class YouTubeApiClient {
       query.set("pageToken", input.pageToken);
     }
 
-    const url = `${YOUTUBE_DATA_API_BASE_URL}/liveChatMessages?${query.toString()}`;
+    const url = `${this.configProvider.getDataApiBaseUrl()}/liveChatMessages?${query.toString()}`;
 
     const response = await this.httpClient(url, {
       method: "GET",

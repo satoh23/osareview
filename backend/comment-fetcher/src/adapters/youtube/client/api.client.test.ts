@@ -11,6 +11,11 @@ test("accessToken が無い場合はエラーを投げる", async () => {
       },
     },
     async () => new Response() as never,
+    {
+      getDataApiBaseUrl() {
+        return "https://www.googleapis.com/youtube/v3";
+      },
+    },
   );
 
   await assert.rejects(
@@ -45,6 +50,11 @@ test("liveChatMessages.list を正しいクエリとヘッダで呼ぶ", async (
       },
     },
     httpClient,
+    {
+      getDataApiBaseUrl() {
+        return "https://www.googleapis.com/youtube/v3";
+      },
+    },
   );
 
   await client.fetchLiveChatMessages({
@@ -75,6 +85,11 @@ test("APIエラー時はステータスと本文を含むエラーを投げる",
       },
     },
     httpClient,
+    {
+      getDataApiBaseUrl() {
+        return "https://www.googleapis.com/youtube/v3";
+      },
+    },
   );
 
   await assert.rejects(
