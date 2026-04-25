@@ -10,7 +10,7 @@ function createBaseMessage(
   return {
     id: "msg-1",
     snippet: {
-      type: "textMessageEvent",
+      type: "TEXT_MESSAGE_EVENT",
       live_chat_id: "chat-1",
       author_channel_id: "author-1",
       published_at: "2026-04-25T12:00:00Z",
@@ -25,7 +25,7 @@ function createBaseMessage(
   };
 }
 
-test("textMessageEvent は normal へ変換される", () => {
+test("TEXT_MESSAGE_EVENT は normal へ変換される", () => {
   const message = createBaseMessage();
   const result = mapYouTubeLiveChatMessagesToComments({
     kind: "youtube#liveChatMessageListResponse",
@@ -39,10 +39,10 @@ test("textMessageEvent は normal へ変換される", () => {
   assert.equal(result.author.id, "author-1");
 });
 
-test("superChatEvent は monetaryAmount を含む super_chat へ変換される", () => {
+test("SUPER_CHAT_EVENT は monetaryAmount を含む super_chat へ変換される", () => {
   const message = createBaseMessage({
     snippet: {
-      type: "superChatEvent",
+      type: "SUPER_CHAT_EVENT",
       live_chat_id: "chat-1",
       author_channel_id: "author-1",
       published_at: "2026-04-25T12:00:00Z",
@@ -65,10 +65,10 @@ test("superChatEvent は monetaryAmount を含む super_chat へ変換される"
   assert.deepEqual(result.monetaryAmount, { currency: "JPY", amount: 2.5 });
 });
 
-test("newSponsorEvent は subscription へ変換される", () => {
+test("NEW_SPONSOR_EVENT は subscription へ変換される", () => {
   const message = createBaseMessage({
     snippet: {
-      type: "newSponsorEvent",
+      type: "NEW_SPONSOR_EVENT",
       live_chat_id: "chat-1",
       author_channel_id: "author-1",
       published_at: "2026-04-25T12:00:00Z",

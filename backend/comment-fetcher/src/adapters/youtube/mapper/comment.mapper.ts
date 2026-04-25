@@ -10,14 +10,14 @@ import type {
 } from "../dto/raw.dto.js";
 
 const YOUTUBE_MESSAGE_TYPE_TO_COMMENT_EVENT_TYPE = {
-  textMessageEvent: COMMENT_EVENT_TYPES.NORMAL,
-  superChatEvent: COMMENT_EVENT_TYPES.SUPER_CHAT,
+  TEXT_MESSAGE_EVENT: COMMENT_EVENT_TYPES.NORMAL,
+  SUPER_CHAT_EVENT: COMMENT_EVENT_TYPES.SUPER_CHAT,
   // TODO: 将来的に Super Sticker 専用イベント型が必要になれば分離を検討する。
-  superStickerEvent: COMMENT_EVENT_TYPES.SUPER_CHAT,
+  SUPER_STICKER_EVENT: COMMENT_EVENT_TYPES.SUPER_CHAT,
   // TODO: 将来的に新規メンバー加入専用イベント型が必要になれば分離を検討する。
-  newSponsorEvent: COMMENT_EVENT_TYPES.SUBSCRIPTION,
+  NEW_SPONSOR_EVENT: COMMENT_EVENT_TYPES.SUBSCRIPTION,
   // TODO: 将来的に継続マイルストーン専用イベント型が必要になれば分離を検討する。
-  memberMilestoneChatEvent: COMMENT_EVENT_TYPES.SUBSCRIPTION,
+  MEMBER_MILESTONE_CHAT_EVENT: COMMENT_EVENT_TYPES.SUBSCRIPTION,
 } as const;
 
 /** 配信コメントの取得結果を、共通コメント配列へ変換する。 */

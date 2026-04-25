@@ -18,5 +18,59 @@ message LiveChatMessageListRequest {
 message LiveChatMessageListResponse {
   optional string kind = 200;
   optional string etag = 201;
+  optional string offline_at = 2;
   optional string next_page_token = 100602;
+  repeated LiveChatMessage items = 1007;
+}
+
+message LiveChatMessage {
+  optional string kind = 200;
+  optional string etag = 201;
+  optional string id = 101;
+  optional LiveChatMessageSnippet snippet = 2;
+  optional LiveChatMessageAuthorDetails author_details = 3;
+}
+
+message LiveChatMessageSnippet {
+  enum Type {
+    INVALID_TYPE = 0;
+    TEXT_MESSAGE_EVENT = 1;
+    NEW_SPONSOR_EVENT = 7;
+    SUPER_CHAT_EVENT = 15;
+    SUPER_STICKER_EVENT = 16;
+    MEMBER_MILESTONE_CHAT_EVENT = 17;
+    MESSAGE_DELETED_EVENT = 8;
+    MESSAGE_RETRACTED_EVENT = 9;
+    USER_BANNED_EVENT = 10;
+    POLL_EVENT = 20;
+  }
+
+  optional Type type = 1;
+  optional string live_chat_id = 201;
+  optional string author_channel_id = 202;
+  optional string published_at = 203;
+  optional bool has_display_content = 204;
+  optional string display_message = 205;
+  optional SuperChatDetails super_chat_details = 206;
+  optional SuperStickerDetails super_sticker_details = 207;
+  optional MemberMilestoneChatDetails member_milestone_chat_details = 208;
+}
+
+message LiveChatMessageAuthorDetails {
+  optional string channel_id = 1;
+  optional string display_name = 3;
+}
+
+message SuperChatDetails {
+  optional string amount_micros = 1;
+  optional string currency = 2;
+}
+
+message SuperStickerDetails {
+  optional string amount_micros = 1;
+  optional string currency = 2;
+}
+
+message MemberMilestoneChatDetails {
+  optional uint32 member_month = 1;
 }

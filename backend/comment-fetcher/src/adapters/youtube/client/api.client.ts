@@ -32,10 +32,10 @@ const DEFAULT_STREAM_LIST_RUNTIME: StreamListRuntime = {
 };
 
 /**
- * YouTube Data API v3 クライアント（liveChatMessages.list 専用）。
+ * YouTube Data API v3 クライアント（liveChatMessages.streamList 専用）。
  *
  * 参照:
- * - https://developers.google.com/youtube/v3/live/docs/liveChatMessages/list
+ * - https://developers.google.com/youtube/v3/live/docs/liveChatMessages/streamList
  *
  * 認証に関する注意:
  * - 現在は backend の最低動作確認を優先し、環境変数読むAccessTokenProviderを注入する暫定実装。

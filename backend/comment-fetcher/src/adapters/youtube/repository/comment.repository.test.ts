@@ -15,7 +15,7 @@ test("APIレスポンスを共通コメント配列へ変換しページ情報�
           {
             id: "m1",
             snippet: {
-              type: "textMessageEvent" as const,
+              type: "TEXT_MESSAGE_EVENT" as const,
               live_chat_id: "chat-1",
               author_channel_id: "author-1",
               published_at: "2026-04-25T12:00:00Z",
@@ -37,7 +37,7 @@ test("APIレスポンスを共通コメント配列へ変換しページ情報�
           {
             id: "m2",
             snippet: {
-              type: "textMessageEvent" as const,
+              type: "TEXT_MESSAGE_EVENT" as const,
               live_chat_id: "chat-1",
               author_channel_id: "author-2",
               published_at: "2026-04-25T12:00:01Z",

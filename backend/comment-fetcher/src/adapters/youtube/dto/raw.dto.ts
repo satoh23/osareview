@@ -29,7 +29,7 @@ export type YouTubeLiveChatMessageDto = {
 
 /** メッセージ本文・イベント種別などの本体情報 */
 export type YouTubeLiveChatMessageSnippetDto = {
-  /** メッセージ種別（例: textMessageEvent, superChatEvent） */
+  /** メッセージ種別（例: TEXT_MESSAGE_EVENT, SUPER_CHAT_EVENT） */
   type: YouTubeLiveChatMessageType;
   /** 所属するライブチャットID */
   live_chat_id: string;
@@ -41,11 +41,11 @@ export type YouTubeLiveChatMessageSnippetDto = {
   has_display_content: boolean;
   /** 表示用本文（絵文字含む） */
   display_message: string;
-  /** type=superChatEvent のときに付与 */
+  /** type=SUPER_CHAT_EVENT のときに付与 */
   super_chat_details?: YouTubeSuperChatDetailsDto;
-  /** type=superStickerEvent のときに付与 */
+  /** type=SUPER_STICKER_EVENT のときに付与 */
   super_sticker_details?: YouTubeSuperStickerDetailsDto;
-  /** type=memberMilestoneChatEvent のときに付与 */
+  /** type=MEMBER_MILESTONE_CHAT_EVENT のときに付与 */
   member_milestone_chat_details?: YouTubeMemberMilestoneChatDetailsDto;
 };
 
@@ -62,15 +62,15 @@ export type YouTubeLiveChatMessageSnippetDto = {
  * つまり「DTOでは受け取る」「業務判断は後段で行う」という責務分離を採用する。
  */
 export type YouTubeLiveChatMessageType =
-  | "textMessageEvent"
-  | "superChatEvent"
-  | "superStickerEvent"
-  | "memberMilestoneChatEvent"
-  | "newSponsorEvent"
-  | "messageDeletedEvent"
-  | "messageRetractedEvent"
-  | "userBannedEvent"
-  | "pollEvent"
+  | "TEXT_MESSAGE_EVENT"
+  | "SUPER_CHAT_EVENT"
+  | "SUPER_STICKER_EVENT"
+  | "MEMBER_MILESTONE_CHAT_EVENT"
+  | "NEW_SPONSOR_EVENT"
+  | "MESSAGE_DELETED_EVENT"
+  | "MESSAGE_RETRACTED_EVENT"
+  | "USER_BANNED_EVENT"
+  | "POLL_EVENT"
   | (string & {});
 
 /** 投稿者情報 */
