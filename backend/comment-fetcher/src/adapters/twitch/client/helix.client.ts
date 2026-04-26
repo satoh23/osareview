@@ -5,6 +5,8 @@ import { SHARED_DI_TOKENS } from "../../../infrastructure/shared/http/http-clien
 import type { HttpClient } from "../../../infrastructure/shared/http/http-client.js";
 import type { TwitchConfigProvider } from "../../../infrastructure/twitch/config/api-config.js";
 import type {
+  TwitchEventSubSubscriptionsResponseDto,
+  TwitchEventSubSubscriptionType,
   TwitchStreamsResponseDto,
   TwitchUsersResponseDto,
 } from "../dto/raw.dto.js";
@@ -24,7 +26,7 @@ export class TwitchHelixClient {
   async resolveUserIdByLogin(userLogin: string): Promise<string | null> {
     const query = new URLSearchParams({ login: userLogin });
     const url = `${this.configProvider.getHelixApiBaseUrl()}/users?${query.toString()}`;
-    const response = await this.request<TwitchUsersResponseDto>(url);
+    const response = await this.request<TwitchUsersResponseDto>(url, "GET");
     // ユーザーが見つかればそのID、見つからなければ null
     return response.data[0]?.id ?? null;
   }
@@ -33,14 +35,44 @@ export class TwitchHelixClient {
   async findActiveStream(userId: string): Promise<{ streamId: string } | null> {
     const query = new URLSearchParams({ user_id: userId });
     const url = `${this.configProvider.getHelixApiBaseUrl()}/streams?${query.toString()}`;
-    const response = await this.request<TwitchStreamsResponseDto>(url);
+    const response = await this.request<TwitchStreamsResponseDto>(url, "GET");
     const streamId = response.data[0]?.id;
     if (!streamId) return null;
 
     return { streamId };
   }
 
-  private async request<T>(url: string): Promise<T> {
+  /** EventSub WebSocket セッションへチャット購読を1件作成する。 */
+  async createEventSubSubscription(input: {
+    type: TwitchEventSubSubscriptionType;
+    version: "1";
+    condition: {
+      broadcaster_user_id: string;
+      user_id: string;
+    };
+    sessionId: string;
+  }): Promise<void> {
+    const url = `${this.configProvider.getHelixApiBaseUrl()}/eventsub/subscriptions`;
+    await this.request<TwitchEventSubSubscriptionsResponseDto>(
+      url,
+      "POST",
+      JSON.stringify({
+        type: input.type,
+        version: input.version,
+        condition: input.condition,
+        transport: {
+          method: "websocket",
+          session_id: input.sessionId,
+        },
+      }),
+    );
+  }
+
+  private async request<T>(
+    url: string,
+    method: "GET" | "POST",
+    body?: string,
+  ): Promise<T> {
     const accessToken = await this.accessTokenProvider.getAccessToken();
     if (!accessToken) {
       throw new Error(
@@ -54,12 +86,14 @@ export class TwitchHelixClient {
     }
 
     const response = await this.httpClient(url, {
-      method: "GET",
+      method,
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Client-Id": clientId,
         Accept: "application/json",
+        ...(body ? { "Content-Type": "application/json" } : {}),
       },
+      ...(body ? { body } : {}),
     });
 
     if (!response.ok) {

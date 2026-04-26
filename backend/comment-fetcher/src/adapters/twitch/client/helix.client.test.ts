@@ -197,3 +197,83 @@ test("streams APIが空配列ならnullを返す", async () => {
   const stream = await client.findActiveStream("141981764");
   assert.equal(stream, null);
 });
+
+test("EventSub subscription を作成できる", async () => {
+  const called: Array<{
+    url: string;
+    method?: string;
+    headers?: Record<string, string>;
+    body?: string;
+  }> = [];
+
+  const httpClient: typeof fetch = async (input, init) => {
+    called.push({
+      url: String(input),
+      method: init?.method,
+      headers: (init?.headers ?? {}) as Record<string, string>,
+      body: init?.body as string | undefined,
+    });
+    return new Response(
+      JSON.stringify({
+        data: [
+          {
+            id: "sub-1",
+            status: "enabled",
+            type: "channel.chat.message",
+            version: "1",
+          },
+        ],
+      }),
+      { status: 202, headers: { "Content-Type": "application/json" } },
+    );
+  };
+
+  const client = new TwitchHelixClient(
+    {
+      async getAccessToken() {
+        return "test-token";
+      },
+    },
+    httpClient,
+    {
+      getHelixApiBaseUrl() {
+        return "https://api.twitch.tv/helix";
+      },
+      getEventSubWebSocketUrl() {
+        return "wss://eventsub.wss.twitch.tv/ws";
+      },
+      getClientId() {
+        return "test-client-id";
+      },
+    },
+  );
+
+  await client.createEventSubSubscription({
+    type: "channel.chat.message",
+    version: "1",
+    condition: {
+      broadcaster_user_id: "141981764",
+      user_id: "2914196",
+    },
+    sessionId: "session-1",
+  });
+
+  assert.equal(called.length, 1);
+  assert.match(called[0]?.url ?? "", /\/eventsub\/subscriptions$/);
+  assert.equal(called[0]?.method, "POST");
+  assert.equal(called[0]?.headers?.Authorization, "Bearer test-token");
+  assert.equal(called[0]?.headers?.["Client-Id"], "test-client-id");
+  assert.equal(called[0]?.headers?.["Content-Type"], "application/json");
+  assert.deepEqual(JSON.parse(called[0]?.body ?? "{}"), {
+    type: "channel.chat.message",
+    version: "1",
+    condition: {
+      broadcaster_user_id: "141981764",
+      user_id: "2914196",
+    },
+    transport: {
+      method: "websocket",
+      session_id: "session-1",
+    },
+  });
+});
