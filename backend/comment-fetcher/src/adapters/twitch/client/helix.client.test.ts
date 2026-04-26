@@ -130,3 +130,70 @@ test("users APIが空配列ならnullを返す", async () => {
   const userId = await client.resolveUserIdByLogin("unknown_user");
   assert.equal(userId, null);
 });
+
+test("streams APIから配信中stream idを返す", async () => {
+  const calledUrls: string[] = [];
+  const httpClient: typeof fetch = async (input) => {
+    calledUrls.push(String(input));
+    return new Response(
+      JSON.stringify({
+        data: [{ id: "40952121085", user_id: "141981764" }],
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  };
+
+  const client = new TwitchHelixClient(
+    {
+      async getAccessToken() {
+        return "test-token";
+      },
+    },
+    httpClient,
+    {
+      getHelixApiBaseUrl() {
+        return "https://api.twitch.tv/helix";
+      },
+      getEventSubWebSocketUrl() {
+        return "wss://eventsub.wss.twitch.tv/ws";
+      },
+      getClientId() {
+        return "test-client-id";
+      },
+    },
+  );
+
+  const stream = await client.findActiveStream("141981764");
+  assert.deepEqual(stream, { streamId: "40952121085" });
+  assert.equal(calledUrls.length, 1);
+  assert.match(calledUrls[0] ?? "", /\/streams\?user_id=141981764/);
+});
+
+test("streams APIが空配列ならnullを返す", async () => {
+  const client = new TwitchHelixClient(
+    {
+      async getAccessToken() {
+        return "test-token";
+      },
+    },
+    async () =>
+      new Response(JSON.stringify({ data: [] }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    {
+      getHelixApiBaseUrl() {
+        return "https://api.twitch.tv/helix";
+      },
+      getEventSubWebSocketUrl() {
+        return "wss://eventsub.wss.twitch.tv/ws";
+      },
+      getClientId() {
+        return "test-client-id";
+      },
+    },
+  );
+
+  const stream = await client.findActiveStream("141981764");
+  assert.equal(stream, null);
+});

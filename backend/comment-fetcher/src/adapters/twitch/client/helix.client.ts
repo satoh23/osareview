@@ -4,7 +4,10 @@ import type { AccessTokenProvider } from "../../../infrastructure/shared/auth/ac
 import { SHARED_DI_TOKENS } from "../../../infrastructure/shared/http/http-client.js";
 import type { HttpClient } from "../../../infrastructure/shared/http/http-client.js";
 import type { TwitchConfigProvider } from "../../../infrastructure/twitch/config/api-config.js";
-import type { TwitchUsersResponseDto } from "../dto/raw.dto.js";
+import type {
+  TwitchStreamsResponseDto,
+  TwitchUsersResponseDto,
+} from "../dto/raw.dto.js";
 
 @injectable()
 export class TwitchHelixClient {
@@ -24,6 +27,17 @@ export class TwitchHelixClient {
     const response = await this.request<TwitchUsersResponseDto>(url);
     // ユーザーが見つかればそのID、見つからなければ null
     return response.data[0]?.id ?? null;
+  }
+
+  /** user_id から現在配信中の stream id を1件取得する。 */
+  async findActiveStream(userId: string): Promise<{ streamId: string } | null> {
+    const query = new URLSearchParams({ user_id: userId });
+    const url = `${this.configProvider.getHelixApiBaseUrl()}/streams?${query.toString()}`;
+    const response = await this.request<TwitchStreamsResponseDto>(url);
+    const streamId = response.data[0]?.id;
+    if (!streamId) return null;
+
+    return { streamId };
   }
 
   private async request<T>(url: string): Promise<T> {
