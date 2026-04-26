@@ -80,9 +80,36 @@ export class TwitchEventSubWebSocketClient {
     return parsed;
   }
 
-  // NOTE: step-3 本体（welcome待ち・購読作成・ストリーム化）で利用予定。
-  getHelixClient(): TwitchHelixClient {
-    return this.helixClient;
+  /**
+   * EventSub WebSocket セッションへ、チャット受信用の2購読を作成する。
+   * - channel.chat.message
+   * - channel.chat.notification
+   */
+  async subscribeChatEvents(input: {
+    sessionId: string;
+    broadcasterUserId: string;
+    userId: string;
+  }): Promise<void> {
+    await Promise.all([
+      this.helixClient.createEventSubSubscription({
+        type: "channel.chat.message",
+        version: "1",
+        condition: {
+          broadcaster_user_id: input.broadcasterUserId,
+          user_id: input.userId,
+        },
+        sessionId: input.sessionId,
+      }),
+      this.helixClient.createEventSubSubscription({
+        type: "channel.chat.notification",
+        version: "1",
+        condition: {
+          broadcaster_user_id: input.broadcasterUserId,
+          user_id: input.userId,
+        },
+        sessionId: input.sessionId,
+      }),
+    ]);
   }
 
   private async waitForSessionWelcome(socket: WebSocket): Promise<string> {
