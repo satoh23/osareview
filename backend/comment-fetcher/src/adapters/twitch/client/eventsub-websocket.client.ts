@@ -65,9 +65,19 @@ export class TwitchEventSubWebSocketClient {
     return { socket, sessionId };
   }
 
-  // NOTE: EventSub message を後段で型安全に扱うための最小変換のみ提供。
+  /**
+   * EventSub の生メッセージ文字列を envelope DTO へ変換する。
+   * - JSONとして不正な場合はエラー
+   * - EventSub envelope 形式（metadata.message_type が既知値）でない場合はエラー
+   */
   parseEnvelope(payload: string): TwitchEventSubEnvelopeDto {
-    return JSON.parse(payload) as TwitchEventSubEnvelopeDto;
+    const parsed = this.parseJson(payload);
+
+    if (!this.isEventSubEnvelope(parsed)) {
+      throw new Error("Invalid Twitch EventSub envelope format.");
+    }
+
+    return parsed;
   }
 
   // NOTE: step-3 本体（welcome待ち・購読作成・ストリーム化）で利用予定。
@@ -122,5 +132,34 @@ export class TwitchEventSubWebSocketClient {
       socket.once("error", handleError);
       socket.once("close", handleClose);
     });
+  }
+
+  private isEventSubEnvelope(
+    value: unknown,
+  ): value is TwitchEventSubEnvelopeDto {
+    if (typeof value !== "object" || value === null) {
+      return false;
+    }
+
+    const metadata = (value as { metadata?: unknown }).metadata;
+    if (typeof metadata !== "object" || metadata === null) {
+      return false;
+    }
+
+    const messageType = (metadata as { message_type?: unknown }).message_type;
+    return (
+      messageType === TWITCH_EVENTSUB_MESSAGE_TYPES.SESSION_WELCOME ||
+      messageType === TWITCH_EVENTSUB_MESSAGE_TYPES.NOTIFICATION ||
+      messageType === TWITCH_EVENTSUB_MESSAGE_TYPES.SESSION_RECONNECT ||
+      messageType === TWITCH_EVENTSUB_MESSAGE_TYPES.REVOCATION
+    );
+  }
+
+  private parseJson(payload: string): unknown {
+    try {
+      return JSON.parse(payload);
+    } catch {
+      throw new Error("Failed to parse Twitch EventSub message as JSON.");
+    }
   }
 }
