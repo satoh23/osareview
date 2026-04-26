@@ -4,6 +4,6 @@ export const TWITCH_DI_TOKENS = {
   liveStreamRepository: "TwitchLiveStreamRepository",
   configProvider: "TwitchConfigProvider",
   helixClient: "TwitchHelixClient",
-  eventSubClient: "TwitchEventSubClient",
+  eventSubClient: "TwitchEventSubWebSocketClient",
   commentRepository: "TwitchCommentRepository",
 } as const;
