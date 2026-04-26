@@ -5,7 +5,10 @@ import type { TwitchHelixClient } from "./helix.client.js";
 import type { TwitchConfigProvider } from "../../../infrastructure/twitch/config/api-config.js";
 import {
   TWITCH_EVENTSUB_MESSAGE_TYPES,
+  type TwitchChatMessageEventDto,
+  type TwitchChatNotificationEventDto,
   type TwitchEventSubEnvelopeDto,
+  type TwitchEventSubNotificationEnvelopeDto,
   type TwitchEventSubSessionWelcomeEnvelopeDto,
 } from "../dto/raw.dto.js";
 
@@ -23,6 +26,10 @@ type ConnectedEventSubSession = {
   sessionId: string;
 };
 
+type TwitchChatEvent =
+  | TwitchChatMessageEventDto
+  | TwitchChatNotificationEventDto;
+
 @injectable()
 export class TwitchEventSubWebSocketClient {
   constructor(
@@ -34,9 +41,109 @@ export class TwitchEventSubWebSocketClient {
   ) {}
 
   /**
+   * 接続→購読作成後、notificationイベントを AsyncIterable で継続返却する。
+   */
+  async *streamChatEvents(input: {
+    broadcasterUserId: string;
+    userId: string;
+  }): AsyncIterable<TwitchChatEvent> {
+    const session = await this.connectAndSubscribeChatEvents(input);
+    const { socket } = session;
+
+    const queue: TwitchChatEvent[] = [];
+    let done = false;
+    let streamError: Error | null = null;
+    let wakeup: (() => void) | null = null;
+
+    const notify = () => {
+      if (!wakeup) {
+        return;
+      }
+      const fn = wakeup;
+      wakeup = null;
+      fn();
+    };
+
+    const handleMessage = (raw: WebSocket.RawData) => {
+      try {
+        const payload = this.rawDataToString(raw);
+        const envelope = this.parseEnvelope(payload);
+        if (
+          envelope.metadata.message_type !==
+          TWITCH_EVENTSUB_MESSAGE_TYPES.NOTIFICATION
+        ) {
+          return;
+        }
+
+        // 直前で notification 以外を除外しているため、ここでは NotificationEnvelope として扱える。
+        const notification = envelope as TwitchEventSubNotificationEnvelopeDto;
+        queue.push(notification.payload.event);
+        notify();
+      } catch (error) {
+        streamError = error instanceof Error ? error : new Error(String(error));
+        done = true;
+        notify();
+      }
+    };
+
+    const handleError = (error: Error) => {
+      streamError = error;
+      done = true;
+      notify();
+    };
+
+    const handleClose = () => {
+      if (!done) {
+        streamError = new Error("Twitch EventSub socket was closed.");
+      }
+      done = true;
+      notify();
+    };
+
+    socket.on("message", handleMessage);
+    socket.on("error", handleError);
+    socket.on("close", handleClose);
+
+    try {
+      while (true) {
+        if (queue.length > 0) {
+          const event = queue.shift();
+          if (event) {
+            yield event;
+          }
+          continue;
+        }
+
+        if (streamError) {
+          throw streamError;
+        }
+
+        if (done) {
+          break;
+        }
+
+        await new Promise<void>((resolve) => {
+          wakeup = resolve;
+        });
+      }
+    } finally {
+      socket.off("message", handleMessage);
+      socket.off("error", handleError);
+      socket.off("close", handleClose);
+
+      if (
+        socket.readyState === WebSocket.OPEN ||
+        socket.readyState === WebSocket.CONNECTING
+      ) {
+        socket.close();
+      }
+    }
+  }
+
+  /**
    * EventSubへ接続し、チャット受信用の2購読を作成した状態を返す。
    */
-  async connectAndSubscribeChatEvents(input: {
+  private async connectAndSubscribeChatEvents(input: {
     broadcasterUserId: string;
     userId: string;
   }): Promise<ConnectedEventSubSession> {
@@ -86,7 +193,7 @@ export class TwitchEventSubWebSocketClient {
    * - JSONとして不正な場合はエラー
    * - EventSub envelope 形式（metadata.message_type が既知値）でない場合はエラー
    */
-  parseEnvelope(payload: string): TwitchEventSubEnvelopeDto {
+  private parseEnvelope(payload: string): TwitchEventSubEnvelopeDto {
     const parsed = this.parseJson(payload);
 
     if (!this.isEventSubEnvelope(parsed)) {
@@ -204,5 +311,15 @@ export class TwitchEventSubWebSocketClient {
     } catch {
       throw new Error("Failed to parse Twitch EventSub message as JSON.");
     }
+  }
+
+  private rawDataToString(raw: WebSocket.RawData): string {
+    if (typeof raw === "string") {
+      return raw;
+    }
+    if (Buffer.isBuffer(raw)) {
+      return raw.toString("utf8");
+    }
+    return raw.toString();
   }
 }
