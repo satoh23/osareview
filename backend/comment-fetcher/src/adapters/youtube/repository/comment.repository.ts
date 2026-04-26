@@ -8,6 +8,7 @@ import type {
   FetchCommentsResult,
 } from "../../../usecases/youtube-comment-collection/comment-repository.interface.js";
 
+// Repositoryが必要とする最小機能だけに依存し、結合度とモック実装コストを下げるための境界。
 interface YouTubeCommentApi {
   fetchLiveChatMessages: YouTubeApiClient["fetchLiveChatMessages"];
 }

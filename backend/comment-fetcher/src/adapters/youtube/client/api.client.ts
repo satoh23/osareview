@@ -7,11 +7,6 @@ import grpc from "@grpc/grpc-js";
 import protoLoader from "@grpc/proto-loader";
 import { fileURLToPath } from "node:url";
 
-type FetchYouTubeLiveChatMessagesInput = {
-  liveChatId: string;
-  pageToken?: string;
-};
-
 // gRPC本体を直接importしたままだとテストで差し替えづらいため、
 // streamList呼び出しに必要な依存（proto読み込み/クライアント生成/metadata）を
 // ひとかたまりのruntimeとして注入可能にしている。
@@ -52,9 +47,10 @@ export class YouTubeApiClient {
     private readonly streamListRuntime: StreamListRuntime = DEFAULT_STREAM_LIST_RUNTIME,
   ) {}
 
-  async *fetchLiveChatMessages(
-    input: FetchYouTubeLiveChatMessagesInput,
-  ): AsyncIterable<YouTubeLiveChatMessagesListResponseDto> {
+  async *fetchLiveChatMessages(input: {
+    liveChatId: string;
+    pageToken?: string;
+  }): AsyncIterable<YouTubeLiveChatMessagesListResponseDto> {
     const accessToken = await this.accessTokenProvider.getAccessToken();
     if (!accessToken) {
       throw new Error(
