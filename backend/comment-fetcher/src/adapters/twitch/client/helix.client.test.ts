@@ -277,3 +277,111 @@ test("EventSub subscription を作成できる", async () => {
     },
   });
 });
+
+test("self user id を取得できる", async () => {
+  const calledUrls: string[] = [];
+  const httpClient: typeof fetch = async (input) => {
+    calledUrls.push(String(input));
+    return new Response(
+      JSON.stringify({
+        data: [{ id: "2914196", login: "bot_user", display_name: "BotUser" }],
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  };
+
+  const client = new TwitchHelixClient(
+    {
+      async getAccessToken() {
+        return "test-token";
+      },
+    },
+    httpClient,
+    {
+      getHelixApiBaseUrl() {
+        return "https://api.twitch.tv/helix";
+      },
+      getEventSubWebSocketUrl() {
+        return "wss://eventsub.wss.twitch.tv/ws";
+      },
+      getClientId() {
+        return "test-client-id";
+      },
+    },
+  );
+
+  const selfUserId = await client.getSelfUserId();
+  assert.equal(selfUserId, "2914196");
+  assert.equal(calledUrls.length, 1);
+  assert.match(calledUrls[0] ?? "", /\/users$/);
+});
+
+test("self user id は2回目以降キャッシュを返す", async () => {
+  let callCount = 0;
+  const httpClient: typeof fetch = async () => {
+    callCount += 1;
+    return new Response(
+      JSON.stringify({
+        data: [{ id: "2914196", login: "bot_user", display_name: "BotUser" }],
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  };
+
+  const client = new TwitchHelixClient(
+    {
+      async getAccessToken() {
+        return "test-token";
+      },
+    },
+    httpClient,
+    {
+      getHelixApiBaseUrl() {
+        return "https://api.twitch.tv/helix";
+      },
+      getEventSubWebSocketUrl() {
+        return "wss://eventsub.wss.twitch.tv/ws";
+      },
+      getClientId() {
+        return "test-client-id";
+      },
+    },
+  );
+
+  const first = await client.getSelfUserId();
+  const second = await client.getSelfUserId();
+  assert.equal(first, "2914196");
+  assert.equal(second, "2914196");
+  assert.equal(callCount, 1);
+});
+
+test("self user が取得できない場合はエラーを投げる", async () => {
+  const client = new TwitchHelixClient(
+    {
+      async getAccessToken() {
+        return "test-token";
+      },
+    },
+    async () =>
+      new Response(JSON.stringify({ data: [] }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    {
+      getHelixApiBaseUrl() {
+        return "https://api.twitch.tv/helix";
+      },
+      getEventSubWebSocketUrl() {
+        return "wss://eventsub.wss.twitch.tv/ws";
+      },
+      getClientId() {
+        return "test-client-id";
+      },
+    },
+  );
+
+  await assert.rejects(
+    () => client.getSelfUserId(),
+    /Twitch self user was not found from \/helix\/users/,
+  );
+});

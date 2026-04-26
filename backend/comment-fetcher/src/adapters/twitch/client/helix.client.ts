@@ -13,6 +13,9 @@ import type {
 
 @injectable()
 export class TwitchHelixClient {
+  // getSelfUserId() の結果をメモ化し、同一プロセス内の重複API呼び出しを避ける。
+  private selfUserId: string | null = null;
+
   constructor(
     @inject(TWITCH_DI_TOKENS.accessTokenProvider)
     private readonly accessTokenProvider: AccessTokenProvider,
@@ -40,6 +43,22 @@ export class TwitchHelixClient {
     if (!streamId) return null;
 
     return { streamId };
+  }
+
+  /** 現在のアクセストークンに紐づく user_id を取得する。 */
+  async getSelfUserId(): Promise<string> {
+    if (this.selfUserId) {
+      return this.selfUserId;
+    }
+
+    const url = `${this.configProvider.getHelixApiBaseUrl()}/users`;
+    const response = await this.request<TwitchUsersResponseDto>(url, "GET");
+    const userId = response.data[0]?.id;
+    if (!userId) {
+      throw new Error("Twitch self user was not found from /helix/users.");
+    }
+    this.selfUserId = userId;
+    return userId;
   }
 
   /** EventSub WebSocket セッションへチャット購読を1件作成する。 */
