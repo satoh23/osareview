@@ -5,6 +5,7 @@ import { YOUTUBE_DI_TOKENS } from "./adapters/youtube/access-token/di-tokens.js"
 import { YouTubeApiClient } from "./adapters/youtube/client/api.client.js";
 import { YouTubeLiveStreamClient } from "./adapters/youtube/client/live-stream.client.js";
 import { YouTubeLiveStreamRepository } from "./adapters/youtube/repository/live-stream.repository.js";
+import { runCommentFetcherApp } from "./app/main.js";
 import { SHARED_DI_TOKENS } from "./infrastructure/http/http-client.js";
 import { EnvYouTubeConfigProvider } from "./infrastructure/config/youtube-api-base-url.js";
 
@@ -27,6 +28,7 @@ container.register(YOUTUBE_DI_TOKENS.configProvider, {
   useClass: EnvYouTubeConfigProvider,
 });
 
-console.info(
-  "[comment-fetcher] service scaffold — replace with real entrypoint",
-);
+runCommentFetcherApp().catch((error: unknown) => {
+  console.error("[comment-fetcher] fatal error", error);
+  process.exitCode = 1;
+});

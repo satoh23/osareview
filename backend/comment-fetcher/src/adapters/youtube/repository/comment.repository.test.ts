@@ -2,7 +2,7 @@ import "reflect-metadata";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { YouTubeCommentRepository } from "./comment.repository.js";
-import type { FetchCommentsResult } from "../../../usecases/youtube-comment-collection/comment-repository.interface.js";
+import type { FetchCommentsResult } from "../../../usecases/comment-collection/comment-repository.interface.js";
 
 test("APIレスポンスを共通コメント配列へ変換しページ情報を返す", async () => {
   const apiClient = {

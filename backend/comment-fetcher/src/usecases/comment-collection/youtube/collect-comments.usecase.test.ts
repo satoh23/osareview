@@ -1,8 +1,8 @@
 import "reflect-metadata";
 import test from "node:test";
 import assert from "node:assert/strict";
-import type { Comment } from "../../entities/comment/comment.js";
-import { CollectYouTubeCommentsUseCase } from "./index.js";
+import type { Comment } from "../../../entities/comment/comment.js";
+import { CollectYouTubeCommentsUseCase } from "./collect-comments.usecase.js";
 
 const createComment = (id: string): Comment => ({
   id,

@@ -1,14 +1,10 @@
 import { setTimeout as sleep } from "node:timers/promises";
-import type { Comment } from "../../entities/comment/comment.js";
+import type { CommentRepository } from "../comment-repository.interface.js";
+import { DEFAULT_COMMENT_STREAM_RECONNECT_INTERVAL_MS } from "../../../infrastructure/config/youtube-comment-collection.js";
 import type {
-  CommentRepository,
-  FetchCommentsInput,
-} from "./comment-repository.interface.js";
-import { DEFAULT_COMMENT_STREAM_RECONNECT_INTERVAL_MS } from "../../infrastructure/config/youtube-comment-collection.js";
-
-// 現状は repository の入力型と同一構造だが、層ごとの責務を明確にするため
-// usecase 側では意味名を持つ別名型として定義している。
-export type CollectYouTubeCommentsInput = FetchCommentsInput;
+  CollectCommentsInput,
+  CollectCommentsStream,
+} from "../comment-collection.types.js";
 
 export class CollectYouTubeCommentsUseCase {
   constructor(
@@ -23,8 +19,8 @@ export class CollectYouTubeCommentsUseCase {
   ) {}
 
   async *streamCommentsFromLiveChat(
-    input: CollectYouTubeCommentsInput,
-  ): AsyncIterable<Comment[]> {
+    input: CollectCommentsInput,
+  ): CollectCommentsStream {
     let nextPageToken = input.pageToken;
 
     while (true) {
