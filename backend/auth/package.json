@@ -1,0 +1,17 @@
+{
+  "name": "@comment-dock/auth",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.3",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.3"
+  }
+}
