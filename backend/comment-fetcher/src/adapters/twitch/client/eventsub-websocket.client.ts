@@ -18,7 +18,7 @@ const DEFAULT_WEBSOCKET_RUNTIME: WebSocketRuntime = {
   createClient: (url) => new WebSocket(url),
 };
 
-export type ConnectedEventSubSession = {
+type ConnectedEventSubSession = {
   socket: WebSocket;
   sessionId: string;
 };
@@ -34,13 +34,29 @@ export class TwitchEventSubWebSocketClient {
   ) {}
 
   /**
+   * EventSubへ接続し、チャット受信用の2購読を作成した状態を返す。
+   */
+  async connectAndSubscribeChatEvents(input: {
+    broadcasterUserId: string;
+    userId: string;
+  }): Promise<ConnectedEventSubSession> {
+    const session = await this.connect();
+    await this.subscribeChatEvents({
+      sessionId: session.sessionId,
+      broadcasterUserId: input.broadcasterUserId,
+      userId: input.userId,
+    });
+    return session;
+  }
+
+  /**
    * EventSub WebSocketへ接続し、session_welcome から session_id を取得して返す。
    * 返り値:
    * - socket: 以降の message/error/close 監視と受信継続に使う接続本体
    * - sessionId: Helix の eventsub/subscriptions 作成時の transport.session_id に使う
    * NOTE: subscribe と AsyncIterable 化はこの後のステップで実装する。
    */
-  async connect(): Promise<ConnectedEventSubSession> {
+  private async connect(): Promise<ConnectedEventSubSession> {
     const url = this.configProvider.getEventSubWebSocketUrl();
     const socket = this.runtime.createClient(url);
 
@@ -85,7 +101,7 @@ export class TwitchEventSubWebSocketClient {
    * - channel.chat.message
    * - channel.chat.notification
    */
-  async subscribeChatEvents(input: {
+  private async subscribeChatEvents(input: {
     sessionId: string;
     broadcasterUserId: string;
     userId: string;
