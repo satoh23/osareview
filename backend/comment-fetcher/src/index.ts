@@ -7,6 +7,11 @@ import { YouTubeAccessTokenProvider } from "./adapters/youtube/access-token/acce
 import { YOUTUBE_DI_TOKENS } from "./adapters/youtube/access-token/di-tokens.js";
 import { TwitchAccessTokenProvider } from "./adapters/twitch/access-token/access-token-provider.js";
 import { TWITCH_DI_TOKENS } from "./adapters/twitch/access-token/di-tokens.js";
+import { TwitchHelixClient } from "./adapters/twitch/client/helix.client.js";
+import { TwitchEventSubWebSocketClient } from "./adapters/twitch/client/eventsub-websocket.client.js";
+import { TwitchLiveStreamClient } from "./adapters/twitch/client/live-stream.client.js";
+import { TwitchLiveStreamRepository } from "./adapters/twitch/repository/live-stream.repository.js";
+import { TwitchCommentRepository } from "./adapters/twitch/repository/comment.repository.js";
 import { YouTubeApiClient } from "./adapters/youtube/client/api.client.js";
 import { YouTubeLiveStreamClient } from "./adapters/youtube/client/live-stream.client.js";
 import { YouTubeLiveStreamRepository } from "./adapters/youtube/repository/live-stream.repository.js";
@@ -44,6 +49,21 @@ container.register(TWITCH_DI_TOKENS.accessTokenProvider, {
 });
 container.register(TWITCH_DI_TOKENS.configProvider, {
   useClass: EnvTwitchConfigProvider,
+});
+container.register(TWITCH_DI_TOKENS.helixClient, {
+  useClass: TwitchHelixClient,
+});
+container.register(TWITCH_DI_TOKENS.eventSubClient, {
+  useClass: TwitchEventSubWebSocketClient,
+});
+container.register(TWITCH_DI_TOKENS.liveStreamClient, {
+  useClass: TwitchLiveStreamClient,
+});
+container.register(TWITCH_DI_TOKENS.liveStreamRepository, {
+  useClass: TwitchLiveStreamRepository,
+});
+container.register(TWITCH_DI_TOKENS.commentRepository, {
+  useClass: TwitchCommentRepository,
 });
 
 runCommentFetcherApp().catch((error: unknown) => {

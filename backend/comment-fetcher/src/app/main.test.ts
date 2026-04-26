@@ -5,6 +5,8 @@ import { container } from "tsyringe";
 import { runCommentFetcherApp } from "./main.js";
 import { YouTubeLiveStreamRepository } from "../adapters/youtube/repository/live-stream.repository.js";
 import { YouTubeCommentRepository } from "../adapters/youtube/repository/comment.repository.js";
+import { TwitchLiveStreamRepository } from "../adapters/twitch/repository/live-stream.repository.js";
+import { TwitchCommentRepository } from "../adapters/twitch/repository/comment.repository.js";
 import { LiveStreamNotFoundError } from "../usecases/live-stream-detection/index.js";
 
 type ResolveFn = typeof container.resolve;
@@ -24,7 +26,9 @@ const withMockedResolve = async (
 
 test("YOUTUBE_TARGET_CHANNEL_ID が未設定なら provider をスキップする", async () => {
   const originalChannelId = process.env.YOUTUBE_TARGET_CHANNEL_ID;
+  const originalTwitchChannelId = process.env.TWITCH_TARGET_CHANNEL_ID;
   delete process.env.YOUTUBE_TARGET_CHANNEL_ID;
+  delete process.env.TWITCH_TARGET_CHANNEL_ID;
 
   const warnings: unknown[][] = [];
   const originalWarn = console.warn;
@@ -45,6 +49,16 @@ test("YOUTUBE_TARGET_CHANNEL_ID が未設定なら provider をスキップす�
             async *streamComments() {},
           } as unknown as ReturnType<ResolveFn>;
         }
+        if (token === TwitchLiveStreamRepository) {
+          return {
+            findLiveStream: async () => null,
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === TwitchCommentRepository) {
+          return {
+            async *streamComments() {},
+          } as unknown as ReturnType<ResolveFn>;
+        }
         throw new Error("unexpected token");
       }) as ResolveFn,
       async () => {
@@ -56,15 +70,21 @@ test("YOUTUBE_TARGET_CHANNEL_ID が未設定なら provider をスキップす�
     if (originalChannelId) {
       process.env.YOUTUBE_TARGET_CHANNEL_ID = originalChannelId;
     }
+    if (originalTwitchChannelId) {
+      process.env.TWITCH_TARGET_CHANNEL_ID = originalTwitchChannelId;
+    }
   }
 
-  assert.equal(warnings.length, 1);
+  assert.equal(warnings.length, 2);
   assert.match(String(warnings[0]?.[0] ?? ""), /is skipped because/);
+  assert.match(String(warnings[1]?.[0] ?? ""), /is skipped because/);
 });
 
 test("LiveStreamNotFoundError はメッセージを出して終了する", async () => {
   const originalChannelId = process.env.YOUTUBE_TARGET_CHANNEL_ID;
+  const originalTwitchChannelId = process.env.TWITCH_TARGET_CHANNEL_ID;
   process.env.YOUTUBE_TARGET_CHANNEL_ID = "channel-1";
+  delete process.env.TWITCH_TARGET_CHANNEL_ID;
 
   const errors: unknown[][] = [];
   const originalError = console.error;
@@ -87,6 +107,16 @@ test("LiveStreamNotFoundError はメッセージを出して終了する", async
             async *streamComments() {},
           } as unknown as ReturnType<ResolveFn>;
         }
+        if (token === TwitchLiveStreamRepository) {
+          return {
+            findLiveStream: async () => null,
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === TwitchCommentRepository) {
+          return {
+            async *streamComments() {},
+          } as unknown as ReturnType<ResolveFn>;
+        }
         throw new Error("unexpected token");
       }) as ResolveFn,
       async () => {
@@ -99,6 +129,11 @@ test("LiveStreamNotFoundError はメッセージを出して終了する", async
       process.env.YOUTUBE_TARGET_CHANNEL_ID = originalChannelId;
     } else {
       delete process.env.YOUTUBE_TARGET_CHANNEL_ID;
+    }
+    if (originalTwitchChannelId) {
+      process.env.TWITCH_TARGET_CHANNEL_ID = originalTwitchChannelId;
+    } else {
+      delete process.env.TWITCH_TARGET_CHANNEL_ID;
     }
   }
 

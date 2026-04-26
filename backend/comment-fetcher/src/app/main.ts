@@ -3,11 +3,14 @@ import { COMMENT_SOURCES } from "@comment-dock/shared";
 import type { CommentSource } from "@comment-dock/shared";
 import { YouTubeCommentRepository } from "../adapters/youtube/repository/comment.repository.js";
 import { YouTubeLiveStreamRepository } from "../adapters/youtube/repository/live-stream.repository.js";
+import { TwitchCommentRepository } from "../adapters/twitch/repository/comment.repository.js";
+import { TwitchLiveStreamRepository } from "../adapters/twitch/repository/live-stream.repository.js";
 import {
   DetectLiveStreamUseCase,
   LiveStreamNotFoundError,
 } from "../usecases/live-stream-detection/index.js";
 import { CollectYouTubeCommentsUseCase } from "../usecases/comment-collection/youtube/collect-comments.usecase.js";
+import { CollectTwitchCommentsUseCase } from "../usecases/comment-collection/twitch/collect-comments.usecase.js";
 import type {
   CollectCommentsInput,
   CollectCommentsStream,
@@ -47,6 +50,25 @@ const createYouTubePipeline = (): CommentFetchPipeline => {
 
   return {
     provider: COMMENT_SOURCES.YOUTUBE,
+    findActiveLiveStream: (input) =>
+      detectLiveStreamUseCase.findActiveLiveStream(input),
+    streamCommentsFromLiveChat: (input) =>
+      collectCommentsUseCase.streamCommentsFromLiveChat(input),
+  };
+};
+
+const createTwitchPipeline = (): CommentFetchPipeline => {
+  const liveStreamRepository = container.resolve(TwitchLiveStreamRepository);
+  const commentRepository = container.resolve(TwitchCommentRepository);
+  const detectLiveStreamUseCase = new DetectLiveStreamUseCase(
+    liveStreamRepository,
+  );
+  const collectCommentsUseCase = new CollectTwitchCommentsUseCase(
+    commentRepository,
+  );
+
+  return {
+    provider: COMMENT_SOURCES.TWITCH,
     findActiveLiveStream: (input) =>
       detectLiveStreamUseCase.findActiveLiveStream(input),
     streamCommentsFromLiveChat: (input) =>
@@ -108,8 +130,10 @@ const collectComments = async (
  */
 export const runCommentFetcherApp = async (): Promise<void> => {
   const presenter = new CommentPresenter();
-  const pipelines: CommentFetchPipeline[] = [createYouTubePipeline()];
-  // Twitch 実装時はここへ createTwitchPipeline() を追加する。
+  const pipelines: CommentFetchPipeline[] = [
+    createYouTubePipeline(),
+    createTwitchPipeline(),
+  ];
 
   await Promise.all(
     pipelines.map(async (pipeline) => {
