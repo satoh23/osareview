@@ -161,7 +161,6 @@ export class TwitchEventSubWebSocketClient {
    * 返り値:
    * - socket: 以降の message/error/close 監視と受信継続に使う接続本体
    * - sessionId: Helix の eventsub/subscriptions 作成時の transport.session_id に使う
-   * NOTE: subscribe と AsyncIterable 化はこの後のステップで実装する。
    */
   private async connect(): Promise<ConnectedEventSubSession> {
     const url = this.configProvider.getEventSubWebSocketUrl();
