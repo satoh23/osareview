@@ -19,7 +19,7 @@ test("アクセストークンが無い場合はエラーを投げる", async ()
   );
 
   await assert.rejects(
-    () => client.detectLiveStream({ channelId: "channel-1" }),
+    () => client.findLiveStream({ channelId: "channel-1" }),
     /YouTube access token is missing from AccessTokenProvider/,
   );
 });
@@ -66,7 +66,7 @@ test("配信中なら配信IDとライブチャットIDを返す", async () => {
     },
   );
 
-  const result = await client.detectLiveStream({ channelId: "channel-1" });
+  const result = await client.findLiveStream({ channelId: "channel-1" });
   assert.deepEqual(result, {
     liveStreamId: "live-video-1",
     liveChatId: "chat-1",
@@ -99,6 +99,6 @@ test("配信が見つからない場合は null を返す", async () => {
     },
   );
 
-  const result = await client.detectLiveStream({ channelId: "channel-1" });
+  const result = await client.findLiveStream({ channelId: "channel-1" });
   assert.equal(result, null);
 });

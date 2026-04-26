@@ -4,6 +4,7 @@ import { YouTubeAccessTokenProvider } from "./adapters/youtube/access-token/acce
 import { YOUTUBE_DI_TOKENS } from "./adapters/youtube/access-token/di-tokens.js";
 import { YouTubeApiClient } from "./adapters/youtube/client/api.client.js";
 import { YouTubeLiveStreamClient } from "./adapters/youtube/client/live-stream.client.js";
+import { YouTubeLiveStreamRepository } from "./adapters/youtube/repository/live-stream.repository.js";
 import { SHARED_DI_TOKENS } from "./infrastructure/http/http-client.js";
 import { EnvYouTubeConfigProvider } from "./infrastructure/config/youtube-api-base-url.js";
 
@@ -18,6 +19,9 @@ container.register(YOUTUBE_DI_TOKENS.apiClient, {
 });
 container.register(YOUTUBE_DI_TOKENS.liveStreamClient, {
   useClass: YouTubeLiveStreamClient,
+});
+container.register(YOUTUBE_DI_TOKENS.liveStreamRepository, {
+  useClass: YouTubeLiveStreamRepository,
 });
 container.register(YOUTUBE_DI_TOKENS.configProvider, {
   useClass: EnvYouTubeConfigProvider,

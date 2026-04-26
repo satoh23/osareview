@@ -20,7 +20,7 @@ export class YouTubeLiveStreamClient {
     private readonly configProvider: YouTubeConfigProvider,
   ) {}
 
-  async detectLiveStream(input: {
+  async findLiveStream(input: {
     channelId: string;
   }): Promise<{ liveStreamId: string; liveChatId: string } | null> {
     const liveStreamId = await this.findLiveStreamId(input.channelId);
