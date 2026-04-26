@@ -26,12 +26,18 @@ export function mapYouTubeLiveChatMessagesToComments(
 ): Comment[] {
   return response.items
     .map((message) => {
+      // 削除/撤回/BAN などの本文なしイベントは snippet や author_details が欠けるため除外する。
+      if (!message?.snippet || !message.author_details) {
+        return null;
+      }
+
+      // 未対応の message type は業務イベントへ変換できないため除外する。
       if (
-        message.snippet.type in YOUTUBE_MESSAGE_TYPE_TO_COMMENT_EVENT_TYPE ===
-        false
+        !(message.snippet.type in YOUTUBE_MESSAGE_TYPE_TO_COMMENT_EVENT_TYPE)
       ) {
         return null;
       }
+
       const eventType =
         YOUTUBE_MESSAGE_TYPE_TO_COMMENT_EVENT_TYPE[
           message.snippet

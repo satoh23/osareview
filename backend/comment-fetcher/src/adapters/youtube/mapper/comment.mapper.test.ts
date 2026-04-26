@@ -130,3 +130,21 @@ test("list 変換は null を除外する", () => {
   assert.equal(result.length, 1);
   assert.equal(result[0]?.id, "ok-1");
 });
+
+test("snippet が null のデータはスキップする", () => {
+  const response = {
+    kind: "youtube#liveChatMessageListResponse" as const,
+    etag: "etag",
+    items: [
+      createBaseMessage({ id: "ok-1" }),
+      {
+        ...createBaseMessage({ id: "skip-null-snippet" }),
+        snippet: null,
+      } as unknown as YouTubeLiveChatMessageDto,
+    ],
+  };
+
+  const result = mapYouTubeLiveChatMessagesToComments(response);
+  assert.equal(result.length, 1);
+  assert.equal(result[0]?.id, "ok-1");
+});

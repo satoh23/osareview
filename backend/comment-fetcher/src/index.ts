@@ -1,4 +1,7 @@
 import "reflect-metadata";
+import dotenv from "dotenv";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 import { container } from "tsyringe";
 import { YouTubeAccessTokenProvider } from "./adapters/youtube/access-token/access-token-provider.js";
 import { YOUTUBE_DI_TOKENS } from "./adapters/youtube/access-token/di-tokens.js";
@@ -8,6 +11,12 @@ import { YouTubeLiveStreamRepository } from "./adapters/youtube/repository/live-
 import { runCommentFetcherApp } from "./app/main.js";
 import { SHARED_DI_TOKENS } from "./infrastructure/http/http-client.js";
 import { EnvYouTubeConfigProvider } from "./infrastructure/config/youtube-api-base-url.js";
+
+const currentFilePath = fileURLToPath(import.meta.url);
+const currentDir = dirname(currentFilePath);
+dotenv.config({
+  path: resolve(currentDir, "../../../.env"),
+});
 
 container.register(SHARED_DI_TOKENS.httpClient, {
   useValue: fetch,
