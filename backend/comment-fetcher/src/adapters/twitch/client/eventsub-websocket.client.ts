@@ -298,6 +298,7 @@ export class TwitchEventSubWebSocketClient {
     const messageType = (metadata as { message_type?: unknown }).message_type;
     return (
       messageType === TWITCH_EVENTSUB_MESSAGE_TYPES.SESSION_WELCOME ||
+      messageType === TWITCH_EVENTSUB_MESSAGE_TYPES.SESSION_KEEPALIVE ||
       messageType === TWITCH_EVENTSUB_MESSAGE_TYPES.NOTIFICATION ||
       messageType === TWITCH_EVENTSUB_MESSAGE_TYPES.SESSION_RECONNECT ||
       messageType === TWITCH_EVENTSUB_MESSAGE_TYPES.REVOCATION

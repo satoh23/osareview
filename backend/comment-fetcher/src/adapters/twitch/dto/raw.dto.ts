@@ -10,6 +10,7 @@
 /** EventSub の message_type 定数。 */
 export const TWITCH_EVENTSUB_MESSAGE_TYPES = {
   SESSION_WELCOME: "session_welcome",
+  SESSION_KEEPALIVE: "session_keepalive",
   NOTIFICATION: "notification",
   SESSION_RECONNECT: "session_reconnect",
   REVOCATION: "revocation",
@@ -18,9 +19,19 @@ export const TWITCH_EVENTSUB_MESSAGE_TYPES = {
 /** EventSub WebSocket の envelope。 */
 export type TwitchEventSubEnvelopeDto =
   | TwitchEventSubSessionWelcomeEnvelopeDto
+  | TwitchEventSubKeepaliveEnvelopeDto
   | TwitchEventSubNotificationEnvelopeDto
   | TwitchEventSubReconnectEnvelopeDto
   | TwitchEventSubRevocationEnvelopeDto;
+
+/** EventSub の keepalive 通知。 */
+export type TwitchEventSubKeepaliveEnvelopeDto = {
+  metadata: {
+    message_type: typeof TWITCH_EVENTSUB_MESSAGE_TYPES.SESSION_KEEPALIVE;
+    message_id: string;
+  };
+  payload: Record<string, never>;
+};
 
 /** EventSub セッション開始通知。 */
 export type TwitchEventSubSessionWelcomeEnvelopeDto = {

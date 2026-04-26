@@ -160,6 +160,17 @@ test("notification以外のmessage_typeはキューに積まず無視する", as
     "message",
     JSON.stringify({
       metadata: {
+        message_type: "session_keepalive",
+        message_id: "keepalive-1",
+      },
+      payload: {},
+    }),
+  );
+
+  socket.emit(
+    "message",
+    JSON.stringify({
+      metadata: {
         message_type: "session_welcome",
         message_id: "welcome-1",
       },
