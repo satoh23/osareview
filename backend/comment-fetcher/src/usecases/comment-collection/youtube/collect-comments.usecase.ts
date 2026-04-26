@@ -1,6 +1,6 @@
 import { setTimeout as sleep } from "node:timers/promises";
 import type { CommentRepository } from "../comment-repository.interface.js";
-import { DEFAULT_COMMENT_STREAM_RECONNECT_INTERVAL_MS } from "../../../infrastructure/config/youtube-comment-collection.js";
+import { DEFAULT_COMMENT_STREAM_RECONNECT_INTERVAL_MS } from "../../../infrastructure/youtube/config/comment-collection.js";
 import type {
   CollectCommentsInput,
   CollectCommentsStream,

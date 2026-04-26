@@ -7,7 +7,7 @@ import type {
 import {
   DEFAULT_LIVE_STREAM_MAX_ATTEMPTS,
   DEFAULT_LIVE_STREAM_POLLING_INTERVAL_MS,
-} from "../../infrastructure/config/live-stream-detection.js";
+} from "../../infrastructure/shared/config/live-stream-detection.js";
 
 type WaitFn = (milliseconds: number) => Promise<void>;
 

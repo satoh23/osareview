@@ -1,9 +1,9 @@
 import { inject, injectable } from "tsyringe";
 import { YOUTUBE_DI_TOKENS } from "../access-token/di-tokens.js";
-import type { AccessTokenProvider } from "../../../infrastructure/auth/access-token-provider.js";
-import { SHARED_DI_TOKENS } from "../../../infrastructure/http/http-client.js";
-import type { HttpClient } from "../../../infrastructure/http/http-client.js";
-import type { YouTubeConfigProvider } from "../../../infrastructure/config/youtube-api-base-url.js";
+import type { AccessTokenProvider } from "../../../infrastructure/shared/auth/access-token-provider.js";
+import { SHARED_DI_TOKENS } from "../../../infrastructure/shared/http/http-client.js";
+import type { HttpClient } from "../../../infrastructure/shared/http/http-client.js";
+import type { YouTubeConfigProvider } from "../../../infrastructure/youtube/config/api-config.js";
 import type {
   YouTubeSearchListResponseDto,
   YouTubeVideosListResponseDto,

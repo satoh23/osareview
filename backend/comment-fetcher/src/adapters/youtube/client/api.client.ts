@@ -1,8 +1,8 @@
 import type { YouTubeLiveChatMessagesListResponseDto } from "../dto/raw.dto.js";
 import { inject, injectable } from "tsyringe";
 import { YOUTUBE_DI_TOKENS } from "../access-token/di-tokens.js";
-import type { AccessTokenProvider } from "../../../infrastructure/auth/access-token-provider.js";
-import type { YouTubeConfigProvider } from "../../../infrastructure/config/youtube-api-base-url.js";
+import type { AccessTokenProvider } from "../../../infrastructure/shared/auth/access-token-provider.js";
+import type { YouTubeConfigProvider } from "../../../infrastructure/youtube/config/api-config.js";
 import grpc from "@grpc/grpc-js";
 import protoLoader from "@grpc/proto-loader";
 import { fileURLToPath } from "node:url";

@@ -9,8 +9,8 @@ import { YouTubeApiClient } from "./adapters/youtube/client/api.client.js";
 import { YouTubeLiveStreamClient } from "./adapters/youtube/client/live-stream.client.js";
 import { YouTubeLiveStreamRepository } from "./adapters/youtube/repository/live-stream.repository.js";
 import { runCommentFetcherApp } from "./app/main.js";
-import { SHARED_DI_TOKENS } from "./infrastructure/http/http-client.js";
-import { EnvYouTubeConfigProvider } from "./infrastructure/config/youtube-api-base-url.js";
+import { SHARED_DI_TOKENS } from "./infrastructure/shared/http/http-client.js";
+import { EnvYouTubeConfigProvider } from "./infrastructure/youtube/config/api-config.js";
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDir = dirname(currentFilePath);
