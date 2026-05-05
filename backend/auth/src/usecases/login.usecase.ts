@@ -45,7 +45,7 @@ export class LoginUsecase {
     const state = this.stateGenerator.generate();
     const callback = await this.callbackReceiver.start({
       expectedState: state,
-      timeoutMs: this.loginPolicy.getCallbackTimeoutMs(provider),
+      timeoutMs: this.loginPolicy.getCallbackTimeoutMs(),
     });
 
     try {
@@ -54,7 +54,7 @@ export class LoginUsecase {
         state,
         codeVerifier: pkce.codeVerifier,
         codeChallenge: pkce.codeChallenge,
-        scopes: this.loginPolicy.getScopes(provider),
+        scopes: this.loginPolicy.getScopes(),
       });
       // NOTE: ユーザー同意フローをブラウザで開始し、loopback callback で認可コードを受け取る。
       await this.browserLauncher.open(authorizationUrl);

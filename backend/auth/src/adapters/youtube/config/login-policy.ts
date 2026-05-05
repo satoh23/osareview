@@ -1,4 +1,3 @@
-import type { Provider } from "../../../provider.js";
 import "reflect-metadata";
 import { inject, injectable } from "tsyringe";
 import type { LoginPolicy } from "../../../usecases/interfaces/login-policy.interface.js";
@@ -15,21 +14,11 @@ export class YouTubeLoginPolicy implements LoginPolicy {
     private readonly callbackTimeoutMs: number = DEFAULT_CALLBACK_TIMEOUT_MS,
   ) {}
 
-  getScopes(provider: Provider): readonly string[] {
-    if (provider !== "youtube") {
-      throw new Error(
-        `Unsupported provider for YouTubeLoginPolicy: ${provider}`,
-      );
-    }
+  getScopes(): readonly string[] {
     return this.configProvider.getOAuthConfig().scopes;
   }
 
-  getCallbackTimeoutMs(provider: Provider): number {
-    if (provider !== "youtube") {
-      throw new Error(
-        `Unsupported provider for YouTubeLoginPolicy: ${provider}`,
-      );
-    }
+  getCallbackTimeoutMs(): number {
     return this.callbackTimeoutMs;
   }
 }
