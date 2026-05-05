@@ -9,7 +9,7 @@ import { LoopbackOAuthCallbackReceiver } from "./adapters/shared/loopback/loopba
 import { RandomPkceGenerator } from "./adapters/shared/pkce/pkce.js";
 import { RandomStateGenerator } from "./adapters/shared/state/random-state.generator.js";
 import { YouTubeLoginPolicy } from "./adapters/youtube/config/login-policy.js";
-import { AuthorizationCodeLoopbackLoginStrategy } from "./adapters/shared/login/authorization-code-loopback-login-strategy.js";
+import { AuthorizationCodeLoopbackLoginStrategy } from "./adapters/youtube/login/authorization-code-loopback-login-strategy.js";
 import { LoginUsecase } from "./usecases/login.usecase.js";
 import {
   GetValidAccessTokenUsecase,
