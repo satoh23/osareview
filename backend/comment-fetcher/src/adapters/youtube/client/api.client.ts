@@ -33,7 +33,7 @@ const DEFAULT_STREAM_LIST_RUNTIME: StreamListRuntime = {
  * - https://developers.google.com/youtube/v3/live/docs/liveChatMessages/streamList
  *
  * 認証に関する注意:
- * - 現在は backend の最低動作確認を優先し、環境変数読むAccessTokenProviderを注入する暫定実装。
+ * - AccessTokenProvider は @comment-dock/auth 経由で有効 token を返す実装を注入する。
  * - 正式版では OAuth2 + PKCE で取得したトークンをセキュアストレージ管理し、
  *   ここへ注入する方式に置き換える。
  */

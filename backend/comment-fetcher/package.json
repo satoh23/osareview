@@ -11,6 +11,7 @@
     "test": "tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
+    "@comment-dock/auth": "workspace:*",
     "@comment-dock/shared": "workspace:*",
     "@grpc/grpc-js": "^1.14.3",
     "@grpc/proto-loader": "^0.8.0",

@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { container } from "tsyringe";
+import { createAuthClient, type AuthClient } from "@comment-dock/auth";
 import { YouTubeAccessTokenProvider } from "./adapters/youtube/access-token/access-token-provider.js";
 import { YOUTUBE_DI_TOKENS } from "./adapters/youtube/access-token/di-tokens.js";
 import { TwitchAccessTokenProvider } from "./adapters/twitch/access-token/access-token-provider.js";
@@ -28,6 +29,9 @@ dotenv.config({
 
 container.register(SHARED_DI_TOKENS.httpClient, {
   useValue: fetch,
+});
+container.register<AuthClient>(YOUTUBE_DI_TOKENS.authClient, {
+  useValue: createAuthClient(),
 });
 container.register(YOUTUBE_DI_TOKENS.accessTokenProvider, {
   useClass: YouTubeAccessTokenProvider,

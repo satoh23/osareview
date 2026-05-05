@@ -111,6 +111,9 @@ importers:
 
   backend/comment-fetcher:
     dependencies:
+      "@comment-dock/auth":
+        specifier: workspace:*
+        version: link:../auth
       "@comment-dock/shared":
         specifier: workspace:*
         version: link:../../packages/shared
