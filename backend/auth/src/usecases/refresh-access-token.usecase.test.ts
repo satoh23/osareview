@@ -2,7 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import type { Provider } from "../provider.js";
 import { TokenSet } from "../entities/token/token-set.js";
-import type { OAuthClient, TokenStore } from "./interfaces/index.js";
+import type {
+  OAuthClient,
+  OAuthTokenRefresher,
+  TokenStore,
+} from "./interfaces/index.js";
 import { NotAuthorizedError } from "./get-valid-access-token.usecase.js";
 import { RefreshAccessTokenUsecase } from "./refresh-access-token.usecase.js";
 
@@ -75,7 +79,9 @@ test("明示 refresh で新しい token を返して保存する", async () => {
       obtainedAt: Date.now(),
     });
 
-  const usecase = new RefreshAccessTokenUsecase(store, oauth);
+  const refresherByProvider: ReadonlyMap<Provider, OAuthTokenRefresher> =
+    new Map([["youtube", oauth]]);
+  const usecase = new RefreshAccessTokenUsecase(store, refresherByProvider);
   const result = await usecase.refresh("youtube");
 
   assert.equal(result, "access-new");
@@ -87,7 +93,9 @@ test("明示 refresh で新しい token を返して保存する", async () => {
 test("未ログイン状態の明示 refresh は NotAuthorizedError", async () => {
   const store = new InMemoryTokenStore();
   const oauth = new StubOAuthClient();
-  const usecase = new RefreshAccessTokenUsecase(store, oauth);
+  const refresherByProvider: ReadonlyMap<Provider, OAuthTokenRefresher> =
+    new Map([["youtube", oauth]]);
+  const usecase = new RefreshAccessTokenUsecase(store, refresherByProvider);
 
   await assert.rejects(
     usecase.refresh("youtube"),
@@ -102,7 +110,9 @@ test("refresh 失敗時は clear して NotAuthorizedError", async () => {
   oauth.refreshImpl = async () => {
     throw new Error("invalid_grant");
   };
-  const usecase = new RefreshAccessTokenUsecase(store, oauth);
+  const refresherByProvider: ReadonlyMap<Provider, OAuthTokenRefresher> =
+    new Map([["youtube", oauth]]);
+  const usecase = new RefreshAccessTokenUsecase(store, refresherByProvider);
 
   await assert.rejects(
     usecase.refresh("youtube"),

@@ -36,7 +36,10 @@ class StubLoginStrategy implements LoginStrategy {
 test("login: strategy が返した tokenSet を provider 付きで保存する", async () => {
   const loginStrategy = new StubLoginStrategy();
   const tokenStore = new FakeTokenStore();
-  const usecase = new LoginUsecase(loginStrategy, tokenStore);
+  const usecase = new LoginUsecase(
+    new Map([["youtube", loginStrategy]]),
+    tokenStore,
+  );
 
   await usecase.login("youtube");
 
@@ -52,7 +55,7 @@ test("login: strategy 失敗時は NotAuthorizedError に正規化する", async
       throw new Error("device flow expired");
     },
   };
-  const usecase = new LoginUsecase(strategy, tokenStore);
+  const usecase = new LoginUsecase(new Map([["twitch", strategy]]), tokenStore);
 
   await assert.rejects(
     usecase.login("twitch"),
