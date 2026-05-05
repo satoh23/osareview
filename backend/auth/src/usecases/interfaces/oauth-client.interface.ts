@@ -1,4 +1,4 @@
-import type { TokenSet } from "../entities/token/token-set.js";
+import type { TokenSet } from "../../entities/token/token-set.js";
 
 /**
  * 認可 URL 組み立てに必要な共通入力（PKCE S256 + state + redirect）。

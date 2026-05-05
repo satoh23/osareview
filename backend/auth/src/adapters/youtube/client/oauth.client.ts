@@ -3,7 +3,7 @@ import type {
   ExchangeAuthorizationCodeInput,
   OAuthClient,
   RefreshAccessTokenInput,
-} from "../../../usecases/oauth-client.interface.js";
+} from "../../../usecases/interfaces/oauth-client.interface.js";
 import { TokenSet } from "../../../entities/token/token-set.js";
 import type { YouTubeOAuthConfigProvider } from "../../../infrastructure/youtube/config/oauth-config.js";
 
@@ -40,7 +40,6 @@ export class YouTubeOAuthClient implements OAuthClient {
   }
 
   authorize(request: AuthorizationRequest): URL {
-    // TODO: Wire this from login usecase (build auth URL -> launch browser).
     const config = this.configProvider.getOAuthConfig();
     const url = new URL(config.authorizationEndpoint);
     url.searchParams.set("client_id", config.clientId);

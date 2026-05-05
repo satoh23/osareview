@@ -1,6 +1,6 @@
 import { AsyncEntry } from "@napi-rs/keyring";
 import type { Provider } from "../../../provider.js";
-import type { TokenStore } from "../../../usecases/token-store.interface.js";
+import type { TokenStore } from "../../../usecases/interfaces/token-store.interface.js";
 import {
   TokenSet,
   type TokenSetPlain,

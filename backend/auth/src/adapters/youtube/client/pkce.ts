@@ -1,10 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
-
-export type PkcePair = {
-  readonly codeVerifier: string;
-  readonly codeChallenge: string;
-  readonly codeChallengeMethod: "S256";
-};
+import type {
+  PkceGenerator,
+  PkcePair,
+} from "../../../usecases/interfaces/pkce.interface.js";
 
 function base64UrlEncode(bytes: Buffer): string {
   return bytes
@@ -19,12 +17,14 @@ export function toCodeChallengeS256(codeVerifier: string): string {
   return base64UrlEncode(digest);
 }
 
-export function generatePkcePair(): PkcePair {
-  // RFC 7636: code_verifier は 43-128 文字。32 bytes を base64url 化すると 43 文字。
-  const codeVerifier = base64UrlEncode(randomBytes(32));
-  return {
-    codeVerifier,
-    codeChallenge: toCodeChallengeS256(codeVerifier),
-    codeChallengeMethod: "S256",
-  };
+export class RandomPkceGenerator implements PkceGenerator {
+  generate(): PkcePair {
+    // RFC 7636: code_verifier は 43-128 文字。32 bytes を base64url 化すると 43 文字。
+    const codeVerifier = base64UrlEncode(randomBytes(32));
+    return {
+      codeVerifier,
+      codeChallenge: toCodeChallengeS256(codeVerifier),
+      codeChallengeMethod: "S256",
+    };
+  }
 }

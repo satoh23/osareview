@@ -1,5 +1,5 @@
-import type { Provider } from "../provider.js";
-import type { TokenSet } from "../entities/token/token-set.js";
+import type { Provider } from "../../provider.js";
+import type { TokenSet } from "../../entities/token/token-set.js";
 
 /**
  * プロバイダ別に `TokenSet` を永続化する契約（keychain 等の実装が満たす）。

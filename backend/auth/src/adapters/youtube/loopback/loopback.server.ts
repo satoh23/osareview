@@ -20,22 +20,20 @@ export class LoopbackOAuthError extends Error {
   }
 }
 
-// TODO: These loopback-specific types should remain adapter-internal after introducing usecase port.
-export type CreateLoopbackOAuthCallbackServerOptions = {
+type CreateLoopbackOAuthCallbackServerOptions = {
   expectedState: string;
   timeoutMs: number;
   /** @default "/callback" */
   callbackPath?: string;
 };
 
-export type LoopbackOAuthCallbackServer = {
+type LoopbackOAuthCallbackServer = {
   readonly redirectUri: string;
   /** 認可コード。タイムアウト・state 不一致・OAuth error・code 欠落で reject */
   readonly authorizationCode: Promise<string>;
   close: () => Promise<void>;
 };
 
-// TODO: Keep loopback-specific errors in adapter layer; map to usecase-level errors at boundary.
 function sendHtml(
   res: http.ServerResponse,
   status: number,
