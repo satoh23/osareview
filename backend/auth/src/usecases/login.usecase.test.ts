@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { TokenSet } from "../entities/token/token-set.js";
 import { LoginUsecase } from "./login.usecase.js";
+import { NotAuthorizedError } from "./get-valid-access-token.usecase.js";
 import type { LoginStrategy, TokenStore } from "./interfaces/index.js";
 import type { Provider } from "../provider.js";
 
@@ -42,4 +43,22 @@ test("login: strategy が返した tokenSet を provider 付きで保存する",
   assert.equal(loginStrategy.calls, 1);
   assert.equal(tokenStore.saved?.provider, "youtube");
   assert.equal(tokenStore.saved?.tokenSet.accessToken, "a");
+});
+
+test("login: strategy 失敗時は NotAuthorizedError に正規化する", async () => {
+  const tokenStore = new FakeTokenStore();
+  const strategy: LoginStrategy = {
+    async login(): Promise<TokenSet> {
+      throw new Error("device flow expired");
+    },
+  };
+  const usecase = new LoginUsecase(strategy, tokenStore);
+
+  await assert.rejects(
+    usecase.login("twitch"),
+    (err: unknown) =>
+      err instanceof NotAuthorizedError &&
+      err.message === "Authorization failed. Please login again.",
+  );
+  assert.equal(tokenStore.saved, null);
 });

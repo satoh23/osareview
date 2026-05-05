@@ -3,6 +3,7 @@ import "reflect-metadata";
 import { inject, injectable } from "tsyringe";
 import type { LoginStrategy, TokenStore } from "./interfaces/index.js";
 import { AUTH_DI_TOKENS } from "../shared/di-tokens.js";
+import { NotAuthorizedError } from "./get-valid-access-token.usecase.js";
 
 export type LoginUsecaseDeps = {
   loginStrategy: LoginStrategy;
@@ -18,7 +19,17 @@ export class LoginUsecase {
   ) {}
 
   async login(provider: Provider): Promise<void> {
-    const tokenSet = await this.loginStrategy.login();
-    await this.tokenStore.save(provider, tokenSet);
+    try {
+      const tokenSet = await this.loginStrategy.login();
+      await this.tokenStore.save(provider, tokenSet);
+    } catch (err) {
+      if (err instanceof NotAuthorizedError) {
+        throw err;
+      }
+      throw new NotAuthorizedError(
+        "Authorization failed. Please login again.",
+        { cause: err },
+      );
+    }
   }
 }
