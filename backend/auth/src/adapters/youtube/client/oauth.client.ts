@@ -2,8 +2,8 @@ import type {
   AuthorizationRequest,
   ExchangeAuthorizationCodeInput,
   OAuthClient,
-  RefreshAccessTokenInput,
 } from "../../../usecases/interfaces/oauth-client.interface.js";
+import { RefreshAccessTokenInput } from "../../../usecases/interfaces/oauth-token-refresher.interface.js";
 import "reflect-metadata";
 import { inject, injectable } from "tsyringe";
 import { TokenSet } from "../../../entities/token/token-set.js";

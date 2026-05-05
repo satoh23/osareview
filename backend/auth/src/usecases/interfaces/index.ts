@@ -3,8 +3,11 @@ export type {
   AuthorizationRequest,
   ExchangeAuthorizationCodeInput,
   OAuthClient,
-  RefreshAccessTokenInput,
 } from "./oauth-client.interface.js";
+export type {
+  OAuthTokenRefresher,
+  RefreshAccessTokenInput,
+} from "./oauth-token-refresher.interface.js";
 export type { BrowserLauncher } from "./browser-launcher.interface.js";
 export type {
   OAuthCallbackReceiver,
