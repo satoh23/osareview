@@ -3,6 +3,7 @@ import { COMMENT_SOURCES } from "@comment-dock/shared";
 import type { CommentSource } from "@comment-dock/shared";
 import { YouTubeCommentRepository } from "../adapters/youtube/repository/comment.repository.js";
 import { YouTubeLiveStreamRepository } from "../adapters/youtube/repository/live-stream.repository.js";
+import { YouTubeLiveStreamClient } from "../adapters/youtube/client/live-stream.client.js";
 import { TwitchCommentRepository } from "../adapters/twitch/repository/comment.repository.js";
 import { TwitchLiveStreamRepository } from "../adapters/twitch/repository/live-stream.repository.js";
 import {
@@ -23,13 +24,9 @@ import { CommentPresenter } from "../adapters/presenters/comment.presenter.js";
 
 type CommentProvider = CommentSource;
 
-const TARGET_CHANNEL_ID_ENV_BY_PROVIDER: Record<CommentProvider, string> = {
-  youtube: "YOUTUBE_TARGET_CHANNEL_ID",
-  twitch: "TWITCH_TARGET_CHANNEL_ID",
-};
-
 type CommentFetchPipeline = {
   provider: CommentProvider;
+  resolveTargetChannelId: () => Promise<string | null>;
   findActiveLiveStream: (
     input: FindLiveStreamInput,
   ) => Promise<FindLiveStreamResult>;
@@ -40,6 +37,7 @@ type CommentFetchPipeline = {
 
 const createYouTubePipeline = (): CommentFetchPipeline => {
   const liveStreamRepository = container.resolve(YouTubeLiveStreamRepository);
+  const liveStreamClient = container.resolve(YouTubeLiveStreamClient);
   const commentRepository = container.resolve(YouTubeCommentRepository);
   const detectLiveStreamUseCase = new DetectLiveStreamUseCase(
     liveStreamRepository,
@@ -50,6 +48,20 @@ const createYouTubePipeline = (): CommentFetchPipeline => {
 
   return {
     provider: COMMENT_SOURCES.YOUTUBE,
+    resolveTargetChannelId: async () => {
+      const ownChannelId = await liveStreamClient.resolveOwnChannelId();
+      if (!ownChannelId) {
+        console.warn(
+          "[comment-fetcher] youtube is skipped because own channel could not be resolved from authenticated account.",
+        );
+        return null;
+      }
+      console.info(
+        "[comment-fetcher] youtube channel is resolved from authenticated account.",
+        { channelId: ownChannelId },
+      );
+      return ownChannelId;
+    },
     findActiveLiveStream: (input) =>
       detectLiveStreamUseCase.findActiveLiveStream(input),
     streamCommentsFromLiveChat: (input) =>
@@ -69,6 +81,16 @@ const createTwitchPipeline = (): CommentFetchPipeline => {
 
   return {
     provider: COMMENT_SOURCES.TWITCH,
+    resolveTargetChannelId: async () => {
+      const channelId = process.env.TWITCH_TARGET_CHANNEL_ID;
+      if (!channelId) {
+        console.warn(
+          "[comment-fetcher] twitch is skipped because TWITCH_TARGET_CHANNEL_ID is not set.",
+        );
+        return null;
+      }
+      return channelId;
+    },
     findActiveLiveStream: (input) =>
       detectLiveStreamUseCase.findActiveLiveStream(input),
     streamCommentsFromLiveChat: (input) =>
@@ -76,23 +98,11 @@ const createTwitchPipeline = (): CommentFetchPipeline => {
   };
 };
 
-const resolveTargetChannelId = (provider: CommentProvider): string | null => {
-  const envName = TARGET_CHANNEL_ID_ENV_BY_PROVIDER[provider];
-  const channelId = process.env[envName];
-  if (!channelId) {
-    console.warn(
-      `[comment-fetcher] ${provider} is skipped because ${envName} is not set.`,
-    );
-    return null;
-  }
-  return channelId;
-};
-
 const collectComments = async (
   pipeline: CommentFetchPipeline,
   presenter: CommentPresenter,
 ): Promise<void> => {
-  const channelId = resolveTargetChannelId(pipeline.provider);
+  const channelId = await pipeline.resolveTargetChannelId();
   if (!channelId) {
     return;
   }

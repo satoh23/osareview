@@ -5,6 +5,7 @@ import { SHARED_DI_TOKENS } from "../../../infrastructure/shared/http/http-clien
 import type { HttpClient } from "../../../infrastructure/shared/http/http-client.js";
 import type { YouTubeConfigProvider } from "../../../infrastructure/youtube/config/api-config.js";
 import type {
+  YouTubeChannelsListResponseDto,
   YouTubeSearchListResponseDto,
   YouTubeVideosListResponseDto,
 } from "../dto/live-stream.dto.js";
@@ -37,6 +38,18 @@ export class YouTubeLiveStreamClient {
       liveStreamId,
       liveChatId,
     };
+  }
+
+  /** OAuth ログイン中ユーザー自身の channelId を取得する。 */
+  async resolveOwnChannelId(): Promise<string | null> {
+    const query = new URLSearchParams({
+      part: "id",
+      mine: "true",
+      maxResults: "1",
+    });
+    const url = `${this.configProvider.getDataApiBaseUrl()}/channels?${query.toString()}`;
+    const response = await this.request<YouTubeChannelsListResponseDto>(url);
+    return response.items[0]?.id ?? null;
   }
 
   /** 指定チャンネルで現在配信中のライブ配信IDを1件取得する。 */

@@ -22,9 +22,6 @@ pnpm dev
 最低限、利用する provider 側の設定が必要です。
 
 ```env
-# YouTube (comment-fetcher)
-YOUTUBE_TARGET_CHANNEL_ID=
-
 # YouTube OAuth (backend/auth)
 YOUTUBE_OAUTH_CLIENT_ID=
 # YOUTUBE_OAUTH_AUTHORIZATION_ENDPOINT=https://accounts.google.com/o/oauth2/v2/auth

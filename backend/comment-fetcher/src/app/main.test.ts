@@ -5,6 +5,7 @@ import { container } from "tsyringe";
 import { runCommentFetcherApp } from "./main.js";
 import { YouTubeLiveStreamRepository } from "../adapters/youtube/repository/live-stream.repository.js";
 import { YouTubeCommentRepository } from "../adapters/youtube/repository/comment.repository.js";
+import { YouTubeLiveStreamClient } from "../adapters/youtube/client/live-stream.client.js";
 import { TwitchLiveStreamRepository } from "../adapters/twitch/repository/live-stream.repository.js";
 import { TwitchCommentRepository } from "../adapters/twitch/repository/comment.repository.js";
 import { LiveStreamNotFoundError } from "../usecases/live-stream-detection/index.js";
@@ -24,10 +25,8 @@ const withMockedResolve = async (
   }
 };
 
-test("YOUTUBE_TARGET_CHANNEL_ID が未設定なら provider をスキップする", async () => {
-  const originalChannelId = process.env.YOUTUBE_TARGET_CHANNEL_ID;
+test("YouTube自身の channelId を解決できない場合は provider をスキップする", async () => {
   const originalTwitchChannelId = process.env.TWITCH_TARGET_CHANNEL_ID;
-  delete process.env.YOUTUBE_TARGET_CHANNEL_ID;
   delete process.env.TWITCH_TARGET_CHANNEL_ID;
 
   const warnings: unknown[][] = [];
@@ -42,6 +41,11 @@ test("YOUTUBE_TARGET_CHANNEL_ID が未設定なら provider をスキップす�
         if (token === YouTubeLiveStreamRepository) {
           return {
             findLiveStream: async () => null,
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === YouTubeLiveStreamClient) {
+          return {
+            resolveOwnChannelId: async () => null,
           } as unknown as ReturnType<ResolveFn>;
         }
         if (token === YouTubeCommentRepository) {
@@ -67,9 +71,6 @@ test("YOUTUBE_TARGET_CHANNEL_ID が未設定なら provider をスキップす�
     );
   } finally {
     console.warn = originalWarn;
-    if (originalChannelId) {
-      process.env.YOUTUBE_TARGET_CHANNEL_ID = originalChannelId;
-    }
     if (originalTwitchChannelId) {
       process.env.TWITCH_TARGET_CHANNEL_ID = originalTwitchChannelId;
     }
@@ -81,9 +82,7 @@ test("YOUTUBE_TARGET_CHANNEL_ID が未設定なら provider をスキップす�
 });
 
 test("LiveStreamNotFoundError はメッセージを出して終了する", async () => {
-  const originalChannelId = process.env.YOUTUBE_TARGET_CHANNEL_ID;
   const originalTwitchChannelId = process.env.TWITCH_TARGET_CHANNEL_ID;
-  process.env.YOUTUBE_TARGET_CHANNEL_ID = "channel-1";
   delete process.env.TWITCH_TARGET_CHANNEL_ID;
 
   const errors: unknown[][] = [];
@@ -100,6 +99,11 @@ test("LiveStreamNotFoundError はメッセージを出して終了する", async
             async findLiveStream() {
               throw new LiveStreamNotFoundError("channel-1", 1);
             },
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === YouTubeLiveStreamClient) {
+          return {
+            resolveOwnChannelId: async () => "channel-1",
           } as unknown as ReturnType<ResolveFn>;
         }
         if (token === YouTubeCommentRepository) {
@@ -125,11 +129,6 @@ test("LiveStreamNotFoundError はメッセージを出して終了する", async
     );
   } finally {
     console.error = originalError;
-    if (originalChannelId) {
-      process.env.YOUTUBE_TARGET_CHANNEL_ID = originalChannelId;
-    } else {
-      delete process.env.YOUTUBE_TARGET_CHANNEL_ID;
-    }
     if (originalTwitchChannelId) {
       process.env.TWITCH_TARGET_CHANNEL_ID = originalTwitchChannelId;
     } else {

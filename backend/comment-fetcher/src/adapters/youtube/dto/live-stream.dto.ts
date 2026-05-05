@@ -15,6 +15,15 @@ export type YouTubeSearchItemDto = {
   };
 };
 
+/** 認証中ユーザー自身のチャンネルID解決に使う。 */
+export type YouTubeChannelsListResponseDto = {
+  items: YouTubeChannelItemDto[];
+};
+
+export type YouTubeChannelItemDto = {
+  id?: string;
+};
+
 /** 配信動画の詳細問い合わせ結果。ライブチャットIDの取得に使う。 */
 export type YouTubeVideosListResponseDto = {
   items: YouTubeVideoItemDto[];
