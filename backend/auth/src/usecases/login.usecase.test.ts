@@ -117,15 +117,15 @@ test("login: browser -> callback -> exchange -> save を結線する", async () 
   const browserLauncher = new FakeBrowserLauncher();
   const callbackReceiver = new FakeCallbackReceiver();
 
-  const usecase = new LoginUsecase({
+  const usecase = new LoginUsecase(
     tokenStore,
     oauthClient,
     browserLauncher,
     callbackReceiver,
-    pkceGenerator: new FixedPkceGenerator(),
-    stateGenerator: new FixedStateGenerator(),
-    loginPolicy: new FixedLoginPolicy(),
-  });
+    new FixedPkceGenerator(),
+    new FixedStateGenerator(),
+    new FixedLoginPolicy(),
+  );
 
   await usecase.login("youtube");
 

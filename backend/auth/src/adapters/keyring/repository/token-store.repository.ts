@@ -1,4 +1,6 @@
 import { AsyncEntry } from "@napi-rs/keyring";
+import "reflect-metadata";
+import { injectable } from "tsyringe";
 import type { Provider } from "../../../provider.js";
 import type { TokenStore } from "../../../usecases/interfaces/token-store.interface.js";
 import {
@@ -41,6 +43,7 @@ function isTokenSetPlain(value: unknown): value is TokenSetPlain {
 /**
  * `TokenStore` の OS keychain 実装（`@napi-rs/keyring` / `AsyncEntry`）。
  */
+@injectable()
 export class KeyringTokenStoreRepository implements TokenStore {
   private readonly createEntry: (
     service: string,

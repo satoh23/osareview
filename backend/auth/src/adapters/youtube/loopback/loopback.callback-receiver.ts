@@ -2,6 +2,8 @@ import {
   createLoopbackOAuthCallbackServer,
   LoopbackOAuthError,
 } from "./loopback.server.js";
+import "reflect-metadata";
+import { injectable } from "tsyringe";
 import type {
   OAuthCallbackReceiver,
   OAuthCallbackSession,
@@ -38,6 +40,7 @@ class LoopbackCallbackSession implements OAuthCallbackSession {
   }
 }
 
+@injectable()
 export class YouTubeOAuthCallbackReceiver implements OAuthCallbackReceiver {
   async start(
     input: StartOAuthCallbackSessionInput,

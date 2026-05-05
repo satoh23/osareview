@@ -1,4 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
+import "reflect-metadata";
+import { injectable } from "tsyringe";
 import type {
   PkceGenerator,
   PkcePair,
@@ -17,6 +19,7 @@ export function toCodeChallengeS256(codeVerifier: string): string {
   return base64UrlEncode(digest);
 }
 
+@injectable()
 export class RandomPkceGenerator implements PkceGenerator {
   generate(): PkcePair {
     // RFC 7636: code_verifier は 43-128 文字。32 bytes を base64url 化すると 43 文字。

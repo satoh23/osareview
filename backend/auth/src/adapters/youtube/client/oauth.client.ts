@@ -4,8 +4,11 @@ import type {
   OAuthClient,
   RefreshAccessTokenInput,
 } from "../../../usecases/interfaces/oauth-client.interface.js";
+import "reflect-metadata";
+import { inject, injectable } from "tsyringe";
 import { TokenSet } from "../../../entities/token/token-set.js";
 import type { YouTubeOAuthConfigProvider } from "../../../infrastructure/youtube/config/oauth-config.js";
+import { AUTH_DI_TOKENS } from "../../../shared/di-tokens.js";
 
 type FetchLike = typeof fetch;
 
@@ -29,10 +32,12 @@ class YouTubeOAuthClientError extends Error {
   }
 }
 
+@injectable()
 export class YouTubeOAuthClient implements OAuthClient {
   private readonly fetchFn: FetchLike;
 
   constructor(
+    @inject(AUTH_DI_TOKENS.oauthConfigProvider)
     private readonly configProvider: YouTubeOAuthConfigProvider,
     options: { fetchFn?: FetchLike } = {},
   ) {

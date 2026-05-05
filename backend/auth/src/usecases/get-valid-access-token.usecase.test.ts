@@ -69,10 +69,7 @@ test("保存済みトークンが有効ならそのまま返す", async () => {
   const oauth = new StubOAuthClient();
   store.value = makeTokenSet({ accessToken: "live-token" });
 
-  const usecase = new GetValidAccessTokenUsecase({
-    tokenStore: store,
-    oauthClient: oauth,
-  });
+  const usecase = new GetValidAccessTokenUsecase(store, oauth);
 
   const result = await usecase.getValidAccessToken("youtube");
   assert.equal(result, "live-token");
@@ -85,10 +82,7 @@ test("未ログインなら NotAuthorizedError", async () => {
   const store = new InMemoryTokenStore();
   const oauth = new StubOAuthClient();
 
-  const usecase = new GetValidAccessTokenUsecase({
-    tokenStore: store,
-    oauthClient: oauth,
-  });
+  const usecase = new GetValidAccessTokenUsecase(store, oauth);
 
   await assert.rejects(
     usecase.getValidAccessToken("youtube"),
@@ -113,10 +107,7 @@ test("期限切れなら refresh して保存した token を返す", async () =
       obtainedAt: Date.now(),
     });
 
-  const usecase = new GetValidAccessTokenUsecase({
-    tokenStore: store,
-    oauthClient: oauth,
-  });
+  const usecase = new GetValidAccessTokenUsecase(store, oauth);
 
   const result = await usecase.getValidAccessToken("youtube");
   assert.equal(result, "access-new");
@@ -137,10 +128,7 @@ test("refresh 失敗なら clear して NotAuthorizedError", async () => {
     throw new Error("invalid_grant");
   };
 
-  const usecase = new GetValidAccessTokenUsecase({
-    tokenStore: store,
-    oauthClient: oauth,
-  });
+  const usecase = new GetValidAccessTokenUsecase(store, oauth);
 
   await assert.rejects(
     usecase.getValidAccessToken("youtube"),
