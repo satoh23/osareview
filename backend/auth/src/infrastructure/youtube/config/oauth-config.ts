@@ -10,12 +10,14 @@ const DEFAULT_SCOPES = [
 ] as const;
 
 const ENV_CLIENT_ID = "YOUTUBE_OAUTH_CLIENT_ID";
+const ENV_CLIENT_SECRET = "YOUTUBE_OAUTH_CLIENT_SECRET";
 const ENV_AUTHORIZATION_ENDPOINT = "YOUTUBE_OAUTH_AUTHORIZATION_ENDPOINT";
 const ENV_TOKEN_ENDPOINT = "YOUTUBE_OAUTH_TOKEN_ENDPOINT";
 const ENV_SCOPES = "YOUTUBE_OAUTH_SCOPES";
 
 export interface YouTubeOAuthConfig {
   readonly clientId: string;
+  readonly clientSecret: string;
   readonly authorizationEndpoint: string;
   readonly tokenEndpoint: string;
   readonly scopes: readonly string[];
@@ -48,6 +50,12 @@ export class EnvYouTubeOAuthConfigProvider implements YouTubeOAuthConfigProvider
         `${ENV_CLIENT_ID} is required (set it in your environment or .env)`,
       );
     }
+    const clientSecret = process.env[ENV_CLIENT_SECRET]?.trim() ?? "";
+    if (clientSecret === "") {
+      throw new Error(
+        `${ENV_CLIENT_SECRET} is required (set it in your environment or .env)`,
+      );
+    }
     const authorizationEndpoint =
       process.env[ENV_AUTHORIZATION_ENDPOINT]?.trim() ||
       DEFAULT_AUTHORIZATION_ENDPOINT;
@@ -55,6 +63,7 @@ export class EnvYouTubeOAuthConfigProvider implements YouTubeOAuthConfigProvider
       process.env[ENV_TOKEN_ENDPOINT]?.trim() || DEFAULT_TOKEN_ENDPOINT;
     return {
       clientId,
+      clientSecret,
       authorizationEndpoint,
       tokenEndpoint,
       scopes: parseScopes(process.env[ENV_SCOPES]),

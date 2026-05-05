@@ -17,6 +17,7 @@ YouTube OAuth2 (Authorization Code + PKCE) とトークン保管を担当する�
 
 ```env
 YOUTUBE_OAUTH_CLIENT_ID=
+YOUTUBE_OAUTH_CLIENT_SECRET=
 # Optional overrides
 # YOUTUBE_OAUTH_AUTHORIZATION_ENDPOINT=https://accounts.google.com/o/oauth2/v2/auth
 # YOUTUBE_OAUTH_TOKEN_ENDPOINT=https://oauth2.googleapis.com/token

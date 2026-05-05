@@ -63,6 +63,7 @@ export class YouTubeOAuthClient implements OAuthClient {
     const config = this.configProvider.getOAuthConfig();
     const payload = new URLSearchParams();
     payload.set("client_id", config.clientId);
+    payload.set("client_secret", config.clientSecret);
     payload.set("grant_type", "authorization_code");
     payload.set("code", input.code);
     payload.set("code_verifier", input.codeVerifier);
@@ -81,6 +82,7 @@ export class YouTubeOAuthClient implements OAuthClient {
     const config = this.configProvider.getOAuthConfig();
     const payload = new URLSearchParams();
     payload.set("client_id", config.clientId);
+    payload.set("client_secret", config.clientSecret);
     payload.set("grant_type", "refresh_token");
     payload.set("refresh_token", input.refreshToken);
     const response = await this.fetchFn(config.tokenEndpoint, {

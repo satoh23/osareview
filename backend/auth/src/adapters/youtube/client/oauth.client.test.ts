@@ -7,6 +7,19 @@ class StubConfigProvider implements YouTubeOAuthConfigProvider {
   getOAuthConfig() {
     return {
       clientId: "client-id-1",
+      clientSecret: "client-secret-default",
+      authorizationEndpoint: "https://accounts.example.com/auth",
+      tokenEndpoint: "https://accounts.example.com/token",
+      scopes: ["scope.default"],
+    };
+  }
+}
+
+class StubConfigProviderWithSecret implements YouTubeOAuthConfigProvider {
+  getOAuthConfig() {
+    return {
+      clientId: "client-id-1",
+      clientSecret: "client-secret-1",
       authorizationEndpoint: "https://accounts.example.com/auth",
       tokenEndpoint: "https://accounts.example.com/token",
       scopes: ["scope.default"],
@@ -91,6 +104,36 @@ test("refresh: response に refresh_token が無ければ入力値を引き継�
   const tokenSet = await client.refresh({ refreshToken: "refresh-original" });
   assert.equal(tokenSet.refreshToken, "refresh-original");
   assert.equal(tokenSet.accessToken, "access-2");
+});
+
+test("exchange/refresh: client_secret があれば payload に含める", async () => {
+  const bodies: string[] = [];
+  const client = new YouTubeOAuthClient(new StubConfigProviderWithSecret(), {
+    fetchFn: async (_input, init) => {
+      bodies.push(String(init?.body));
+      return new Response(
+        JSON.stringify({
+          access_token: "access-2",
+          refresh_token: "refresh-2",
+          expires_in: 1200,
+          scope: "scope.a",
+          token_type: "Bearer",
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    },
+  });
+
+  await client.exchange({
+    code: "code-1",
+    codeVerifier: "verifier-1",
+    redirectUri: "http://127.0.0.1:3000/callback",
+  });
+  await client.refresh({ refreshToken: "refresh-original" });
+
+  assert.equal(bodies.length, 2);
+  assert.match(bodies[0] ?? "", /client_secret=client-secret-1/);
+  assert.match(bodies[1] ?? "", /client_secret=client-secret-1/);
 });
 
 test("token endpoint がエラーJSONを返したら YouTubeOAuthClientError", async () => {

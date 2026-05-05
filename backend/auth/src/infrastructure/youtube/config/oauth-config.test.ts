@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { EnvYouTubeOAuthConfigProvider } from "./oauth-config.js";
 
 const ENV_CLIENT_ID = "YOUTUBE_OAUTH_CLIENT_ID";
+const ENV_CLIENT_SECRET = "YOUTUBE_OAUTH_CLIENT_SECRET";
 const ENV_AUTHORIZATION_ENDPOINT = "YOUTUBE_OAUTH_AUTHORIZATION_ENDPOINT";
 const ENV_TOKEN_ENDPOINT = "YOUTUBE_OAUTH_TOKEN_ENDPOINT";
 const ENV_SCOPES = "YOUTUBE_OAUTH_SCOPES";
@@ -48,6 +49,24 @@ test("EnvYouTubeOAuthConfigProvider: client_id 必須（未設定なら例外）
   });
 });
 
+test("EnvYouTubeOAuthConfigProvider: client_secret 必須（未設定なら例外）", () => {
+  withEnv(
+    {
+      [ENV_CLIENT_ID]: "id",
+      [ENV_CLIENT_SECRET]: undefined,
+    },
+    () => {
+      const provider = new EnvYouTubeOAuthConfigProvider();
+      assert.throws(
+        () => provider.getOAuthConfig(),
+        (err: unknown) =>
+          err instanceof Error &&
+          err.message.includes("YOUTUBE_OAUTH_CLIENT_SECRET is required"),
+      );
+    },
+  );
+});
+
 test("EnvYouTubeOAuthConfigProvider: 空文字の client_id は例外", () => {
   withEnv({ [ENV_CLIENT_ID]: "   " }, () => {
     const provider = new EnvYouTubeOAuthConfigProvider();
@@ -59,6 +78,7 @@ test("EnvYouTubeOAuthConfigProvider: 既定の endpoints / scopes", () => {
   withEnv(
     {
       [ENV_CLIENT_ID]: "test-client-id",
+      [ENV_CLIENT_SECRET]: "test-client-secret",
       [ENV_AUTHORIZATION_ENDPOINT]: undefined,
       [ENV_TOKEN_ENDPOINT]: undefined,
       [ENV_SCOPES]: undefined,
@@ -83,6 +103,7 @@ test("EnvYouTubeOAuthConfigProvider: 環境変数で endpoints / scopes を上�
   withEnv(
     {
       [ENV_CLIENT_ID]: "id",
+      [ENV_CLIENT_SECRET]: "secret",
       [ENV_AUTHORIZATION_ENDPOINT]: "https://example.com/auth",
       [ENV_TOKEN_ENDPOINT]: "https://example.com/token",
       [ENV_SCOPES]: "a b  c",
@@ -101,12 +122,27 @@ test("EnvYouTubeOAuthConfigProvider: scopes はカンマ区切りも可", () => 
   withEnv(
     {
       [ENV_CLIENT_ID]: "id",
+      [ENV_CLIENT_SECRET]: "secret",
       [ENV_SCOPES]: "scope/one,scope/two",
     },
     () => {
       const provider = new EnvYouTubeOAuthConfigProvider();
       const config = provider.getOAuthConfig();
       assert.deepEqual(config.scopes, ["scope/one", "scope/two"]);
+    },
+  );
+});
+
+test("EnvYouTubeOAuthConfigProvider: client_secret を読み込む", () => {
+  withEnv(
+    {
+      [ENV_CLIENT_ID]: "id",
+      [ENV_CLIENT_SECRET]: "secret-1",
+    },
+    () => {
+      const provider = new EnvYouTubeOAuthConfigProvider();
+      const config = provider.getOAuthConfig();
+      assert.equal(config.clientSecret, "secret-1");
     },
   );
 });
