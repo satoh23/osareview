@@ -22,9 +22,14 @@ pnpm dev
 最低限、利用する provider 側の設定が必要です。
 
 ```env
-# YouTube
-YOUTUBE_ACCESS_TOKEN=
+# YouTube (comment-fetcher)
 YOUTUBE_TARGET_CHANNEL_ID=
+
+# YouTube OAuth (backend/auth)
+YOUTUBE_OAUTH_CLIENT_ID=
+# YOUTUBE_OAUTH_AUTHORIZATION_ENDPOINT=https://accounts.google.com/o/oauth2/v2/auth
+# YOUTUBE_OAUTH_TOKEN_ENDPOINT=https://oauth2.googleapis.com/token
+# YOUTUBE_OAUTH_SCOPES=https://www.googleapis.com/auth/youtube.readonly
 
 # Twitch
 TWITCH_ACCESS_TOKEN=
@@ -34,6 +39,13 @@ TWITCH_TARGET_CHANNEL_ID=   # login 名（例: twitchdev）
 # Optional
 # TWITCH_HELIX_API_BASE_URL=https://api.twitch.tv/helix
 # TWITCH_EVENTSUB_WS_URL=wss://eventsub.wss.twitch.tv/ws
+```
+
+YouTube は `YOUTUBE_ACCESS_TOKEN` を直接設定せず、`@comment-dock/auth` を通して OAuth ログインします。
+初回は次を実行してください。
+
+```bash
+pnpm --filter @comment-dock/auth login youtube
 ```
 
 ## ディレクトリ構成
@@ -95,7 +107,5 @@ pnpm --filter @comment-dock/comment-fetcher check-types
 
 ## 今後の主タスク
 
-- OAuth2 + PKCE の正式実装（`.env` 直読みから移行）
-- token refresh / secure storage
 - provider ごとの障害分離（片系エラー時も他系継続）
 - コメントポリシー拡張（例: Twitch 絵文字のみ投稿の扱い）
