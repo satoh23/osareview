@@ -3,10 +3,16 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "bin": {
+    "comment-dock-auth": "dist/cli.js"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "login": "tsx src/cli.ts login",
+    "logout": "tsx src/cli.ts logout",
+    "auth:cli": "tsx src/cli.ts",
     "check-types": "tsc --noEmit",
     "test": "tsx --test \"src/**/*.test.ts\""
   },
