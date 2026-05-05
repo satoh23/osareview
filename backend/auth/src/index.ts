@@ -16,6 +16,7 @@ import {
 } from "./usecases/get-valid-access-token.usecase.js";
 import { RefreshAccessTokenUsecase } from "./usecases/refresh-access-token.usecase.js";
 import { AUTH_DI_TOKENS } from "./shared/di-tokens.js";
+import { DEFAULT_ACCESS_TOKEN_CLOCK_SKEW_MS } from "./entities/token/token-set.js";
 import type {
   BrowserLauncher,
   LoginPolicy,
@@ -75,9 +76,9 @@ export function createAuthClient(
   c.register<LoginPolicy>(AUTH_DI_TOKENS.loginPolicy, {
     useClass: YouTubeLoginPolicy,
   });
-  c.registerInstance<number | undefined>(
+  c.registerInstance<number>(
     AUTH_DI_TOKENS.accessTokenClockSkewMs,
-    options.accessTokenClockSkewMs,
+    options.accessTokenClockSkewMs ?? DEFAULT_ACCESS_TOKEN_CLOCK_SKEW_MS,
   );
 
   const tokenStore = c.resolve<TokenStore>(AUTH_DI_TOKENS.tokenStore);

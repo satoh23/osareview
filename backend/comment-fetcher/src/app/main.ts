@@ -24,6 +24,10 @@ import { CommentPresenter } from "../adapters/presenters/comment.presenter.js";
 
 type CommentProvider = CommentSource;
 
+export type RunCommentFetcherAppOptions = {
+  youtubeTargetChannelId?: string;
+};
+
 type CommentFetchPipeline = {
   provider: CommentProvider;
   resolveTargetChannelId: () => Promise<string | null>;
@@ -35,7 +39,9 @@ type CommentFetchPipeline = {
   ) => CollectCommentsStream;
 };
 
-const createYouTubePipeline = (): CommentFetchPipeline => {
+const createYouTubePipeline = (
+  options: RunCommentFetcherAppOptions,
+): CommentFetchPipeline => {
   const liveStreamRepository = container.resolve(YouTubeLiveStreamRepository);
   const liveStreamClient = container.resolve(YouTubeLiveStreamClient);
   const commentRepository = container.resolve(YouTubeCommentRepository);
@@ -49,6 +55,10 @@ const createYouTubePipeline = (): CommentFetchPipeline => {
   return {
     provider: COMMENT_SOURCES.YOUTUBE,
     resolveTargetChannelId: async () => {
+      if (options.youtubeTargetChannelId) {
+        return options.youtubeTargetChannelId;
+      }
+
       const ownChannelId = await liveStreamClient.resolveOwnChannelId();
       if (!ownChannelId) {
         console.warn(
@@ -138,10 +148,12 @@ const collectComments = async (
  * コメント取得アプリの実行エントリポイント。
  * 有効な provider の収集フローを組み立てて並列実行する。
  */
-export const runCommentFetcherApp = async (): Promise<void> => {
+export const runCommentFetcherApp = async (
+  options: RunCommentFetcherAppOptions = {},
+): Promise<void> => {
   const presenter = new CommentPresenter();
   const pipelines: CommentFetchPipeline[] = [
-    createYouTubePipeline(),
+    createYouTubePipeline(options),
     createTwitchPipeline(),
   ];
 
