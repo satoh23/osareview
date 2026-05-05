@@ -1,12 +1,12 @@
 import { inject, injectable } from "tsyringe";
 import { NotAuthorizedError, type AuthClient } from "@comment-dock/auth";
 import type { AccessTokenProvider } from "../../../infrastructure/shared/auth/access-token-provider.js";
-import { YOUTUBE_DI_TOKENS } from "./di-tokens.js";
+import { SHARED_AUTH_DI_TOKENS } from "../../../infrastructure/shared/auth/di-tokens.js";
 
 @injectable()
 export class YouTubeAccessTokenProvider implements AccessTokenProvider {
   constructor(
-    @inject(YOUTUBE_DI_TOKENS.authClient)
+    @inject(SHARED_AUTH_DI_TOKENS.authClient)
     private readonly authClient: AuthClient,
   ) {}
 

@@ -18,6 +18,7 @@ import { YouTubeLiveStreamClient } from "./adapters/youtube/client/live-stream.c
 import { YouTubeLiveStreamRepository } from "./adapters/youtube/repository/live-stream.repository.js";
 import { runCommentFetcherApp } from "./app/main.js";
 import { SHARED_DI_TOKENS } from "./infrastructure/shared/http/http-client.js";
+import { SHARED_AUTH_DI_TOKENS } from "./infrastructure/shared/auth/di-tokens.js";
 import { EnvTwitchConfigProvider } from "./infrastructure/twitch/config/api-config.js";
 import { EnvYouTubeConfigProvider } from "./infrastructure/youtube/config/api-config.js";
 
@@ -30,7 +31,7 @@ dotenv.config({
 container.register(SHARED_DI_TOKENS.httpClient, {
   useValue: fetch,
 });
-container.register<AuthClient>(YOUTUBE_DI_TOKENS.authClient, {
+container.register<AuthClient>(SHARED_AUTH_DI_TOKENS.authClient, {
   useValue: createAuthClient(),
 });
 container.register(YOUTUBE_DI_TOKENS.accessTokenProvider, {
