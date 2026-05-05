@@ -9,6 +9,7 @@ import { LoopbackOAuthCallbackReceiver } from "./adapters/shared/loopback/loopba
 import { RandomPkceGenerator } from "./adapters/shared/pkce/pkce.js";
 import { RandomStateGenerator } from "./adapters/shared/state/random-state.generator.js";
 import { YouTubeLoginPolicy } from "./adapters/youtube/config/login-policy.js";
+import { AuthorizationCodeLoopbackLoginStrategy } from "./adapters/shared/login/authorization-code-loopback-login-strategy.js";
 import { LoginUsecase } from "./usecases/login.usecase.js";
 import {
   GetValidAccessTokenUsecase,
@@ -20,6 +21,7 @@ import { DEFAULT_ACCESS_TOKEN_CLOCK_SKEW_MS } from "./entities/token/token-set.j
 import type {
   BrowserLauncher,
   LoginPolicy,
+  LoginStrategy,
   OAuthCallbackReceiver,
   OAuthClient,
   PkceGenerator,
@@ -75,6 +77,9 @@ export function createAuthClient(
   });
   c.register<LoginPolicy>(AUTH_DI_TOKENS.loginPolicy, {
     useClass: YouTubeLoginPolicy,
+  });
+  c.register<LoginStrategy>(AUTH_DI_TOKENS.loginStrategy, {
+    useClass: AuthorizationCodeLoopbackLoginStrategy,
   });
   c.registerInstance<number>(
     AUTH_DI_TOKENS.accessTokenClockSkewMs,

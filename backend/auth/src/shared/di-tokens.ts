@@ -6,6 +6,7 @@ export const AUTH_DI_TOKENS = {
   pkceGenerator: Symbol("auth.pkceGenerator"),
   stateGenerator: Symbol("auth.stateGenerator"),
   loginPolicy: Symbol("auth.loginPolicy"),
+  loginStrategy: Symbol("auth.loginStrategy"),
   oauthConfigProvider: Symbol("auth.oauthConfigProvider"),
   accessTokenClockSkewMs: Symbol("auth.accessTokenClockSkewMs"),
 } as const;
