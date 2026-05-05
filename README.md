@@ -93,6 +93,20 @@ pnpm --filter @comment-dock/auth login youtube
 pnpm dev:comment-fetcher
 ```
 
+### Twitch OAuth 初期ログイン
+
+Twitch は Device Code Flow（Public client）を使います。  
+`TWITCH_OAUTH_CLIENT_SECRET` は不要です。
+
+1. Twitch Developer Console でアプリを Public client として作成
+2. ルート `.env` に `TWITCH_CLIENT_ID` を設定
+3. 次を実行して認可
+
+```bash
+pnpm --filter @comment-dock/auth login twitch
+pnpm dev:comment-fetcher
+```
+
 ### ビルド
 
 ```bash

@@ -29,7 +29,6 @@ YOUTUBE_OAUTH_CLIENT_ID=
 # YOUTUBE_OAUTH_SCOPES=https://www.googleapis.com/auth/youtube.readonly
 
 # Twitch
-TWITCH_ACCESS_TOKEN=
 TWITCH_CLIENT_ID=
 TWITCH_TARGET_CHANNEL_ID=   # login 名（例: twitchdev）
 
@@ -38,11 +37,12 @@ TWITCH_TARGET_CHANNEL_ID=   # login 名（例: twitchdev）
 # TWITCH_EVENTSUB_WS_URL=wss://eventsub.wss.twitch.tv/ws
 ```
 
-YouTube は `YOUTUBE_ACCESS_TOKEN` を直接設定せず、`@comment-dock/auth` を通して OAuth ログインします。
+YouTube / Twitch ともにアクセストークンを直接設定せず、`@comment-dock/auth` を通して OAuth ログインします。
 初回は次を実行してください。
 
 ```bash
 pnpm --filter @comment-dock/auth login youtube
+pnpm --filter @comment-dock/auth login twitch
 ```
 
 ## ディレクトリ構成

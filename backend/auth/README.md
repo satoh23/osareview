@@ -1,6 +1,6 @@
 # @comment-dock/auth
 
-YouTube OAuth2 (Authorization Code + PKCE) とトークン保管を担当するライブラリです。
+YouTube / Twitch OAuth とトークン保管を担当するライブラリです。
 
 ## 役割
 
@@ -22,6 +22,12 @@ YOUTUBE_OAUTH_CLIENT_SECRET=
 # YOUTUBE_OAUTH_AUTHORIZATION_ENDPOINT=https://accounts.google.com/o/oauth2/v2/auth
 # YOUTUBE_OAUTH_TOKEN_ENDPOINT=https://oauth2.googleapis.com/token
 # YOUTUBE_OAUTH_SCOPES=https://www.googleapis.com/auth/youtube.readonly
+
+TWITCH_CLIENT_ID=
+# Optional overrides
+# TWITCH_OAUTH_DEVICE_AUTHORIZATION_ENDPOINT=https://id.twitch.tv/oauth2/device
+# TWITCH_OAUTH_TOKEN_ENDPOINT=https://id.twitch.tv/oauth2/token
+# TWITCH_OAUTH_SCOPES=user:read:chat
 ```
 
 ## 使い方（ライブラリ）
@@ -34,6 +40,14 @@ await authClient.login("youtube");
 const accessToken = await authClient.getValidAccessToken("youtube");
 ```
 
+Twitch も同じ API で利用できます。
+
+```ts
+const authClient = createAuthClient();
+await authClient.login("twitch");
+const accessToken = await authClient.getValidAccessToken("twitch");
+```
+
 ## 使い方（CLI）
 
 初期セットアップや動作確認で使えます。
@@ -41,7 +55,24 @@ const accessToken = await authClient.getValidAccessToken("youtube");
 ```bash
 pnpm --filter @comment-dock/auth login youtube
 pnpm --filter @comment-dock/auth logout youtube
+pnpm --filter @comment-dock/auth login twitch
+pnpm --filter @comment-dock/auth logout twitch
 ```
+
+## Twitch セットアップ（Device Code Flow）
+
+Twitch は Desktop/Electron 系クライアント向けに Device Code Flow を使います。  
+`client_secret` は使いません（`TWITCH_OAUTH_CLIENT_SECRET` は不要です）。
+
+1. Twitch Developer Console でアプリを Public client として作成する
+2. ルート `.env` に `TWITCH_CLIENT_ID` を設定する
+3. ログインを実行する
+
+```bash
+pnpm --filter @comment-dock/auth login twitch
+```
+
+実行後、ブラウザで認可を完了すると token が保存されます。
 
 ## エラー
 
