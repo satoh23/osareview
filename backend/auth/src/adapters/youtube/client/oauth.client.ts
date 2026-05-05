@@ -4,6 +4,10 @@ import type {
   OAuthClient,
 } from "../../../usecases/interfaces/oauth-client.interface.js";
 import { RefreshAccessTokenInput } from "../../../usecases/interfaces/oauth-token-refresher.interface.js";
+import type {
+  YouTubeTokenErrorResponse,
+  YouTubeTokenSuccessResponse,
+} from "../dto/oauth.dto.js";
 import "reflect-metadata";
 import { inject, injectable } from "tsyringe";
 import { TokenSet } from "../../../entities/token/token-set.js";
@@ -11,19 +15,6 @@ import type { YouTubeOAuthConfigProvider } from "../../../infrastructure/youtube
 import { AUTH_DI_TOKENS } from "../../../shared/di-tokens.js";
 
 type FetchLike = typeof fetch;
-
-type YouTubeTokenSuccessResponse = {
-  readonly access_token: string;
-  readonly token_type: string;
-  readonly expires_in: number;
-  readonly scope: string;
-  readonly refresh_token?: string;
-};
-
-type YouTubeTokenErrorResponse = {
-  readonly error?: string;
-  readonly error_description?: string;
-};
 
 class YouTubeOAuthClientError extends Error {
   constructor(message: string) {
@@ -46,6 +37,7 @@ export class YouTubeOAuthClient implements OAuthClient {
 
   authorize(request: AuthorizationRequest): URL {
     const config = this.configProvider.getOAuthConfig();
+
     const url = new URL(config.authorizationEndpoint);
     url.searchParams.set("client_id", config.clientId);
     url.searchParams.set("response_type", "code");
@@ -61,6 +53,7 @@ export class YouTubeOAuthClient implements OAuthClient {
 
   async exchange(input: ExchangeAuthorizationCodeInput): Promise<TokenSet> {
     const config = this.configProvider.getOAuthConfig();
+
     const payload = new URLSearchParams();
     payload.set("client_id", config.clientId);
     payload.set("client_secret", config.clientSecret);
@@ -73,13 +66,16 @@ export class YouTubeOAuthClient implements OAuthClient {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: payload,
     });
+
     const json = await this.readJson(response);
     const token = this.parseTokenResponse(json);
+
     return this.toTokenSet(token, token.refresh_token);
   }
 
   async refresh(input: RefreshAccessTokenInput): Promise<TokenSet> {
     const config = this.configProvider.getOAuthConfig();
+
     const payload = new URLSearchParams();
     payload.set("client_id", config.clientId);
     payload.set("client_secret", config.clientSecret);
@@ -90,13 +86,16 @@ export class YouTubeOAuthClient implements OAuthClient {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: payload,
     });
+
     const json = await this.readJson(response);
     const token = this.parseTokenResponse(json);
+
     return this.toTokenSet(token, token.refresh_token ?? input.refreshToken);
   }
 
   private async readJson(response: Response): Promise<unknown> {
     let json: unknown;
+
     try {
       json = await response.json();
     } catch {
@@ -139,7 +138,9 @@ export class YouTubeOAuthClient implements OAuthClient {
     if (refreshToken === undefined || refreshToken === "") {
       throw new YouTubeOAuthClientError("refresh_token is missing.");
     }
+
     const obtainedAt = Date.now();
+
     return TokenSet.create({
       accessToken: token.access_token,
       refreshToken,
