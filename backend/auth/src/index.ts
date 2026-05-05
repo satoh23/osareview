@@ -4,9 +4,9 @@ import { container } from "tsyringe";
 import { KeyringTokenStoreRepository } from "./adapters/keyring/repository/token-store.repository.js";
 import { YouTubeOAuthClient } from "./adapters/youtube/client/oauth.client.js";
 import { EnvYouTubeOAuthConfigProvider } from "./infrastructure/youtube/config/oauth-config.js";
-import { OpenBrowserLauncher } from "./adapters/youtube/browser/browser.launcher.js";
-import { YouTubeOAuthCallbackReceiver } from "./adapters/youtube/loopback/loopback.callback-receiver.js";
-import { RandomPkceGenerator } from "./adapters/youtube/client/pkce.js";
+import { OpenBrowserLauncher } from "./adapters/shared/browser/browser.launcher.js";
+import { LoopbackOAuthCallbackReceiver } from "./adapters/shared/loopback/loopback.callback-receiver.js";
+import { RandomPkceGenerator } from "./adapters/shared/pkce/pkce.js";
 import { RandomStateGenerator } from "./adapters/shared/state/random-state.generator.js";
 import { YouTubeLoginPolicy } from "./adapters/youtube/config/login-policy.js";
 import { LoginUsecase } from "./usecases/login.usecase.js";
@@ -65,7 +65,7 @@ export function createAuthClient(
     useClass: OpenBrowserLauncher,
   });
   c.register<OAuthCallbackReceiver>(AUTH_DI_TOKENS.callbackReceiver, {
-    useClass: YouTubeOAuthCallbackReceiver,
+    useClass: LoopbackOAuthCallbackReceiver,
   });
   c.register<PkceGenerator>(AUTH_DI_TOKENS.pkceGenerator, {
     useClass: RandomPkceGenerator,

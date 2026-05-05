@@ -41,7 +41,7 @@ class LoopbackCallbackSession implements OAuthCallbackSession {
 }
 
 @injectable()
-export class YouTubeOAuthCallbackReceiver implements OAuthCallbackReceiver {
+export class LoopbackOAuthCallbackReceiver implements OAuthCallbackReceiver {
   async start(
     input: StartOAuthCallbackSessionInput,
   ): Promise<OAuthCallbackSession> {
