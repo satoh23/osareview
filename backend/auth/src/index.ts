@@ -14,6 +14,7 @@ import {
   GetValidAccessTokenUsecase,
   NotAuthorizedError,
 } from "./usecases/get-valid-access-token.usecase.js";
+import { RefreshAccessTokenUsecase } from "./usecases/refresh-access-token.usecase.js";
 import { AUTH_DI_TOKENS } from "./shared/di-tokens.js";
 import type {
   BrowserLauncher,
@@ -80,9 +81,9 @@ export function createAuthClient(
   );
 
   const tokenStore = c.resolve<TokenStore>(AUTH_DI_TOKENS.tokenStore);
-  const oauthClient = c.resolve<OAuthClient>(AUTH_DI_TOKENS.oauthClient);
   const loginUsecase = c.resolve(LoginUsecase);
   const getValidAccessTokenUsecase = c.resolve(GetValidAccessTokenUsecase);
+  const refreshAccessTokenUsecase = c.resolve(RefreshAccessTokenUsecase);
 
   return {
     async login(provider: Provider): Promise<void> {
@@ -97,23 +98,7 @@ export function createAuthClient(
 
     async refresh(provider: Provider): Promise<string> {
       assertSupportedProvider(provider);
-      const tokenSet = await tokenStore.get(provider);
-      if (tokenSet === null) {
-        throw new NotAuthorizedError("Not authorized. Please login first.");
-      }
-      try {
-        const refreshed = await oauthClient.refresh({
-          refreshToken: tokenSet.refreshToken,
-        });
-        await tokenStore.save(provider, refreshed);
-        return refreshed.accessToken;
-      } catch (err) {
-        await tokenStore.clear(provider);
-        throw new NotAuthorizedError(
-          "Authorization expired. Please login again.",
-          { cause: err },
-        );
-      }
+      return refreshAccessTokenUsecase.refresh(provider);
     },
 
     async logout(provider: Provider): Promise<void> {
