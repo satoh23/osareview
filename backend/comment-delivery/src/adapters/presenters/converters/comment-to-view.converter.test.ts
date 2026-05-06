@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import type { Comment } from "@comment-dock/comment-fetcher";
 import { COMMENT_EVENT_TYPES, COMMENT_SOURCES } from "@comment-dock/shared";
-import { convertCommentDomainToViewDto } from "./comment-domain-to-view-dto.js";
+import { convertCommentToViewDto } from "./comment-to-view.converter.js";
 
 test("domain comment を CommentViewDto に変換できる", () => {
   const publishedAt = new Date("2026-05-06T08:00:00.000Z");
@@ -22,7 +22,7 @@ test("domain comment を CommentViewDto に変換できる", () => {
     },
   };
 
-  const actual = convertCommentDomainToViewDto(comment);
+  const actual = convertCommentToViewDto(comment);
 
   assert.deepEqual(actual, {
     id: "comment-1",
@@ -54,7 +54,7 @@ test("monetaryAmount が無いコメントも変換できる", () => {
     eventType: COMMENT_EVENT_TYPES.SUBSCRIPTION,
   };
 
-  const actual = convertCommentDomainToViewDto(comment);
+  const actual = convertCommentToViewDto(comment);
 
   assert.equal(actual.monetaryAmount, undefined);
 });

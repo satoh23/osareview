@@ -1,9 +1,7 @@
 import type { Comment } from "@comment-dock/comment-fetcher";
 import type { CommentViewDto } from "@comment-dock/shared";
 
-export const convertCommentDomainToViewDto = (
-  comment: Comment,
-): CommentViewDto => {
+export const convertCommentToViewDto = (comment: Comment): CommentViewDto => {
   return {
     id: comment.id,
     source: comment.source,
