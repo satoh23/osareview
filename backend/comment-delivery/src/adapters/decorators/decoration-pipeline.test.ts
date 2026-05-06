@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { COMMENT_EVENT_TYPES, COMMENT_SOURCES } from "@comment-dock/shared";

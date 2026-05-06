@@ -3,6 +3,8 @@ import type { CommentViewDto } from "@comment-dock/shared";
 import { injectAll, injectable } from "tsyringe";
 import { DELIVERY_DI_TOKENS } from "../../infrastructure/shared/di-tokens.js";
 
+// 複数の出力先へ同じコメントを配る中継用ポート。
+// ここ自身は送信を行わず、WebSocket/Console など各出力先へ fanout する。
 @injectable()
 export class MultiCommentOutputPort implements CommentOutputPort {
   constructor(
