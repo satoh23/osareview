@@ -9,6 +9,7 @@ import { YouTubeLiveStreamClient } from "../adapters/youtube/client/live-stream.
 import { TwitchLiveStreamRepository } from "../adapters/twitch/repository/live-stream.repository.js";
 import { TwitchCommentRepository } from "../adapters/twitch/repository/comment.repository.js";
 import { LiveStreamNotFoundError } from "../usecases/live-stream-detection/index.js";
+import type { CommentOutputPort } from "../usecases/comment-collection/comment-collection.interface.js";
 
 type ResolveFn = typeof container.resolve;
 
@@ -23,6 +24,10 @@ const withMockedResolve = async (
   } finally {
     (container as { resolve: ResolveFn }).resolve = originalResolve;
   }
+};
+
+const noopOutputPort: CommentOutputPort = {
+  publish: async () => {},
 };
 
 test("YouTube自身の channelId を解決できない場合は provider をスキップする", async () => {
@@ -66,7 +71,7 @@ test("YouTube自身の channelId を解決できない場合は provider をス�
         throw new Error("unexpected token");
       }) as ResolveFn,
       async () => {
-        await runCommentFetcherApp();
+        await runCommentFetcherApp({}, noopOutputPort);
       },
     );
   } finally {
@@ -124,7 +129,7 @@ test("LiveStreamNotFoundError はメッセージを出して終了する", async
         throw new Error("unexpected token");
       }) as ResolveFn,
       async () => {
-        await runCommentFetcherApp();
+        await runCommentFetcherApp({}, noopOutputPort);
       },
     );
   } finally {
@@ -183,7 +188,10 @@ test("options で渡した YouTube channelId を優先して使う", async () =>
         throw new Error("unexpected token");
       }) as ResolveFn,
       async () => {
-        await runCommentFetcherApp({ youtubeTargetChannelId: "input-channel" });
+        await runCommentFetcherApp(
+          { youtubeTargetChannelId: "input-channel" },
+          noopOutputPort,
+        );
       },
     );
   } finally {

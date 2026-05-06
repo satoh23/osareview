@@ -16,11 +16,11 @@ import type {
   CollectCommentsInput,
   CollectCommentsStream,
 } from "../usecases/comment-collection/comment-collection.types.js";
+import type { CommentOutputPort } from "../usecases/comment-collection/comment-collection.interface.js";
 import type {
   FindLiveStreamInput,
   FindLiveStreamResult,
 } from "../usecases/live-stream-detection/live-stream-repository.interface.js";
-import { CommentPresenter } from "../adapters/presenters/comment.presenter.js";
 
 type CommentProvider = CommentSource;
 
@@ -110,7 +110,7 @@ const createTwitchPipeline = (): CommentFetchPipeline => {
 
 const collectComments = async (
   pipeline: CommentFetchPipeline,
-  presenter: CommentPresenter,
+  outputPort: CommentOutputPort,
 ): Promise<void> => {
   const channelId = await pipeline.resolveTargetChannelId();
   if (!channelId) {
@@ -130,7 +130,7 @@ const collectComments = async (
     for await (const comments of pipeline.streamCommentsFromLiveChat({
       liveChatId: activeLiveStream.liveChatId,
     })) {
-      presenter.present(comments);
+      await outputPort.publish(comments);
     }
   } catch (error) {
     if (error instanceof LiveStreamNotFoundError) {
@@ -150,8 +150,8 @@ const collectComments = async (
  */
 export const runCommentFetcherApp = async (
   options: RunCommentFetcherAppOptions = {},
+  outputPort: CommentOutputPort,
 ): Promise<void> => {
-  const presenter = new CommentPresenter();
   const pipelines: CommentFetchPipeline[] = [
     createYouTubePipeline(options),
     createTwitchPipeline(),
@@ -159,7 +159,7 @@ export const runCommentFetcherApp = async (
 
   await Promise.all(
     pipelines.map(async (pipeline) => {
-      await collectComments(pipeline, presenter);
+      await collectComments(pipeline, outputPort);
     }),
   );
 };
