@@ -23,31 +23,24 @@ export const registerCommentDeliveryDependencies = (
       useClass: IdentityDecorator,
     },
   );
-  targetContainer.register<CommentSource>(DELIVERY_DI_TOKENS.commentSource, {
-    useClass: CommentFetcherSource,
-  });
-  targetContainer.register<WebSocketConfigProvider>(
+  targetContainer.registerSingleton<CommentSource>(
+    DELIVERY_DI_TOKENS.commentSource,
+    CommentFetcherSource,
+  );
+  targetContainer.registerSingleton<WebSocketConfigProvider>(
     DELIVERY_DI_TOKENS.websocketConfigProvider,
-    {
-      useClass: EnvWebSocketConfigProvider,
-    },
+    EnvWebSocketConfigProvider,
   );
-  targetContainer.register<CommentOutputPort>(
+  targetContainer.registerSingleton<CommentOutputPort>(
     DELIVERY_DI_TOKENS.commentOutputTarget,
-    {
-      useClass: ConsoleCommentOutputPort,
-    },
+    ConsoleCommentOutputPort,
   );
-  targetContainer.register<CommentOutputPort>(
+  targetContainer.registerSingleton<CommentOutputPort>(
     DELIVERY_DI_TOKENS.commentOutputTarget,
-    {
-      useClass: WebSocketCommentOutputPort,
-    },
+    WebSocketCommentOutputPort,
   );
-  targetContainer.register<CommentOutputPort>(
+  targetContainer.registerSingleton<CommentOutputPort>(
     DELIVERY_DI_TOKENS.commentOutputPort,
-    {
-      useClass: MultiCommentOutputPort,
-    },
+    MultiCommentOutputPort,
   );
 };

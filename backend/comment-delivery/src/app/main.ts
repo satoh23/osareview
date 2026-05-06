@@ -14,6 +14,8 @@ export const runCommentDeliveryApp = async (
   );
 
   try {
+    // フロントが配信前から接続待機できるよう、起動時に出力ポートを初期化する。
+    await outputPort.outputToUi([]);
     await deliverCommentsUseCase.deliverToUi();
   } finally {
     await outputPort.close?.();
