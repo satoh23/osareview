@@ -39,6 +39,15 @@ type CommentFetchPipeline = {
   ) => CollectCommentsStream;
 };
 
+const isAuthorizationMissingError = (error: unknown): boolean => {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  return /access token is missing from AccessTokenProvider\./.test(
+    error.message,
+  );
+};
+
 const createYouTubePipeline = (
   options: RunCommentFetcherAppOptions,
 ): CommentFetchPipeline => {
@@ -112,12 +121,12 @@ const collectComments = async (
   pipeline: CommentFetchPipeline,
   outputPort: CommentOutputPort,
 ): Promise<void> => {
-  const channelId = await pipeline.resolveTargetChannelId();
-  if (!channelId) {
-    return;
-  }
-
   try {
+    const channelId = await pipeline.resolveTargetChannelId();
+    if (!channelId) {
+      return;
+    }
+
     const activeLiveStream = await pipeline.findActiveLiveStream({ channelId });
     console.info(
       `[comment-fetcher] ${pipeline.provider} live stream detected`,
@@ -133,6 +142,12 @@ const collectComments = async (
       await outputPort.outputComments(comments);
     }
   } catch (error) {
+    if (isAuthorizationMissingError(error)) {
+      console.warn(
+        `[comment-fetcher] ${pipeline.provider} is skipped because authorization is missing.`,
+      );
+      return;
+    }
     if (error instanceof LiveStreamNotFoundError) {
       console.error(
         `[comment-fetcher] ${pipeline.provider} live stream not found`,

@@ -19,7 +19,7 @@ type StreamListRuntime = {
 
 // 本番実行時に使うデフォルトruntime。
 // テスト時はコンストラクタ第3引数でモックruntimeを渡して差し替える。
-const DEFAULT_STREAM_LIST_RUNTIME: StreamListRuntime = {
+export const DEFAULT_STREAM_LIST_RUNTIME: StreamListRuntime = {
   loadSync: protoLoader.loadSync,
   loadPackageDefinition: grpc.loadPackageDefinition,
   createSsl: grpc.credentials.createSsl,
@@ -44,6 +44,7 @@ export class YouTubeApiClient {
     private readonly accessTokenProvider: AccessTokenProvider,
     @inject(YOUTUBE_DI_TOKENS.configProvider)
     private readonly configProvider: YouTubeConfigProvider,
+    @inject(YOUTUBE_DI_TOKENS.streamListRuntime)
     private readonly streamListRuntime: StreamListRuntime = DEFAULT_STREAM_LIST_RUNTIME,
   ) {}
 

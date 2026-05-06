@@ -17,7 +17,7 @@ type WebSocketRuntime = {
   createClient: (url: string) => WebSocket;
 };
 
-const DEFAULT_WEBSOCKET_RUNTIME: WebSocketRuntime = {
+export const DEFAULT_WEBSOCKET_RUNTIME: WebSocketRuntime = {
   createClient: (url) => new WebSocket(url),
 };
 
@@ -37,6 +37,7 @@ export class TwitchEventSubWebSocketClient {
     private readonly helixClient: TwitchHelixClient,
     @inject(TWITCH_DI_TOKENS.configProvider)
     private readonly configProvider: TwitchConfigProvider,
+    @inject(TWITCH_DI_TOKENS.eventSubWebSocketRuntime)
     private readonly runtime: WebSocketRuntime = DEFAULT_WEBSOCKET_RUNTIME,
   ) {}
 

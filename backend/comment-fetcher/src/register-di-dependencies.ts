@@ -5,11 +5,15 @@ import { YOUTUBE_DI_TOKENS } from "./adapters/youtube/access-token/di-tokens.js"
 import { TwitchAccessTokenProvider } from "./adapters/twitch/access-token/access-token-provider.js";
 import { TWITCH_DI_TOKENS } from "./adapters/twitch/access-token/di-tokens.js";
 import { TwitchHelixClient } from "./adapters/twitch/client/helix.client.js";
-import { TwitchEventSubWebSocketClient } from "./adapters/twitch/client/eventsub-websocket.client.js";
+import {
+  DEFAULT_WEBSOCKET_RUNTIME,
+  TwitchEventSubWebSocketClient,
+} from "./adapters/twitch/client/eventsub-websocket.client.js";
 import { TwitchLiveStreamClient } from "./adapters/twitch/client/live-stream.client.js";
 import { TwitchLiveStreamRepository } from "./adapters/twitch/repository/live-stream.repository.js";
 import { TwitchCommentRepository } from "./adapters/twitch/repository/comment.repository.js";
 import { YouTubeApiClient } from "./adapters/youtube/client/api.client.js";
+import { DEFAULT_STREAM_LIST_RUNTIME } from "./adapters/youtube/client/api.client.js";
 import { YouTubeLiveStreamClient } from "./adapters/youtube/client/live-stream.client.js";
 import { YouTubeLiveStreamRepository } from "./adapters/youtube/repository/live-stream.repository.js";
 import { SHARED_DI_TOKENS } from "./infrastructure/shared/http/http-client.js";
@@ -29,6 +33,9 @@ export const registerCommentFetcherDependencies = (): void => {
   });
   container.register(YOUTUBE_DI_TOKENS.apiClient, {
     useClass: YouTubeApiClient,
+  });
+  container.register(YOUTUBE_DI_TOKENS.streamListRuntime, {
+    useValue: DEFAULT_STREAM_LIST_RUNTIME,
   });
   container.register(YOUTUBE_DI_TOKENS.liveStreamClient, {
     useClass: YouTubeLiveStreamClient,
@@ -50,6 +57,9 @@ export const registerCommentFetcherDependencies = (): void => {
   });
   container.register(TWITCH_DI_TOKENS.eventSubClient, {
     useClass: TwitchEventSubWebSocketClient,
+  });
+  container.register(TWITCH_DI_TOKENS.eventSubWebSocketRuntime, {
+    useValue: DEFAULT_WEBSOCKET_RUNTIME,
   });
   container.register(TWITCH_DI_TOKENS.liveStreamClient, {
     useClass: TwitchLiveStreamClient,

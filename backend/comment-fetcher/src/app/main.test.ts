@@ -86,6 +86,145 @@ test("YouTube自身の channelId を解決できない場合は provider をス�
   assert.match(String(warnings[1]?.[0] ?? ""), /is skipped because/);
 });
 
+test("YouTube 未認可時は provider をスキップして継続する", async () => {
+  const originalTwitchChannelId = process.env.TWITCH_TARGET_CHANNEL_ID;
+  delete process.env.TWITCH_TARGET_CHANNEL_ID;
+
+  const warnings: unknown[][] = [];
+  const originalWarn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    warnings.push(args);
+  };
+
+  try {
+    await withMockedResolve(
+      ((token: unknown) => {
+        if (token === YouTubeLiveStreamRepository) {
+          return {
+            findLiveStream: async () => null,
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === YouTubeLiveStreamClient) {
+          return {
+            async resolveOwnChannelId() {
+              throw new Error(
+                "YouTube access token is missing from AccessTokenProvider.",
+              );
+            },
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === YouTubeCommentRepository) {
+          return {
+            async *streamComments() {},
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === TwitchLiveStreamRepository) {
+          return {
+            findLiveStream: async () => null,
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === TwitchCommentRepository) {
+          return {
+            async *streamComments() {},
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        throw new Error("unexpected token");
+      }) as ResolveFn,
+      async () => {
+        await runCommentFetcherApp({}, noopOutputPort);
+      },
+    );
+  } finally {
+    console.warn = originalWarn;
+    if (originalTwitchChannelId) {
+      process.env.TWITCH_TARGET_CHANNEL_ID = originalTwitchChannelId;
+    } else {
+      delete process.env.TWITCH_TARGET_CHANNEL_ID;
+    }
+  }
+
+  assert.equal(warnings.length, 2);
+  const warningTexts = warnings.map((entry) => String(entry[0] ?? ""));
+  assert.ok(
+    warningTexts.some((text) =>
+      /youtube is skipped because authorization is missing/.test(text),
+    ),
+  );
+  assert.ok(
+    warningTexts.some((text) => /twitch is skipped because/.test(text)),
+  );
+});
+
+test("Twitch 未認可時は provider をスキップして継続する", async () => {
+  const originalTwitchChannelId = process.env.TWITCH_TARGET_CHANNEL_ID;
+  process.env.TWITCH_TARGET_CHANNEL_ID = "target-channel";
+
+  const warnings: unknown[][] = [];
+  const originalWarn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    warnings.push(args);
+  };
+
+  try {
+    await withMockedResolve(
+      ((token: unknown) => {
+        if (token === YouTubeLiveStreamRepository) {
+          return {
+            findLiveStream: async () => null,
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === YouTubeLiveStreamClient) {
+          return {
+            resolveOwnChannelId: async () => null,
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === YouTubeCommentRepository) {
+          return {
+            async *streamComments() {},
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === TwitchLiveStreamRepository) {
+          return {
+            async findLiveStream() {
+              throw new Error(
+                "Twitch access token is missing from AccessTokenProvider.",
+              );
+            },
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === TwitchCommentRepository) {
+          return {
+            async *streamComments() {},
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        throw new Error("unexpected token");
+      }) as ResolveFn,
+      async () => {
+        await runCommentFetcherApp({}, noopOutputPort);
+      },
+    );
+  } finally {
+    console.warn = originalWarn;
+    if (originalTwitchChannelId) {
+      process.env.TWITCH_TARGET_CHANNEL_ID = originalTwitchChannelId;
+    } else {
+      delete process.env.TWITCH_TARGET_CHANNEL_ID;
+    }
+  }
+
+  const warningTexts = warnings.map((entry) => String(entry[0] ?? ""));
+  assert.ok(
+    warningTexts.some((text) =>
+      /youtube is skipped because own channel could not be resolved/.test(text),
+    ),
+  );
+  assert.ok(
+    warningTexts.some((text) =>
+      /twitch is skipped because authorization is missing/.test(text),
+    ),
+  );
+});
+
 test("LiveStreamNotFoundError はメッセージを出して終了する", async () => {
   const originalTwitchChannelId = process.env.TWITCH_TARGET_CHANNEL_ID;
   delete process.env.TWITCH_TARGET_CHANNEL_ID;

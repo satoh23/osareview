@@ -5,5 +5,6 @@ export const TWITCH_DI_TOKENS = {
   configProvider: "TwitchConfigProvider",
   helixClient: "TwitchHelixClient",
   eventSubClient: "TwitchEventSubWebSocketClient",
+  eventSubWebSocketRuntime: "TwitchEventSubWebSocketRuntime",
   commentRepository: "TwitchCommentRepository",
 } as const;
