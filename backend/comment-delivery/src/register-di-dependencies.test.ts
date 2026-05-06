@@ -5,6 +5,9 @@ import { container } from "tsyringe";
 import { COMMENT_EVENT_TYPES, COMMENT_SOURCES } from "@comment-dock/shared";
 import { DELIVERY_DI_TOKENS } from "./infrastructure/shared/di-tokens.js";
 import type { CommentDecorator } from "./usecases/interfaces/comment-decorator.interface.js";
+import { ConsoleCommentOutputPort } from "./adapters/output-ports/console-comment.output-port.js";
+import { MultiCommentOutputPort } from "./adapters/output-ports/multi-comment.output-port.js";
+import { WebSocketCommentOutputPort } from "./adapters/output-ports/websocket-comment.output-port.js";
 import { registerCommentDeliveryDependencies } from "./register-di-dependencies.js";
 
 test("register + resolveAll で複数デコレーターを登録順に解決できる", async () => {
@@ -36,4 +39,21 @@ test("register + resolveAll で複数デコレーターを登録順に解決で�
   assert.ok(resolved.length >= 2);
   assert.deepEqual(first, input);
   assert.equal(second?.text, "hello-extra");
+});
+
+test("出力ポートを DI で構成できる", () => {
+  const c = container.createChildContainer();
+  registerCommentDeliveryDependencies(c);
+
+  const outputPort = c.resolve(DELIVERY_DI_TOKENS.commentOutputPort);
+  const targets = c.resolveAll(DELIVERY_DI_TOKENS.commentOutputTarget);
+
+  assert.ok(outputPort instanceof MultiCommentOutputPort);
+  assert.equal(targets.length, 2);
+  assert.ok(
+    targets.some((target) => target instanceof ConsoleCommentOutputPort),
+  );
+  assert.ok(
+    targets.some((target) => target instanceof WebSocketCommentOutputPort),
+  );
 });
