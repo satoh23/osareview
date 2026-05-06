@@ -3,6 +3,59 @@
 配信プラットフォーム（YouTube / Twitch）からコメントを取得し、共通ドメインへ正規化して出力するバックエンドです。  
 現在は `console` 出力までを担い、将来的に認証認可（OAuth2 + PKCE）や配信先拡張を想定した構成になっています。
 
+## バックエンド全体の関係図
+
+```mermaid
+flowchart LR
+  subgraph External["External Services"]
+    YT["YouTube API"]
+    TW["Twitch Helix / EventSub"]
+    KC["OS Keychain"]
+  end
+
+  subgraph Backend["backend/*"]
+    AUTH["auth\nOAuth login / token refresh"]
+    FETCHER["comment-fetcher\n配信検知・コメント取得・共通化"]
+    DELIVERY["comment-delivery\n装飾・WebSocket 配信"]
+  end
+
+  UI["desktop (frontend)"]
+
+  YT --> FETCHER
+  TW --> FETCHER
+  FETCHER --> DELIVERY
+  DELIVERY --> UI
+  AUTH --> KC
+  FETCHER --> AUTH
+  DELIVERY --> FETCHER
+```
+
+```mermaid
+flowchart TD
+  subgraph Fetcher["comment-fetcher 内部"]
+    A["app/main\nprovider pipeline orchestration"]
+    U1["usecases/live-stream-detection"]
+    U2["usecases/comment-collection"]
+    R["adapters/*/repository"]
+    C["adapters/*/client"]
+    CFG["infrastructure/* config"]
+    E["entities/comment, user"]
+  end
+
+  A --> U1
+  A --> U2
+  U1 --> R
+  U2 --> R
+  R --> C
+  C --> CFG
+  U2 --> E
+```
+
+- `auth`: 各 provider の OAuth を担当し、トークンを安全に保存（Keychain）。
+- `comment-fetcher`: 外部APIと直接やり取りしてコメントを取得し、共通ドメインへ正規化。
+- `comment-delivery`: `comment-fetcher` をソースとして受け、必要なら装飾して WebSocket で配信。
+- `desktop`: `comment-delivery` の WebSocket を購読して表示するクライアント。
+
 ## 実行
 
 リポジトリルートで実行します。
@@ -24,6 +77,7 @@ pnpm dev
 ```env
 # YouTube OAuth (backend/auth)
 YOUTUBE_OAUTH_CLIENT_ID=
+YOUTUBE_OAUTH_CLIENT_SECRET=
 # YOUTUBE_OAUTH_AUTHORIZATION_ENDPOINT=https://accounts.google.com/o/oauth2/v2/auth
 # YOUTUBE_OAUTH_TOKEN_ENDPOINT=https://oauth2.googleapis.com/token
 # YOUTUBE_OAUTH_SCOPES=https://www.googleapis.com/auth/youtube.readonly
