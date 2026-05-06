@@ -27,7 +27,7 @@ const withMockedResolve = async (
 };
 
 const noopOutputPort: CommentOutputPort = {
-  publish: async () => {},
+  outputComments: async () => {},
 };
 
 test("YouTube自身の channelId を解決できない場合は provider をスキップする", async () => {

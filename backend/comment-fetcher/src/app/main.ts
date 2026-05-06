@@ -130,7 +130,7 @@ const collectComments = async (
     for await (const comments of pipeline.streamCommentsFromLiveChat({
       liveChatId: activeLiveStream.liveChatId,
     })) {
-      await outputPort.publish(comments);
+      await outputPort.outputComments(comments);
     }
   } catch (error) {
     if (error instanceof LiveStreamNotFoundError) {
