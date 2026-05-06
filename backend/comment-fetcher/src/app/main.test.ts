@@ -71,7 +71,10 @@ test("YouTube自身の channelId を解決できない場合は provider をス�
         throw new Error("unexpected token");
       }) as ResolveFn,
       async () => {
-        await runCommentFetcherApp({}, noopOutputPort);
+        await runCommentFetcherApp(
+          { retryOnLiveStreamNotFound: false },
+          noopOutputPort,
+        );
       },
     );
   } finally {
@@ -131,7 +134,10 @@ test("YouTube 未認可時は provider をスキップして継続する", async
         throw new Error("unexpected token");
       }) as ResolveFn,
       async () => {
-        await runCommentFetcherApp({}, noopOutputPort);
+        await runCommentFetcherApp(
+          { retryOnLiveStreamNotFound: false },
+          noopOutputPort,
+        );
       },
     );
   } finally {
@@ -200,7 +206,10 @@ test("Twitch 未認可時は provider をスキップして継続する", async 
         throw new Error("unexpected token");
       }) as ResolveFn,
       async () => {
-        await runCommentFetcherApp({}, noopOutputPort);
+        await runCommentFetcherApp(
+          { retryOnLiveStreamNotFound: false },
+          noopOutputPort,
+        );
       },
     );
   } finally {
@@ -225,14 +234,14 @@ test("Twitch 未認可時は provider をスキップして継続する", async 
   );
 });
 
-test("LiveStreamNotFoundError はメッセージを出して終了する", async () => {
+test("LiveStreamNotFoundError は再試行無効時に警告を出して終了する", async () => {
   const originalTwitchChannelId = process.env.TWITCH_TARGET_CHANNEL_ID;
   delete process.env.TWITCH_TARGET_CHANNEL_ID;
 
-  const errors: unknown[][] = [];
-  const originalError = console.error;
-  console.error = (...args: unknown[]) => {
-    errors.push(args);
+  const warnings: unknown[][] = [];
+  const originalWarn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    warnings.push(args);
   };
 
   try {
@@ -268,11 +277,14 @@ test("LiveStreamNotFoundError はメッセージを出して終了する", async
         throw new Error("unexpected token");
       }) as ResolveFn,
       async () => {
-        await runCommentFetcherApp({}, noopOutputPort);
+        await runCommentFetcherApp(
+          { retryOnLiveStreamNotFound: false },
+          noopOutputPort,
+        );
       },
     );
   } finally {
-    console.error = originalError;
+    console.warn = originalWarn;
     if (originalTwitchChannelId) {
       process.env.TWITCH_TARGET_CHANNEL_ID = originalTwitchChannelId;
     } else {
@@ -280,18 +292,20 @@ test("LiveStreamNotFoundError はメッセージを出して終了する", async
     }
   }
 
-  assert.equal(errors.length, 1);
-  assert.match(String(errors[0]?.[0] ?? ""), /live stream not found/);
+  const warningTexts = warnings.map((entry) => String(entry[0] ?? ""));
+  assert.ok(
+    warningTexts.some((text) => /youtube live stream not found/.test(text)),
+  );
 });
 
 test("options で渡した YouTube channelId を優先して使う", async () => {
   const originalTwitchChannelId = process.env.TWITCH_TARGET_CHANNEL_ID;
   delete process.env.TWITCH_TARGET_CHANNEL_ID;
 
-  const errors: unknown[][] = [];
-  const originalError = console.error;
-  console.error = (...args: unknown[]) => {
-    errors.push(args);
+  const warnings: unknown[][] = [];
+  const originalWarn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    warnings.push(args);
   };
 
   try {
@@ -328,13 +342,16 @@ test("options で渡した YouTube channelId を優先して使う", async () =>
       }) as ResolveFn,
       async () => {
         await runCommentFetcherApp(
-          { youtubeTargetChannelId: "input-channel" },
+          {
+            youtubeTargetChannelId: "input-channel",
+            retryOnLiveStreamNotFound: false,
+          },
           noopOutputPort,
         );
       },
     );
   } finally {
-    console.error = originalError;
+    console.warn = originalWarn;
     if (originalTwitchChannelId) {
       process.env.TWITCH_TARGET_CHANNEL_ID = originalTwitchChannelId;
     } else {
@@ -342,6 +359,9 @@ test("options で渡した YouTube channelId を優先して使う", async () =>
     }
   }
 
-  assert.equal(errors.length, 1);
-  assert.match(String(errors[0]?.[1] ?? ""), /input-channel/);
+  const notFoundWarning = warnings.find((entry) =>
+    /youtube live stream not found/.test(String(entry[0] ?? "")),
+  );
+  assert.ok(notFoundWarning);
+  assert.match(String(notFoundWarning[1] ?? ""), /input-channel/);
 });
