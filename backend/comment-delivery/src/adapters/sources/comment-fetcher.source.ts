@@ -1,5 +1,6 @@
 import {
   runCommentFetcherApp,
+  registerCommentFetcherDependencies,
   type Comment,
   type CommentOutputPort as FetcherCommentOutputPort,
   type RunCommentFetcherAppOptions,
@@ -12,14 +13,21 @@ type RunFetcher = (
   outputPort: FetcherCommentOutputPort,
 ) => Promise<void>;
 
+type RegisterFetcherDependencies = () => void;
+
 @injectable()
 export class CommentFetcherSource implements CommentSource {
+  private hasInitializedFetcherDependencies = false;
+
   constructor(
     private readonly runFetcher: RunFetcher = runCommentFetcherApp,
     private readonly options: RunCommentFetcherAppOptions = {},
+    private readonly registerFetcherDependencies: RegisterFetcherDependencies = registerCommentFetcherDependencies,
   ) {}
 
   async *receiveComments(): AsyncIterable<Comment[]> {
+    this.ensureFetcherDependenciesInitialized();
+
     const queue: Comment[][] = [];
     const state: {
       waitForNext: (() => void) | null;
@@ -76,5 +84,13 @@ export class CommentFetcherSource implements CommentSource {
         state.waitForNext = resolve;
       });
     }
+  }
+
+  private ensureFetcherDependenciesInitialized(): void {
+    if (this.hasInitializedFetcherDependencies) {
+      return;
+    }
+    this.registerFetcherDependencies();
+    this.hasInitializedFetcherDependencies = true;
   }
 }

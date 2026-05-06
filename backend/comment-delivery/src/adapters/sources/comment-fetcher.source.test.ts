@@ -32,7 +32,7 @@ test("CommentFetcherSource は fetcher output を receiveComments stream で受�
     await outputPort.outputComments([buildComment("c2"), buildComment("c3")]);
   };
 
-  const source = new CommentFetcherSource(runFetcher, {});
+  const source = new CommentFetcherSource(runFetcher, {}, () => {});
   const received: Comment[][] = [];
 
   for await (const comments of source.receiveComments()) {
@@ -51,7 +51,7 @@ test("CommentFetcherSource は fetcher エラーをそのまま呼び出し元�
   const runFetcher: RunFetcher = async () => {
     throw expectedError;
   };
-  const source = new CommentFetcherSource(runFetcher, {});
+  const source = new CommentFetcherSource(runFetcher, {}, () => {});
 
   await assert.rejects(
     async () => {
