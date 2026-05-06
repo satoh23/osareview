@@ -14,4 +14,11 @@ export type {
   CommentMonetaryAmountDto,
   CommentViewDto,
 } from "./comment/comment-view.dto.js";
+export { COMMENT_DELIVERY_MESSAGE_TYPES } from "./transport/comment-delivery-message.js";
+export type {
+  CommentDeliveryMessage,
+  CommentDeliveryMessageType,
+  CommentsAppendMessage,
+  CommentsBatchMessage,
+} from "./transport/comment-delivery-message.js";
 export type { UserSummaryDto } from "./user/user-summary.dto.js";
