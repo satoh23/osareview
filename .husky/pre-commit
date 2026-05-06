@@ -1,3 +1,12 @@
 #!/usr/bin/env sh
+export COREPACK_ENABLE_AUTO_PIN=0
+
+staged_files="$(git diff --cached --name-only --diff-filter=ACMR)"
+[ -z "$staged_files" ] && exit 0
+
 pnpm format
-git add .
+
+# もともとステージ済みだったファイルだけを再ステージする。
+for file in $staged_files; do
+  git add "$file"
+done
