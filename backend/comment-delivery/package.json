@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @comment-dock/auth build && pnpm --filter @comment-dock/comment-fetcher build && tsx watch src/index.ts",
+    "dev:mock-ws": "tsx scripts/mock-comment-delivery-server.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "check-types": "tsc --noEmit",

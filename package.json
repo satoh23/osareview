@@ -5,6 +5,7 @@
     "dev": "pnpm -r --parallel --if-present run dev",
     "dev:comment-fetcher": "pnpm --filter @comment-dock/comment-fetcher dev",
     "dev:comment-delivery": "pnpm --filter @comment-dock/comment-delivery dev",
+    "dev:comment-delivery-mock-ws": "pnpm --filter @comment-dock/comment-delivery dev:mock-ws",
     "dev:desktop": "pnpm --filter @comment-dock/desktop dev",
     "build": "pnpm -r --if-present run build",
     "preview": "pnpm -r --if-present run preview",

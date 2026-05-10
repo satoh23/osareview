@@ -84,6 +84,18 @@ pnpm tauri dev
 
 Tauri が内部で `pnpm dev` を実行し、Vite 開発サーバーとデスクトップアプリが立ち上がります。
 
+### 負荷試験・desktop 単体テスト（モック WebSocket）
+
+本番の `comment-fetcher` / `comment-delivery` の代わりに、同じ WS メッセージ形式でコメントを大量送信するモックがあります。コマンドとオプションの一覧は次を参照してください。
+
+- [backend/comment-delivery/README.md](backend/comment-delivery/README.md)（「テスト用モック WebSocket サーバー」）
+
+ルートからの起動例:
+
+```bash
+pnpm dev:comment-delivery-mock-ws
+```
+
 ### YouTube OAuth 初期ログイン
 
 YouTube コメント取得は `@comment-dock/auth` で OAuth ログインを行ってから実行します。
