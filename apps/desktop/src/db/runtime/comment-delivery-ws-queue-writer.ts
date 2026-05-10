@@ -42,7 +42,6 @@ function parseMessage(raw: string): CommentDeliveryMessage | null {
 export class CommentDeliveryWsQueueWriter {
   private readonly queue = new CommentWriteQueue({ intervalMs: 1000 });
   private readonly liveSessionIdByPlatform = new Map<DbPlatform, number>();
-  private readonly sessionKeySeed = new Date().toISOString();
   private socket: WebSocket | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private started = false;
@@ -138,8 +137,9 @@ export class CommentDeliveryWsQueueWriter {
 
     const created = await upsertLiveSession({
       platform,
-      platformLiveId: `ws-session-${platform}-${this.sessionKeySeed}`,
-      startedAt: this.sessionKeySeed,
+      // desktop が再起動しても同一配信を同じセッションとして扱うため、
+      // backend から実ライブIDを受け取るまでは platform ごとに固定キーを使う。
+      platformLiveId: `ws-session-${platform}`,
     });
     this.liveSessionIdByPlatform.set(platform, created);
     return created;
