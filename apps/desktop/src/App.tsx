@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { commentDeliveryWsQueueWriter } from "./db/runtime/comment-delivery-ws-queue-writer";
 import "./App.css";
 
@@ -10,8 +11,28 @@ function App() {
 
   useEffect(() => {
     commentDeliveryWsQueueWriter.start();
+
+    let closeHandled = false;
+    let unlistenCloseRequested: (() => void) | null = null;
+
+    void (async () => {
+      const window = getCurrentWebviewWindow();
+      unlistenCloseRequested = await window.onCloseRequested(async (event) => {
+        if (closeHandled) {
+          return;
+        }
+        closeHandled = true;
+        event.preventDefault();
+        await commentDeliveryWsQueueWriter.stop(true);
+        await window.destroy();
+      });
+    })();
+
     return () => {
-      void commentDeliveryWsQueueWriter.stop(false);
+      unlistenCloseRequested?.();
+      if (!closeHandled) {
+        void commentDeliveryWsQueueWriter.stop(true);
+      }
     };
   }, []);
 
