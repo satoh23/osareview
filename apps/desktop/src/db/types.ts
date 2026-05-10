@@ -35,6 +35,42 @@ export type InsertCommentInput = {
   commentedAt: string;
 };
 
+export type UpsertUserMemoInput = {
+  userId: number;
+  memo: string;
+};
+
+export type CreateTagInput = {
+  name: string;
+};
+
+export type DeleteTagInput = {
+  tagId: number;
+};
+
+export type LinkUserTagInput = {
+  userId: number;
+  tagId: number;
+};
+
+export type InsertPinnedCommentInput = {
+  userId: number;
+  commentId?: number | null;
+  pinnedText: string;
+  note?: string | null;
+};
+
+export type InsertSupportEventInput = {
+  platform: DbPlatform;
+  liveSessionId: number;
+  userId: number;
+  eventType: string;
+  amountMicros?: number | null;
+  currency?: string | null;
+  message?: string | null;
+  occurredAt: string;
+};
+
 /**
  * コメント書き込みキューの1要素。`liveSessionId` は既に存在する必要がある
  * （例: 配信接続時に行を作成）。キューはセッション行を作らない。
