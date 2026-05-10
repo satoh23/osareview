@@ -1,9 +1,10 @@
 import { getDatabase } from "../connection";
+import { firstRow } from "../select-helpers";
 import type { UpsertLiveSessionInput } from "../types";
 
 /**
- * Insert or update by `(platform, platform_live_id)`.
- * On conflict: fills in nullable fields when the caller passes non-null excluded values.
+ * `(platform, platform_live_id)` で INSERT または UPDATE。
+ * 競合時: 呼び出し元が非 null を渡した nullable 列だけ COALESCE で埋める。
  */
 export async function upsertLiveSession(
   input: UpsertLiveSessionInput,
@@ -28,7 +29,7 @@ export async function upsertLiveSession(
       input.endedAt ?? null,
     ],
   );
-  const row = Array.isArray(rows) ? rows[0] : rows;
+  const row = firstRow(rows);
   if (row === undefined || typeof row.id !== "number") {
     throw new Error("upsertLiveSession: expected RETURNING id row");
   }

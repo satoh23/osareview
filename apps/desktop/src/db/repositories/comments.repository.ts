@@ -1,4 +1,5 @@
 import { getDatabase } from "../connection";
+import { firstRow } from "../select-helpers";
 import type { InsertCommentInput } from "../types";
 
 export type InsertCommentResult =
@@ -6,8 +7,8 @@ export type InsertCommentResult =
   | { inserted: false; reason: "duplicate_platform_comment" };
 
 /**
- * Inserts one comment row. When `platform_comment_id` is set and already exists
- * for the same platform, the insert is skipped (partial unique index).
+ * コメントを1行 INSERT。`platform_comment_id` が同一 `platform` で既に存在する場合は
+ * スキップする（部分ユニークインデックス）。
  */
 export async function insertComment(
   input: InsertCommentInput,
@@ -21,8 +22,8 @@ export async function insertComment(
     `
     INSERT INTO comments (
       live_session_id, user_id, platform, platform_comment_id,
-      comment_text, comment_type, is_low_signal, commented_at, raw_payload_json
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      comment_text, comment_type, is_low_signal, commented_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     ON CONFLICT(platform, platform_comment_id) DO NOTHING
     RETURNING id
     `,
@@ -35,11 +36,10 @@ export async function insertComment(
       commentType,
       isLowSignal,
       input.commentedAt,
-      input.rawPayloadJson ?? null,
     ],
   );
 
-  const row = Array.isArray(rows) ? rows[0] : rows;
+  const row = firstRow(rows);
   if (row !== undefined && typeof row.id === "number") {
     return { inserted: true, id: row.id };
   }

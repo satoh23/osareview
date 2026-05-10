@@ -1,11 +1,11 @@
-/** Matches `CHECK (platform IN ('youtube','twitch'))` in migrations. */
+/** マイグレーションの `CHECK (platform IN ('youtube','twitch'))` に対応する型。 */
 export type DbPlatform = "youtube" | "twitch";
 
 export type UpsertUserInput = {
   platform: DbPlatform;
   platformUserId: string;
   displayName: string;
-  /** ISO 8601 UTC string; used for first/last seen on insert and last_seen on update. */
+  /** ISO 8601（UTC）文字列。INSERT 時は初回/最終閲覧、更新時は `last_seen` に使う。 */
   seenAt: string;
 };
 
@@ -20,7 +20,7 @@ export type UpsertLiveSessionInput = {
 export type UpsertLiveSessionUserInput = {
   liveSessionId: number;
   userId: number;
-  /** ISO 8601 UTC string for this comment event. */
+  /** このコメントイベントの ISO 8601（UTC）文字列。 */
   commentAt: string;
 };
 
@@ -33,5 +33,20 @@ export type InsertCommentInput = {
   commentType?: string;
   isLowSignal?: boolean;
   commentedAt: string;
-  rawPayloadJson?: string | null;
+};
+
+/**
+ * コメント書き込みキューの1要素。`liveSessionId` は既に存在する必要がある
+ * （例: 配信接続時に行を作成）。キューはセッション行を作らない。
+ */
+export type QueuedCommentWrite = {
+  liveSessionId: number;
+  platform: DbPlatform;
+  platformUserId: string;
+  displayName: string;
+  platformCommentId?: string | null;
+  commentText: string;
+  commentType?: string;
+  isLowSignal?: boolean;
+  commentedAt: string;
 };

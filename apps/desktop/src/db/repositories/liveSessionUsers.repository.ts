@@ -1,9 +1,10 @@
 import { getDatabase } from "../connection";
+import { firstRow } from "../select-helpers";
 import type { UpsertLiveSessionUserInput } from "../types";
 
 /**
- * Insert or update by `(live_session_id, user_id)`.
- * On conflict: advances last_comment_at and increments comment_count.
+ * `(live_session_id, user_id)` で INSERT または UPDATE。
+ * 競合時: `last_comment_at` を進め、`comment_count` を増やす。
  */
 export async function upsertLiveSessionUser(
   input: UpsertLiveSessionUserInput,
@@ -21,7 +22,7 @@ export async function upsertLiveSessionUser(
     `,
     [input.liveSessionId, input.userId, input.commentAt, input.commentAt],
   );
-  const row = Array.isArray(rows) ? rows[0] : rows;
+  const row = firstRow(rows);
   if (row === undefined || typeof row.id !== "number") {
     throw new Error("upsertLiveSessionUser: expected RETURNING id row");
   }

@@ -1,18 +1,18 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// @ts-expect-error process is a nodejs global
+/** モバイル実機デバッグ時など、`TAURI_DEV_HOST` で HMR 先を指定する（未設定なら falsy）。 */
 const host = process.env.TAURI_DEV_HOST;
 
-// https://vite.dev/config/
+// 公式: https://vite.dev/config/
 export default defineConfig(async () => ({
   plugins: [react()],
 
-  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
+  // `tauri dev` / `tauri build` 向けの Vite 設定
   //
-  // 1. prevent Vite from obscuring rust errors
+  // 1. Rust 側のエラーが Vite の表示に隠れないようにする
   clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
+  // 2. Tauri は固定ポート前提のため、使用中なら失敗させる
   server: {
     port: 1420,
     strictPort: true,
@@ -25,7 +25,7 @@ export default defineConfig(async () => ({
         }
       : undefined,
     watch: {
-      // 3. tell Vite to ignore watching `src-tauri`
+      // 3. `src-tauri` をファイル監視から外す
       ignored: ["**/src-tauri/**"],
     },
   },

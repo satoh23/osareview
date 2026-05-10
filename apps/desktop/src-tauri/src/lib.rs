@@ -1,4 +1,4 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+// Tauri コマンド: https://tauri.app/develop/calling-rust/
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 #[tauri::command]
@@ -23,6 +23,12 @@ pub fn run() {
             sql: include_str!("../migrations/0002_visit_count_per_live_session.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 3,
+            description: "remove_raw_payload_json",
+            sql: include_str!("../migrations/0003_remove_raw_payload_json.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()
@@ -34,5 +40,5 @@ pub fn run() {
         )
         .invoke_handler(tauri::generate_handler![greet])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("Tauri アプリケーションの実行中にエラーが発生しました");
 }

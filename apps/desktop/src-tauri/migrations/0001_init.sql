@@ -116,7 +116,6 @@ CREATE TABLE IF NOT EXISTS comments (
   is_low_signal INTEGER NOT NULL DEFAULT 0 CHECK (is_low_signal IN (0,1)),
 
   commented_at TEXT NOT NULL,
-  raw_payload_json TEXT,
 
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
 
@@ -210,7 +209,6 @@ CREATE TABLE IF NOT EXISTS support_events (
   message TEXT,
 
   occurred_at TEXT NOT NULL,
-  raw_payload_json TEXT,
 
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
 

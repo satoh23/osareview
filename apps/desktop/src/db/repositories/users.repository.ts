@@ -1,10 +1,11 @@
 import { getDatabase } from "../connection";
+import { firstRow } from "../select-helpers";
 import type { UpsertUserInput } from "../types";
 
 /**
- * Insert or update by `(platform, platform_user_id)`.
- * On conflict: refreshes display name and last_seen only.
- * `visit_count` is incremented once per live session when `live_session_users` is first inserted (see migration trigger).
+ * `(platform, platform_user_id)` で INSERT または UPDATE。
+ * 競合時は表示名と `last_seen` のみ更新。
+ * `visit_count` は配信セッションごとに `live_session_users` が初回 INSERT されたときに増える（マイグレーションのトリガ参照）。
  */
 export async function upsertUser(input: UpsertUserInput): Promise<number> {
   const db = await getDatabase();
@@ -26,9 +27,23 @@ export async function upsertUser(input: UpsertUserInput): Promise<number> {
       input.seenAt,
     ],
   );
-  const row = Array.isArray(rows) ? rows[0] : rows;
+  const row = firstRow(rows);
   if (row === undefined || typeof row.id !== "number") {
     throw new Error("upsertUser: expected RETURNING id row");
   }
   return row.id;
+}
+
+export async function incrementObservedCommentCount(
+  userId: number,
+): Promise<void> {
+  const db = await getDatabase();
+  await db.execute(
+    `
+    UPDATE users
+    SET observed_comment_count = observed_comment_count + 1
+    WHERE id = $1
+    `,
+    [userId],
+  );
 }
