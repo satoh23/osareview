@@ -33,16 +33,14 @@ CREATE INDEX IF NOT EXISTS idx_user_tag_links_tag
 ON user_tag_links(tag_id);
 
 -- 旧 user_tags のデータを移行
-INSERT INTO tags (name)
+INSERT OR IGNORE INTO tags (name)
 SELECT DISTINCT tag_name
-FROM user_tags
-ON CONFLICT(name) DO NOTHING;
+FROM user_tags;
 
-INSERT INTO user_tag_links (user_id, tag_id)
+INSERT OR IGNORE INTO user_tag_links (user_id, tag_id)
 SELECT ut.user_id, t.id
 FROM user_tags ut
-INNER JOIN tags t ON t.name = ut.tag_name
-ON CONFLICT(user_id, tag_id) DO NOTHING;
+INNER JOIN tags t ON t.name = ut.tag_name;
 
 DROP INDEX IF EXISTS idx_user_tags_user;
 DROP TABLE IF EXISTS user_tags;

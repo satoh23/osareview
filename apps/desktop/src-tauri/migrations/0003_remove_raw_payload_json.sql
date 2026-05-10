@@ -1,2 +1,3 @@
-ALTER TABLE comments DROP COLUMN raw_payload_json;
-ALTER TABLE support_events DROP COLUMN raw_payload_json;
+-- `raw_payload_json` は `0001_init.sql` から既に削除済み。
+-- 旧DB向けの DROP COLUMN は SQLite 方言上「存在時のみ実行」が難しいため、
+-- ここでは no-op マイグレーションとして扱う。
