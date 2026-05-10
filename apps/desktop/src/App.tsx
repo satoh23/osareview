@@ -1,11 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
+import { commentDeliveryWsQueueWriter } from "./db/runtime/comment-delivery-ws-queue-writer";
 import "./App.css";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
+
+  useEffect(() => {
+    commentDeliveryWsQueueWriter.start();
+    return () => {
+      void commentDeliveryWsQueueWriter.stop(false);
+    };
+  }, []);
 
   async function greet() {
     // Tauri コマンド: https://tauri.app/develop/calling-rust/
