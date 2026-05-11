@@ -2,7 +2,7 @@
   "name": "comment-dock",
   "private": true,
   "scripts": {
-    "dev": "pnpm run --parallel dev:desktop-tauri dev:comment-delivery",
+    "dev": "pnpm run dev:desktop-tauri & pnpm run dev:comment-delivery & wait",
     "dev:comment-fetcher": "pnpm --filter @comment-dock/comment-fetcher dev",
     "dev:comment-delivery": "pnpm --filter @comment-dock/comment-delivery dev",
     "dev:comment-delivery-mock-ws": "pnpm --filter @comment-dock/comment-delivery dev:mock-ws",
