@@ -1,5 +1,5 @@
-import { firstRow, getDatabase } from "../../shared/api/sqlite";
-import type { UpsertLiveSessionInput } from "../types";
+import { firstRow, getDatabase } from "../../../shared/api/sqlite";
+import type { UpsertLiveSessionInput } from "../model/types";
 
 /**
  * `(platform, platform_live_id)` で INSERT または UPDATE。

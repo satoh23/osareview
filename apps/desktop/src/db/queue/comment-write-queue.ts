@@ -1,8 +1,8 @@
 import { withImmediateTransaction } from "../../shared/api/sqlite";
 import { persistQueuedCommentWrite } from "../usecases/persist-queued-comment-write";
-import type { QueuedCommentWrite } from "../types";
+import type { QueuedCommentWrite } from "../../entities/comment/model/types";
 
-export type { QueuedCommentWrite } from "../types";
+export type { QueuedCommentWrite } from "../../entities/comment/model/types";
 
 export type CommentWriteQueueOptions = {
   intervalMs?: number;

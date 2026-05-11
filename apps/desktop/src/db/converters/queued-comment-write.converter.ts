@@ -1,9 +1,9 @@
 import type {
   InsertCommentInput,
   QueuedCommentWrite,
-  UpsertLiveSessionUserInput,
-  UpsertUserInput,
-} from "../types";
+} from "../../entities/comment/model/types";
+import type { UpsertLiveSessionUserInput } from "../../entities/live-session/model/types";
+import type { UpsertUserInput } from "../../entities/user/model/types";
 
 export function toUpsertUserInput(item: QueuedCommentWrite): UpsertUserInput {
   return {

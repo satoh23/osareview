@@ -1,5 +1,5 @@
-import { firstRow, getDatabase } from "../../shared/api/sqlite";
-import type { UpsertUserMemoInput } from "../types";
+import { firstRow, getDatabase } from "../../../shared/api/sqlite";
+import type { UpsertUserMemoInput } from "../model/types";
 
 /**
  * `user_memos` を `user_id` で UPSERT。

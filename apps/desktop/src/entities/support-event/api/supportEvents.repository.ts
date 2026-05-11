@@ -1,5 +1,5 @@
-import { firstRow, getDatabase } from "../../shared/api/sqlite";
-import type { InsertSupportEventInput } from "../types";
+import { firstRow, getDatabase } from "../../../shared/api/sqlite";
+import type { InsertSupportEventInput } from "../model/types";
 
 /**
  * `support_events` を 1 件追加し、`users` の支援サマリも更新する。

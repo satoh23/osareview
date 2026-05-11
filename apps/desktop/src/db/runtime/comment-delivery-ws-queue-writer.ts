@@ -1,6 +1,6 @@
-import type { DbPlatform } from "../types";
+import type { DbPlatform } from "../../entities/live-session/model/types";
 import { CommentWriteQueue } from "../queue/comment-write-queue";
-import { upsertLiveSession } from "../repositories/liveSessions.repository";
+import { upsertLiveSession } from "../../entities/live-session/api/liveSessions.repository";
 import {
   COMMENT_DELIVERY_MESSAGE_TYPES,
   type CommentDeliveryMessage,

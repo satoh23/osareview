@@ -1,5 +1,5 @@
-import { firstRow, getDatabase } from "../../shared/api/sqlite";
-import type { LinkUserTagInput } from "../types";
+import { firstRow, getDatabase } from "../../../shared/api/sqlite";
+import type { LinkUserTagInput } from "../model/types";
 
 export type LinkUserTagResult =
   | { inserted: true; id: number }

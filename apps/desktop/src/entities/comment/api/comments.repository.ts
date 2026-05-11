@@ -1,5 +1,5 @@
-import { firstRow, getDatabase } from "../../shared/api/sqlite";
-import type { InsertCommentInput } from "../types";
+import { firstRow, getDatabase } from "../../../shared/api/sqlite";
+import type { InsertCommentInput } from "../model/types";
 
 export type InsertCommentResult =
   | { inserted: true; id: number }

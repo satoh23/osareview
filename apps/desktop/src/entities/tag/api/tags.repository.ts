@@ -1,5 +1,5 @@
-import { firstRow, getDatabase } from "../../shared/api/sqlite";
-import type { CreateTagInput, DeleteTagInput } from "../types";
+import { firstRow, getDatabase } from "../../../shared/api/sqlite";
+import type { CreateTagInput, DeleteTagInput } from "../model/types";
 
 export type CreateTagResult =
   | { inserted: true; id: number }
