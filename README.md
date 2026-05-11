@@ -1,135 +1,32 @@
 # comment-dock
 
-複数の配信サイトから取得したコメントを統合して表示する、デスクトップ向けコメントビューアーです。  
-フロントエンドは React + TypeScript + Vite、デスクトップアプリは Tauri 2 を利用しています。
+複数の配信サイトから取得したコメントを統合表示する、Tauri ベースのデスクトップアプリです。
 
----
-
-## 技術スタック
-
-- **デスクトップアプリ**: Tauri 2 (Rust)
-- **フロントエンド**: React 19 + TypeScript + Vite
-- **パッケージマネージャ**: pnpm
-- **Lint / Format**:
-  - ESLint (`@eslint/js`, `typescript-eslint`, `eslint-config-prettier`)
-  - Prettier
-  - Husky（pre-commit フック）
-
----
-
-## アーキテクチャ方針
-
-フロントエンドは **Feature-Sliced Design（フィーチャースライスドアーキテクチャ）** をベースに構成します。
-
-- **app**: アプリ全体のエントリポイント・プロバイダ・ルーティングなど
-- **shared**: UI コンポーネントやユーティリティなど、ドメインや機能に依存しない共通資産
-- **entities**: コメントや配信元などのドメインモデル（型・最小限のロジック）
-- **features**: 「コメントを統合表示する」「配信サイトと接続する」「設定を変更する」など、ユーザーのユースケース単位の機能
-- **widgets / pages**: 必要に応じて、画面レイアウトやページ単位のコンポーネントを配置
-
-まずは FSD のコア概念だけを採用した **ライト FSD** として設計し、機能追加に応じて細かいレイヤーやセグメントを拡張していきます。
-
----
-
-## ディレクトリ構成（全体像）
-
-このREADMEではワークスペース全体の役割だけを示します。  
-各ディレクトリの詳細設計は、必要に応じてそれぞれの配下にREADMEを作成して管理します。
+## ワークスペース構成
 
 ```text
 .
 ├─ apps/
-│  └─ desktop/
-│     ├─ src/          # フロントエンド（React）
-│     └─ src-tauri/    # デスクトップ統合層（Tauri / Rust）
+│  └─ desktop/          # デスクトップアプリ本体（React + Tauri）
 ├─ backend/
-│  ├─ comment-fetcher/ # コメント取得・正規化
+│  ├─ auth/             # OAuth ログイン
+│  ├─ comment-fetcher/  # 配信コメント取得・正規化
 │  └─ comment-delivery/ # コメント配信・中継
 ├─ packages/
-│  └─ shared/          # ランタイム間で共有する契約（DTOなど）
+│  └─ shared/           # ランタイム間の共有契約（DTO など）
 └─ infra/
-   └─ cdk/             # インフラ定義
+   └─ cdk/              # インフラ定義
 ```
 
-### 役割の要点
+## 開発コマンド（ルート）
 
-- `apps`: ユーザーが操作するアプリ本体（UIとデスクトップ統合）
-- `backend`: 配信コメント取得や中継など、バックエンド処理本体
-- `packages/shared`: `apps` と `backend` が共有する型・契約
-- `infra`: デプロイ/運用基盤のコード
+- インストール: `pnpm install`
+- desktop 開発（Tauri）: `pnpm dev:desktop-tauri`
+- backend 配信モック: `pnpm dev:comment-delivery-mock-ws`
+- 型チェック（全体）: `pnpm check-types`
 
----
+## 詳細ドキュメント
 
-## 開発方法
-
-### 前提
-
-- Node.js（推奨: 最新 LTS）
-- pnpm
-- Rust ツールチェーン（`rustup` でインストール）
-- Tauri 開発に必要な依存関係  
-  （詳細は Tauri 公式ドキュメントを参照）
-
-### インストール
-
-```bash
-pnpm install
-```
-
-### 開発サーバー（Tauri + Vite）
-
-```bash
-pnpm tauri dev
-```
-
-Tauri が内部で `pnpm dev` を実行し、Vite 開発サーバーとデスクトップアプリが立ち上がります。
-
-### 負荷試験・desktop 単体テスト（モック WebSocket）
-
-本番の `comment-fetcher` / `comment-delivery` の代わりに、同じ WS メッセージ形式でコメントを大量送信するモックがあります。コマンドとオプションの一覧は次を参照してください。
-
-- [backend/comment-delivery/README.md](backend/comment-delivery/README.md)（「テスト用モック WebSocket サーバー」）
-
-ルートからの起動例:
-
-```bash
-pnpm dev:comment-delivery-mock-ws
-```
-
-### YouTube OAuth 初期ログイン
-
-YouTube コメント取得は `@comment-dock/auth` で OAuth ログインを行ってから実行します。
-
-```bash
-pnpm --filter @comment-dock/auth login youtube
-pnpm dev:comment-fetcher
-```
-
-### Twitch OAuth 初期ログイン
-
-Twitch は Device Code Flow（Public client）を使います。  
-`TWITCH_OAUTH_CLIENT_SECRET` は不要です。
-
-1. Twitch Developer Console でアプリを Public client として作成
-2. ルート `.env` に `TWITCH_CLIENT_ID` を設定
-3. 次を実行して認可
-
-```bash
-pnpm --filter @comment-dock/auth login twitch
-pnpm dev:comment-fetcher
-```
-
-### ビルド
-
-```bash
-pnpm tauri build
-```
-
----
-
-## 推奨 IDE / 拡張機能
-
-- Cursor
-  - Tauri 拡張機能
-  - rust-analyzer
-  - ESLint / Prettier 関連拡張
+- desktop アーキテクチャと運用: [apps/desktop/README.md](apps/desktop/README.md)
+- comment-delivery: [backend/comment-delivery/README.md](backend/comment-delivery/README.md)
+- auth: [backend/auth/README.md](backend/auth/README.md)
