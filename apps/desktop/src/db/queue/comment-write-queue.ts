@@ -1,4 +1,4 @@
-import { getDatabase } from "../connection";
+import { withImmediateTransaction } from "../../shared/api/sqlite";
 import { persistQueuedCommentWrite } from "../usecases/persist-queued-comment-write";
 import type { QueuedCommentWrite } from "../types";
 
@@ -63,17 +63,14 @@ export class CommentWriteQueue {
     }
 
     const batch = this.queue.splice(0, this.queue.length);
-    const db = await getDatabase();
-
-    await db.execute("BEGIN IMMEDIATE");
     try {
-      for (const item of batch) {
-        await persistQueuedCommentWrite(item);
-      }
-      await db.execute("COMMIT");
+      await withImmediateTransaction(async () => {
+        for (const item of batch) {
+          await persistQueuedCommentWrite(item);
+        }
+      });
       return batch.length;
     } catch (error) {
-      await db.execute("ROLLBACK");
       this.queue.unshift(...batch);
       throw error;
     }

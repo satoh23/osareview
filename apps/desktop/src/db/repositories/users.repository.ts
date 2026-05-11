@@ -1,5 +1,4 @@
-import { getDatabase } from "../connection";
-import { firstRow } from "../select-helpers";
+import { firstRow, getDatabase } from "../../shared/api/sqlite";
 import type { UpsertUserInput } from "../types";
 
 /**
