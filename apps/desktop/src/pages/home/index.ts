@@ -1,3 +1,3 @@
 // pages/home slice の Public API。
 // ホーム画面コンポーネントを再エクスポートする。
-export {};
+export { HomePage } from "./ui/HomePage";
