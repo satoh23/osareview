@@ -234,6 +234,74 @@ test("Twitch 未認可時は provider をスキップして継続する", async 
   );
 });
 
+test("Twitch トークン失効(401)時は provider をスキップして継続する", async () => {
+  const originalTwitchChannelId = process.env.TWITCH_TARGET_CHANNEL_ID;
+  process.env.TWITCH_TARGET_CHANNEL_ID = "target-channel";
+
+  const warnings: unknown[][] = [];
+  const originalWarn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    warnings.push(args);
+  };
+
+  try {
+    await withMockedResolve(
+      ((token: unknown) => {
+        if (token === YouTubeLiveStreamRepository) {
+          return {
+            findLiveStream: async () => null,
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === YouTubeLiveStreamClient) {
+          return {
+            resolveOwnChannelId: async () => null,
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === YouTubeCommentRepository) {
+          return {
+            async *streamComments() {},
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === TwitchLiveStreamRepository) {
+          return {
+            async findLiveStream() {
+              throw new Error(
+                'Twitch Helix request failed: 401 Unauthorized {"error":"Unauthorized","status":401,"message":"Invalid OAuth token"}',
+              );
+            },
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === TwitchCommentRepository) {
+          return {
+            async *streamComments() {},
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        throw new Error("unexpected token");
+      }) as ResolveFn,
+      async () => {
+        await runCommentFetcherApp(
+          { retryOnLiveStreamNotFound: false },
+          noopOutputPort,
+        );
+      },
+    );
+  } finally {
+    console.warn = originalWarn;
+    if (originalTwitchChannelId) {
+      process.env.TWITCH_TARGET_CHANNEL_ID = originalTwitchChannelId;
+    } else {
+      delete process.env.TWITCH_TARGET_CHANNEL_ID;
+    }
+  }
+
+  const warningTexts = warnings.map((entry) => String(entry[0] ?? ""));
+  assert.ok(
+    warningTexts.some((text) =>
+      /twitch is skipped because authorization is missing/.test(text),
+    ),
+  );
+});
+
 test("LiveStreamNotFoundError は再試行無効時に警告を出して終了する", async () => {
   const originalTwitchChannelId = process.env.TWITCH_TARGET_CHANNEL_ID;
   delete process.env.TWITCH_TARGET_CHANNEL_ID;

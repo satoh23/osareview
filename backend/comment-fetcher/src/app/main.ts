@@ -47,8 +47,10 @@ const isAuthorizationMissingError = (error: unknown): boolean => {
   if (!(error instanceof Error)) {
     return false;
   }
-  return /access token is missing from AccessTokenProvider\./.test(
-    error.message,
+  return (
+    /access token is missing from AccessTokenProvider\./.test(error.message) ||
+    /Twitch Helix request failed: 401 Unauthorized/.test(error.message) ||
+    /Invalid OAuth token/.test(error.message)
   );
 };
 
