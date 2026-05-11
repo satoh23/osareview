@@ -1,7 +1,7 @@
 import { useState } from "react";
 import reactLogo from "../../../assets/react.svg";
 import { tauriCommands } from "../../../shared/api/tauri";
-import "../../../App.css";
+import "./home-page.css";
 
 export function HomePage() {
   const [greetMsg, setGreetMsg] = useState("");
