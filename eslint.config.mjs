@@ -22,6 +22,101 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    files: ["apps/desktop/src/shared/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "**/app/**",
+                "**/pages/**",
+                "**/widgets/**",
+                "**/features/**",
+                "**/entities/**",
+              ],
+              message:
+                "shared レイヤーは上位レイヤー（entities/features/widgets/pages/app）へ依存してはいけません。",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["apps/desktop/src/entities/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "**/app/**",
+                "**/pages/**",
+                "**/widgets/**",
+                "**/features/**",
+              ],
+              message:
+                "entities レイヤーは上位レイヤー（features/widgets/pages/app）へ依存してはいけません。",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["apps/desktop/src/features/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/app/**", "**/pages/**", "**/widgets/**"],
+              message:
+                "features レイヤーは上位レイヤー（widgets/pages/app）へ依存してはいけません。",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["apps/desktop/src/widgets/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/app/**", "**/pages/**"],
+              message:
+                "widgets レイヤーは上位レイヤー（pages/app）へ依存してはいけません。",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["apps/desktop/src/pages/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/app/**"],
+              message: "pages レイヤーは app レイヤーへ依存してはいけません。",
+            },
+          ],
+        },
+      ],
+    },
+  },
   eslintConfigPrettier,
   {
     ignores: [

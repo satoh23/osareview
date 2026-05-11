@@ -4,4 +4,4 @@ export type { InsertPinnedCommentInput } from "./model/types";
 export {
   insertPinnedComment,
   type InsertPinnedCommentResult,
-} from "./api/pinnedComments.repository";
+} from "./api/pinned-comments.repository";

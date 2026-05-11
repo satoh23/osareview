@@ -1,7 +1,7 @@
 import { RuntimeProvider } from "./app/index";
 import { HomePage } from "./pages";
 
-function App() {
+function AppRoot() {
   return (
     <RuntimeProvider>
       <HomePage />
@@ -9,4 +9,4 @@ function App() {
   );
 }
 
-export default App;
+export default AppRoot;

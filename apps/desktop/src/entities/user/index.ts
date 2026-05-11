@@ -10,9 +10,9 @@ export {
   incrementObservedCommentCount,
   upsertUser,
 } from "./api/users.repository";
-export { upsertUserMemo } from "./api/userMemos.repository";
+export { upsertUserMemo } from "./api/user-memos.repository";
 export {
   linkUserTag,
   unlinkUserTag,
   type LinkUserTagResult,
-} from "./api/userTagLinks.repository";
+} from "./api/user-tag-links.repository";

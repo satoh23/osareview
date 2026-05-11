@@ -1,5 +1,5 @@
 import { insertComment } from "../../../entities/comment/api/comments.repository";
-import { upsertLiveSessionUser } from "../../../entities/live-session/api/liveSessionUsers.repository";
+import { upsertLiveSessionUser } from "../../../entities/live-session/api/live-session-users.repository";
 import {
   incrementObservedCommentCount,
   upsertUser,

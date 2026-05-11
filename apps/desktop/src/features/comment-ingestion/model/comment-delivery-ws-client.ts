@@ -3,7 +3,7 @@ import {
   type CommentDeliveryMessage,
   type CommentViewDto,
 } from "@comment-dock/shared";
-import { upsertLiveSession } from "../../../entities/live-session/api/liveSessions.repository";
+import { upsertLiveSession } from "../../../entities/live-session/api/live-sessions.repository";
 import type { DbPlatform } from "../../../entities/live-session/model/types";
 import { COMMENT_DELIVERY_WS_URL } from "../config/ws";
 import {

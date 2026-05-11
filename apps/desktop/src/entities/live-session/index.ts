@@ -6,5 +6,5 @@ export type {
   UpsertLiveSessionInput,
   UpsertLiveSessionUserInput,
 } from "./model/types";
-export { upsertLiveSession } from "./api/liveSessions.repository";
-export { upsertLiveSessionUser } from "./api/liveSessionUsers.repository";
+export { upsertLiveSession } from "./api/live-sessions.repository";
+export { upsertLiveSessionUser } from "./api/live-session-users.repository";
