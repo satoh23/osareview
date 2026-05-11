@@ -1,6 +1,6 @@
 import type { CommentViewDto } from "@comment-dock/shared";
-import type { QueuedCommentWrite } from "../../entities/comment/model/types";
-import type { DbPlatform } from "../../entities/live-session/model/types";
+import type { DbPlatform } from "../../../../entities/live-session/model/types";
+import type { QueuedCommentWrite } from "../../model/types";
 
 export function toDbPlatform(value: string): DbPlatform | null {
   if (value === "youtube" || value === "twitch") {

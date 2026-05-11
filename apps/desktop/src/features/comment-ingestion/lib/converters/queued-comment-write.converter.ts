@@ -1,9 +1,7 @@
-import type {
-  InsertCommentInput,
-  QueuedCommentWrite,
-} from "../../entities/comment/model/types";
-import type { UpsertLiveSessionUserInput } from "../../entities/live-session/model/types";
-import type { UpsertUserInput } from "../../entities/user/model/types";
+import type { InsertCommentInput } from "../../../../entities/comment/model/types";
+import type { UpsertLiveSessionUserInput } from "../../../../entities/live-session/model/types";
+import type { UpsertUserInput } from "../../../../entities/user/model/types";
+import type { QueuedCommentWrite } from "../../model/types";
 
 export function toUpsertUserInput(item: QueuedCommentWrite): UpsertUserInput {
   return {

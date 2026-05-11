@@ -1,15 +1,15 @@
-import { insertComment } from "../../entities/comment/api/comments.repository";
-import { upsertLiveSessionUser } from "../../entities/live-session/api/liveSessionUsers.repository";
+import { insertComment } from "../../../entities/comment/api/comments.repository";
+import { upsertLiveSessionUser } from "../../../entities/live-session/api/liveSessionUsers.repository";
 import {
   incrementObservedCommentCount,
   upsertUser,
-} from "../../entities/user/api/users.repository";
+} from "../../../entities/user/api/users.repository";
 import {
   toInsertCommentInput,
   toUpsertLiveSessionUserInput,
   toUpsertUserInput,
-} from "../converters/queued-comment-write.converter";
-import type { QueuedCommentWrite } from "../../entities/comment/model/types";
+} from "../lib/converters/queued-comment-write.converter";
+import type { QueuedCommentWrite } from "./types";
 
 /**
  * キューに載せたコメントを1件永続化する。共有 DB で呼び出し元がトランザクションを

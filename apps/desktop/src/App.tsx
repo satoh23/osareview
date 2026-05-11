@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { commentDeliveryWsQueueWriter } from "./db/runtime/comment-delivery-ws-queue-writer";
+import { createCommentIngestionRuntime } from "./features/comment-ingestion";
 import "./App.css";
 
 function App() {
@@ -10,7 +10,8 @@ function App() {
   const [name, setName] = useState("");
 
   useEffect(() => {
-    commentDeliveryWsQueueWriter.start();
+    const runtime = createCommentIngestionRuntime();
+    runtime.start();
 
     let closeHandled = false;
     let unlistenCloseRequested: (() => void) | null = null;
@@ -23,7 +24,7 @@ function App() {
         }
         closeHandled = true;
         event.preventDefault();
-        await commentDeliveryWsQueueWriter.stop(true);
+        await runtime.stop(true);
         await window.destroy();
       });
     })();
@@ -31,7 +32,7 @@ function App() {
     return () => {
       unlistenCloseRequested?.();
       if (!closeHandled) {
-        void commentDeliveryWsQueueWriter.stop(true);
+        void runtime.stop(true);
       }
     };
   }, []);

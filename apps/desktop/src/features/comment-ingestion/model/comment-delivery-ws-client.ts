@@ -1,20 +1,29 @@
-import type { DbPlatform } from "../../entities/live-session/model/types";
-import { CommentWriteQueue } from "../queue/comment-write-queue";
-import { upsertLiveSession } from "../../entities/live-session/api/liveSessions.repository";
 import {
   COMMENT_DELIVERY_MESSAGE_TYPES,
   type CommentDeliveryMessage,
   type CommentViewDto,
 } from "@comment-dock/shared";
+import { upsertLiveSession } from "../../../entities/live-session/api/liveSessions.repository";
+import type { DbPlatform } from "../../../entities/live-session/model/types";
+import { COMMENT_DELIVERY_WS_URL } from "../config/ws";
 import {
   toDbPlatform,
   toQueuedCommentWrite,
-} from "../converters/comment-delivery-ws.converter";
+} from "../lib/converters/comment-delivery-ws.converter";
+import { CommentWriteQueue } from "./comment-write-queue";
 
-const COMMENT_DELIVERY_WS_URL =
-  import.meta.env.VITE_COMMENT_DELIVERY_WS_URL ?? "ws://127.0.0.1:17331";
 const COMMENTS_APPEND = COMMENT_DELIVERY_MESSAGE_TYPES.COMMENTS_APPEND;
 const COMMENTS_BATCH = COMMENT_DELIVERY_MESSAGE_TYPES.COMMENTS_BATCH;
+
+type CommentDeliveryWsClientOptions = {
+  wsUrl?: string;
+  queueIntervalMs?: number;
+};
+
+export type CommentIngestionRuntime = {
+  start: () => void;
+  stop: (flushRemaining: boolean) => Promise<void>;
+};
 
 function parseMessage(raw: string): CommentDeliveryMessage | null {
   try {
@@ -39,12 +48,20 @@ function parseMessage(raw: string): CommentDeliveryMessage | null {
   }
 }
 
-export class CommentDeliveryWsQueueWriter {
-  private readonly queue = new CommentWriteQueue({ intervalMs: 1000 });
+class CommentDeliveryWsClient implements CommentIngestionRuntime {
+  private readonly queue: CommentWriteQueue;
+  private readonly wsUrl: string;
   private readonly liveSessionIdByPlatform = new Map<DbPlatform, number>();
   private socket: WebSocket | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private started = false;
+
+  constructor(options: CommentDeliveryWsClientOptions = {}) {
+    this.wsUrl = options.wsUrl ?? COMMENT_DELIVERY_WS_URL;
+    this.queue = new CommentWriteQueue({
+      intervalMs: options.queueIntervalMs ?? 1000,
+    });
+  }
 
   start(): void {
     if (this.started) {
@@ -76,7 +93,7 @@ export class CommentDeliveryWsQueueWriter {
   }
 
   private connect(): void {
-    const socket = new WebSocket(COMMENT_DELIVERY_WS_URL);
+    const socket = new WebSocket(this.wsUrl);
     this.socket = socket;
 
     socket.onmessage = (event) => {
@@ -146,4 +163,8 @@ export class CommentDeliveryWsQueueWriter {
   }
 }
 
-export const commentDeliveryWsQueueWriter = new CommentDeliveryWsQueueWriter();
+export function createCommentIngestionRuntime(
+  options: CommentDeliveryWsClientOptions = {},
+): CommentIngestionRuntime {
+  return new CommentDeliveryWsClient(options);
+}

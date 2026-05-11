@@ -1,6 +1,6 @@
 // entities/comment slice の Public API。
 // 型（model/types）とリポジトリ（api/）を再エクスポートする。
-export type { InsertCommentInput, QueuedCommentWrite } from "./model/types";
+export type { InsertCommentInput } from "./model/types";
 export {
   insertComment,
   type InsertCommentResult,
