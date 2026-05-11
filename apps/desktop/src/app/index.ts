@@ -1,3 +1,3 @@
 // app レイヤーの Public API。
 // エントリポイント・プロバイダ・ランタイム起動の再エクスポート先。
-export {};
+export { RuntimeProvider } from "./providers/RuntimeProvider";
