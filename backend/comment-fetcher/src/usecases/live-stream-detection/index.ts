@@ -5,8 +5,8 @@ import type {
   LiveStreamRepository,
 } from "./live-stream-repository.interface.js";
 import {
-  DEFAULT_LIVE_STREAM_MAX_ATTEMPTS,
-  DEFAULT_LIVE_STREAM_POLLING_INTERVAL_MS,
+  getLiveStreamMaxAttempts,
+  getLiveStreamPollingIntervalMs,
 } from "../../infrastructure/shared/config/live-stream-detection.js";
 
 type WaitFn = (milliseconds: number) => Promise<void>;
@@ -23,8 +23,8 @@ export class LiveStreamNotFoundError extends Error {
 export class DetectLiveStreamUseCase {
   constructor(
     private readonly repository: LiveStreamRepository,
-    private readonly pollingIntervalMs = DEFAULT_LIVE_STREAM_POLLING_INTERVAL_MS,
-    private readonly maxAttempts = DEFAULT_LIVE_STREAM_MAX_ATTEMPTS,
+    private readonly pollingIntervalMs = getLiveStreamPollingIntervalMs(),
+    private readonly maxAttempts = getLiveStreamMaxAttempts(),
     // テスト時に待機処理を差し替えて高速・安定に検証できるよう注入可能にしている。
     private readonly wait: WaitFn = async (milliseconds) => {
       await sleep(milliseconds);

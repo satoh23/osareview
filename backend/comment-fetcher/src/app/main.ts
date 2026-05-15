@@ -22,7 +22,7 @@ import type {
   FindLiveStreamInput,
   FindLiveStreamResult,
 } from "../usecases/live-stream-detection/live-stream-repository.interface.js";
-import { DEFAULT_LIVE_STREAM_POLLING_INTERVAL_MS } from "../infrastructure/shared/config/live-stream-detection.js";
+import { getLiveStreamPollingIntervalMs } from "../infrastructure/shared/config/live-stream-detection.js";
 
 type CommentProvider = CommentSource;
 
@@ -197,8 +197,7 @@ export const runCommentFetcherApp = async (
   const runtimeOptions = {
     retryOnLiveStreamNotFound: options.retryOnLiveStreamNotFound ?? true,
     liveStreamRetryIntervalMs:
-      options.liveStreamRetryIntervalMs ??
-      DEFAULT_LIVE_STREAM_POLLING_INTERVAL_MS,
+      options.liveStreamRetryIntervalMs ?? getLiveStreamPollingIntervalMs(),
   };
 
   const pipelines: CommentFetchPipeline[] = [
