@@ -10,6 +10,7 @@ import {
 import { registerCommentDeliveryDependencies } from "@comment-dock/comment-delivery";
 import { API_GATEWAY_DI_TOKENS } from "./infrastructure/shared/di-tokens.js";
 import { NoopSessionStateOutputPort } from "./adapters/output-ports/noop-session-state.output-port.js";
+import { HttpControlServer } from "./adapters/http/server.js";
 import {
   ManageStreamingSessionsUseCase,
   type SessionPipelineRunner,
@@ -47,4 +48,5 @@ export const registerApiGatewayDependencies = (): void => {
     useValue: 3000,
   });
   container.registerSingleton(ManageStreamingSessionsUseCase);
+  container.registerSingleton(HttpControlServer);
 };

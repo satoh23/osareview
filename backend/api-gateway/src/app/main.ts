@@ -1,6 +1,20 @@
+import { container } from "tsyringe";
+import { HttpControlServer } from "../adapters/http/server.js";
+
 export const runApiGateway = async (): Promise<void> => {
-  // HTTP / WebSocket サーバの起動処理は後続タスクでここに接続する。
-  // パッケージ初期化時点でも型チェックと起動確認ができるように、
-  // 先に Gateway の実行エントリだけ用意している。
-  console.info("[api-gateway] initialized");
+  const httpControlServer = container.resolve(HttpControlServer);
+
+  await httpControlServer.start();
+
+  const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
+    console.info(`[api-gateway] received ${signal}, shutting down`);
+    await httpControlServer.close();
+  };
+
+  process.once("SIGINT", () => {
+    void shutdown("SIGINT");
+  });
+  process.once("SIGTERM", () => {
+    void shutdown("SIGTERM");
+  });
 };

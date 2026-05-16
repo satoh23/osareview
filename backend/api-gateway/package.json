@@ -15,7 +15,9 @@
     "@comment-dock/comment-delivery": "workspace:*",
     "@comment-dock/comment-fetcher": "workspace:*",
     "@comment-dock/shared": "workspace:*",
+    "@hono/node-server": "^2.0.2",
     "dotenv": "^17.4.2",
+    "hono": "^4.12.18",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.10.0",
     "ws": "^8.20.0"

@@ -89,9 +89,15 @@ importers:
       "@comment-dock/shared":
         specifier: workspace:*
         version: link:../../packages/shared
+      "@hono/node-server":
+        specifier: ^2.0.2
+        version: 2.0.2(hono@4.12.18)
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
+      hono:
+        specifier: ^4.12.18
+        version: 4.12.18
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -729,6 +735,15 @@ packages:
       }
     engines: { node: ">=6" }
     hasBin: true
+
+  "@hono/node-server@2.0.2":
+    resolution:
+      {
+        integrity: sha512-tXlTi1h/4V7sDe7i97IVP+9re9ZU7wXZZggnR5ucCRclf1+AX6YhGStrR5w8bLj+3Mlyl0pKfBh9gqTqqnGKfQ==,
+      }
+    engines: { node: ">=20" }
+    peerDependencies:
+      hono: ^4
 
   "@humanfs/core@0.19.1":
     resolution:
@@ -2058,6 +2073,13 @@ packages:
       }
     engines: { node: ">=10.13.0" }
 
+  hono@4.12.18:
+    resolution:
+      {
+        integrity: sha512-RWzP96k/yv0PQfyXnWjs6zot20TqfpfsNXhOnev8d1InAxubW93L11/oNUc3tQqn2G0bSdAOBpX+2uDFHV7kdQ==,
+      }
+    engines: { node: ">=16.9.0" }
+
   husky@9.1.7:
     resolution:
       {
@@ -3071,6 +3093,10 @@ snapshots:
       protobufjs: 7.5.5
       yargs: 17.7.2
 
+  "@hono/node-server@2.0.2(hono@4.12.18)":
+    dependencies:
+      hono: 4.12.18
+
   "@humanfs/core@0.19.1": {}
 
   "@humanfs/node@0.16.7":
@@ -3780,6 +3806,8 @@ snapshots:
   glob-parent@6.0.2:
     dependencies:
       is-glob: 4.0.3
+
+  hono@4.12.18: {}
 
   husky@9.1.7: {}
 
