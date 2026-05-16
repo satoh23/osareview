@@ -1,6 +1,8 @@
 # comment-delivery
 
-`comment-fetcher` が取得したコメントを受け取り、装飾パイプラインを通して UI 向けの DTO へ変換・配信するライブラリです。
+`comment-fetcher` が取得したコメントを受け取り、装飾パイプラインを通して UI 向けの DTO へ変換するライブラリです。
+
+本番の WebSocket サーバは `backend/api-gateway` 側にあります。`comment-delivery` 自体は単独プロセスとして起動せず、Gateway から `DeliverCommentsUseCase` を呼び出して利用します。
 
 現在の既定構成は次のとおりです。
 
@@ -24,7 +26,7 @@ const deliverCommentsUseCase = container.resolve(DeliverCommentsUseCase);
 await deliverCommentsUseCase.deliverComments(comments);
 ```
 
-Gateway では fetcher の `outputComments` から `deliverComments()` を直接呼び、余分な queue / async generator を挟まない構成にします。
+Gateway では fetcher の `outputComments` から `deliverComments()` を直接呼び、余分な queue / async generator を挟まない構成にしています。変換後の DTO は Gateway の WebSocket 出力ポートから desktop へ送信されます。
 
 ## テスト用モック WebSocket サーバー
 

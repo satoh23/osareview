@@ -20,7 +20,8 @@ apps/desktop/
 │  ├─ pages/                    # 画面単位のUI
 │  ├─ widgets/                  # 画面ブロック（現状は空）
 │  ├─ features/                 # ユースケース単位の機能
-│  │  └─ comment-ingestion/     # WS受信 -> キュー -> DB永続化
+│  │  ├─ comment-ingestion/     # Gateway WS 受信 -> コメントキュー -> DB永続化
+│  │  └─ streaming-session/     # 配信セッション状態・開始停止 hooks
 │  ├─ entities/                 # ドメインモデル + repository
 │  ├─ shared/                   # 低レベル基盤/共通API/共通UI
 │  ├─ app-root.tsx              # ルート構成コンポーネント
@@ -46,8 +47,19 @@ apps/desktop/
 - ランタイム起動: `src/app/providers/runtime-provider.tsx`
 - close ハンドリング: `src/app/runtime/lifecycle.ts`
 - コメント取り込み機能: `src/features/comment-ingestion/`
+- 配信セッション制御: `src/features/streaming-session/`
+- Gateway control API client: `src/shared/api/control/`
 - Tauri invoke ラッパー: `src/shared/api/tauri/commands.ts`
 - SQLite 基盤: `src/shared/api/sqlite/`
+
+## API Gateway との接続
+
+desktop は backend の個別パッケージへ直接接続せず、`api-gateway` の HTTP / WebSocket のみを利用します。
+
+- HTTP: `VITE_API_GATEWAY_HTTP_URL`（既定 `http://127.0.0.1:17332`）
+- WebSocket: `VITE_API_GATEWAY_WS_URL`（既定 `ws://127.0.0.1:17331`）
+
+HTTP は `src/shared/api/control/` の SDK ファサードから利用し、配信開始・停止・状態取得を行います。WebSocket は `features/comment-ingestion` が購読し、コメントはキューへ、`session.state` は `features/streaming-session` の Context へ流します。
 
 ## 開発コマンド
 
@@ -62,7 +74,9 @@ apps/desktop/
 
 ## テスト方針（現状）
 
-- `features/comment-ingestion/model` はユースケース単位で単体テスト
+- `features/comment-ingestion/model` は WS メッセージ分岐とキュー投入を単体テスト
+- `features/streaming-session/model` は reducer と session.state event を単体テスト
+- `shared/api/control` は Gateway HTTP client の I/O を fetch mock で単体テスト
 - `entities/*/api` は DB レイヤーをモックした repository テスト
 - まずはユースケースと repository の境界を壊さないことを優先
 

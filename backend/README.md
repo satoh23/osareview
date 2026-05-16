@@ -1,7 +1,8 @@
-# comment-fetcher
+# backend
 
-配信プラットフォーム（YouTube / Twitch）からコメントを取得し、共通ドメインへ正規化して出力するバックエンドです。  
-現在は `console` 出力までを担い、将来的に認証認可（OAuth2 + PKCE）や配信先拡張を想定した構成になっています。
+YouTube / Twitch の認証、配信検知、コメント取得、UI 向け配信を担うバックエンド群です。
+
+現在の desktop 向け入口は `backend/api-gateway` に集約しています。desktop は Gateway の HTTP / WebSocket だけを見て、`comment-fetcher` / `comment-delivery` / `auth` は Gateway からライブラリとして利用されます。
 
 ## バックエンド全体の関係図
 
@@ -14,20 +15,24 @@ flowchart LR
   end
 
   subgraph Backend["backend/*"]
+    GATEWAY["api-gateway\nHTTP control + WebSocket events"]
     AUTH["auth\nOAuth login / token refresh"]
     FETCHER["comment-fetcher\n配信検知・コメント取得・共通化"]
-    DELIVERY["comment-delivery\n装飾・WebSocket 配信"]
+    DELIVERY["comment-delivery\n装飾・UI DTO 変換"]
   end
 
   UI["desktop (frontend)"]
 
   YT --> FETCHER
   TW --> FETCHER
+  UI -->|"HTTP /sessions start, stop, get"| GATEWAY
+  GATEWAY -->|"session.state / comments.*"| UI
+  GATEWAY --> FETCHER
   FETCHER --> DELIVERY
-  DELIVERY --> UI
+  DELIVERY --> GATEWAY
+  GATEWAY --> AUTH
   AUTH --> KC
   FETCHER --> AUTH
-  DELIVERY --> FETCHER
 ```
 
 ```mermaid
@@ -51,24 +56,27 @@ flowchart TD
   U2 --> E
 ```
 
+- `api-gateway`: desktop 向けの HTTP control plane と WebSocket event plane を 1 プロセスで提供。
 - `auth`: 各 provider の OAuth を担当し、トークンを安全に保存（Keychain）。
-- `comment-fetcher`: 外部APIと直接やり取りしてコメントを取得し、共通ドメインへ正規化。
-- `comment-delivery`: `comment-fetcher` をソースとして受け、必要なら装飾して WebSocket で配信。
-- `desktop`: `comment-delivery` の WebSocket を購読して表示するクライアント。
+- `comment-fetcher`: 外部 API と直接やり取りして配信検知・コメント取得を行い、共通ドメインへ正規化。
+- `comment-delivery`: `comment-fetcher` のコメントを UI DTO に変換し、必要なら装飾するライブラリ。WebSocket サーバは持たない。
+- `desktop`: `api-gateway` の HTTP / WebSocket を利用して配信開始・停止とコメント・セッション状態受信を行うクライアント。
 
 ## 実行
 
-リポジトリルートで実行します。
-
-```bash
-pnpm dev:comment-fetcher
-```
-
-`backend/comment-fetcher` 直下で実行する場合:
+desktop と Gateway をまとめて起動する場合は、リポジトリルートで実行します。
 
 ```bash
 pnpm dev
 ```
+
+Gateway のみ起動する場合:
+
+```bash
+pnpm dev:api-gateway
+```
+
+`comment-fetcher` のパイプライン単体を開発・確認したい場合は、従来通り `pnpm dev:comment-fetcher` も利用できます。
 
 ## 必要な環境変数
 
@@ -89,6 +97,16 @@ TWITCH_TARGET_CHANNEL_ID=   # login 名（例: twitchdev）
 # Optional
 # TWITCH_HELIX_API_BASE_URL=https://api.twitch.tv/helix
 # TWITCH_EVENTSUB_WS_URL=wss://eventsub.wss.twitch.tv/ws
+
+# API Gateway
+API_GATEWAY_HTTP_HOST=127.0.0.1
+API_GATEWAY_HTTP_PORT=17332
+API_GATEWAY_WS_HOST=127.0.0.1
+API_GATEWAY_WS_PORT=17331
+
+# Live stream detection
+# LIVE_STREAM_POLLING_INTERVAL_MS=5000
+# LIVE_STREAM_MAX_ATTEMPTS=5
 ```
 
 YouTube / Twitch ともにアクセストークンを直接設定せず、`@comment-dock/auth` を通して OAuth ログインします。
@@ -152,8 +170,12 @@ pnpm --filter @comment-dock/auth login twitch
 ## テスト / 型チェック
 
 ```bash
+pnpm --filter @comment-dock/api-gateway test
+pnpm --filter @comment-dock/api-gateway check-types
 pnpm --filter @comment-dock/comment-fetcher test
 pnpm --filter @comment-dock/comment-fetcher check-types
+pnpm --filter @comment-dock/comment-delivery test
+pnpm --filter @comment-dock/comment-delivery check-types
 ```
 
 ## 今後の主タスク
