@@ -7,7 +7,6 @@ import { DELIVERY_DI_TOKENS } from "./infrastructure/shared/di-tokens.js";
 import type { CommentDecorator } from "./usecases/interfaces/comment-decorator.interface.js";
 import { ConsoleCommentOutputPort } from "./adapters/output-ports/console-comment.output-port.js";
 import { MultiCommentOutputPort } from "./adapters/output-ports/multi-comment.output-port.js";
-import { WebSocketCommentOutputPort } from "./adapters/output-ports/websocket-comment.output-port.js";
 import { registerCommentDeliveryDependencies } from "./register-di-dependencies.js";
 import { DeliverCommentsUseCase } from "./usecases/deliver-comments.usecase.js";
 
@@ -50,12 +49,9 @@ test("出力ポートを DI で構成できる", () => {
   const targets = c.resolveAll(DELIVERY_DI_TOKENS.commentOutputTarget);
 
   assert.ok(outputPort instanceof MultiCommentOutputPort);
-  assert.equal(targets.length, 2);
+  assert.equal(targets.length, 1);
   assert.ok(
     targets.some((target) => target instanceof ConsoleCommentOutputPort),
-  );
-  assert.ok(
-    targets.some((target) => target instanceof WebSocketCommentOutputPort),
   );
 });
 

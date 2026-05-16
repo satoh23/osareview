@@ -7,14 +7,24 @@ import {
   type PipelineControlOptions,
   type CommentOutputPort,
 } from "@comment-dock/comment-fetcher";
-import { registerCommentDeliveryDependencies } from "@comment-dock/comment-delivery";
+import {
+  ConsoleCommentOutputPort,
+  DecorationPipeline,
+  DeliverCommentsUseCase,
+  DELIVERY_DI_TOKENS,
+  IdentityDecorator,
+  MultiCommentOutputPort,
+  type CommentDecorator,
+  type CommentOutputPort as DeliveryCommentOutputPort,
+} from "@comment-dock/comment-delivery";
 import { API_GATEWAY_DI_TOKENS } from "./infrastructure/shared/di-tokens.js";
-import { NoopSessionStateOutputPort } from "./adapters/output-ports/noop-session-state.output-port.js";
 import { HttpControlServer } from "./adapters/http/server.js";
+import { WebSocketCommentOutputPort } from "./adapters/ws/websocket-comment.output-port.js";
 import {
   ManageStreamingSessionsUseCase,
   type SessionPipelineRunner,
 } from "./usecases/manage-streaming-sessions.usecase.js";
+import type { SessionStateOutputPort } from "./usecases/session-state-output-port.interface.js";
 
 const youtubePipelineRunner: SessionPipelineRunner = (
   options: PipelineRunOptions,
@@ -29,13 +39,10 @@ const twitchPipelineRunner: SessionPipelineRunner = (
 ) => runTwitchPipeline(options, outputPort, controls);
 
 export const registerApiGatewayDependencies = (): void => {
-  // Fetcher / delivery はライブラリとして同一コンテナに登録し、
-  // Gateway 側の usecase / server は後続タスクでここに追加していく。
+  // Fetcher はライブラリとして同一コンテナに登録し、delivery は Gateway の
+  // WebSocket 出力ポートを sink にできるようこの境界で組み立てる。
   registerCommentFetcherDependencies();
-  registerCommentDeliveryDependencies();
-  container.register(API_GATEWAY_DI_TOKENS.sessionStateOutputPort, {
-    useClass: NoopSessionStateOutputPort,
-  });
+  registerGatewayCommentDeliveryDependencies();
   container.register<SessionPipelineRunner>(
     API_GATEWAY_DI_TOKENS.youtubePipelineRunner,
     { useValue: youtubePipelineRunner },
@@ -49,4 +56,35 @@ export const registerApiGatewayDependencies = (): void => {
   });
   container.registerSingleton(ManageStreamingSessionsUseCase);
   container.registerSingleton(HttpControlServer);
+};
+
+const registerGatewayCommentDeliveryDependencies = (): void => {
+  container.register<CommentDecorator>(DELIVERY_DI_TOKENS.commentDecorator, {
+    useClass: IdentityDecorator,
+  });
+  container.registerSingleton(WebSocketCommentOutputPort);
+  container.registerSingleton<DeliveryCommentOutputPort>(
+    DELIVERY_DI_TOKENS.commentOutputTarget,
+    ConsoleCommentOutputPort,
+  );
+  container.register<DeliveryCommentOutputPort>(
+    DELIVERY_DI_TOKENS.commentOutputTarget,
+    {
+      useFactory: (dependencyContainer) =>
+        dependencyContainer.resolve(WebSocketCommentOutputPort),
+    },
+  );
+  container.registerSingleton<DeliveryCommentOutputPort>(
+    DELIVERY_DI_TOKENS.commentOutputPort,
+    MultiCommentOutputPort,
+  );
+  container.registerSingleton(DecorationPipeline);
+  container.registerSingleton(DeliverCommentsUseCase);
+  container.register<SessionStateOutputPort>(
+    API_GATEWAY_DI_TOKENS.sessionStateOutputPort,
+    {
+      useFactory: (dependencyContainer) =>
+        dependencyContainer.resolve(WebSocketCommentOutputPort),
+    },
+  );
 };

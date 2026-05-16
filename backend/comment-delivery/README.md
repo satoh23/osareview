@@ -5,7 +5,7 @@
 現在の既定構成は次のとおりです。
 
 - Decorator: `IdentityDecorator`（no-op）
-- Sink: `MultiCommentOutputPort`（`ConsoleCommentOutputPort` + `WebSocketCommentOutputPort` に fanout）
+- Sink: `MultiCommentOutputPort`（既定は `ConsoleCommentOutputPort`。Gateway では `api-gateway` 側の WebSocket 出力ポートを追加登録）
 
 ## 利用方法
 
@@ -26,24 +26,11 @@ await deliverCommentsUseCase.deliverComments(comments);
 
 Gateway では fetcher の `outputComments` から `deliverComments()` を直接呼び、余分な queue / async generator を挟まない構成にします。
 
-## 環境変数
-
-`.env.example` を参考に `.env` を作成してください。
-
-```env
-# comment-delivery WebSocket
-COMMENT_DELIVERY_WS_HOST=127.0.0.1
-COMMENT_DELIVERY_WS_PORT=17331
-```
-
-- `COMMENT_DELIVERY_WS_HOST` 既定値: `127.0.0.1`
-- `COMMENT_DELIVERY_WS_PORT` 既定値: `17331`
-
 ## テスト用モック WebSocket サーバー
 
 本番の `comment-fetcher` なしで、desktop が受け取る **本番と同じ形式**（`comments.append` / `comments.batch`）のメッセージを高速に流せます。負荷試験・イベント種別の確認・YouTube/Twitch 同時流入の確認に使います。
 
-**注意:** 既定ポートは `WebSocketCommentOutputPort` と同じ `17331` です。Gateway など同じポートを使うプロセスを止めてから起動してください（ポート競合します）。
+**注意:** 既定ポートは `api-gateway` の WebSocket と同じ `17331` です。Gateway など同じポートを使うプロセスを止めてから起動してください（ポート競合します）。
 
 ### 起動コマンド
 
@@ -76,7 +63,7 @@ pnpm dev:comment-delivery-mock-ws -- --mps=200 --batch=3 --max=10000
 | オプション | 既定                             | 説明                                                                                   |
 | ---------- | -------------------------------- | -------------------------------------------------------------------------------------- |
 | `host`     | `127.0.0.1`                      | 待ち受けホスト                                                                         |
-| `port`     | `17331`                          | 待ち受けポート（desktop の `VITE_COMMENT_DELIVERY_WS_URL` と揃える）                   |
+| `port`     | `17331`                          | 待ち受けポート（desktop の `VITE_API_GATEWAY_WS_URL` と揃える）                        |
 | `mps`      | `50`                             | 1秒あたりの **送信回数**（メッセージ単位。`batch` 大きいと実コメント数はさらに増える） |
 | `batch`    | `1`                              | 1メッセージ内のコメント数。`1` のとき `comments.append`、`2` 以上で `comments.batch`   |
 | `max`      | `5000`                           | 送る **コメント総数** の上限（`batch` ごとに加算）                                     |
@@ -103,7 +90,7 @@ pnpm dev:comment-delivery-mock-ws -- --sources=youtube --events=normal --mps=100
 pnpm dev:comment-delivery-mock-ws -- --events=super_chat,subscription --mps=30
 ```
 
-desktop 側の接続先を変える場合は、ルートの `.env` の `VITE_COMMENT_DELIVERY_WS_URL` をモックの `host` / `port` に合わせてください。
+desktop 側の接続先を変える場合は、ルートの `.env` の `VITE_API_GATEWAY_WS_URL` をモックの `host` / `port` に合わせてください。
 
 ## 拡張ポイント
 
