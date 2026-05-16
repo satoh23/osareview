@@ -9,7 +9,7 @@ import {
 } from "@comment-dock/shared";
 import { upsertLiveSession } from "../../../entities/live-session/api/live-sessions.repository";
 import type { DbPlatform } from "../../../entities/live-session/model/types";
-import { COMMENT_DELIVERY_WS_URL } from "../config/ws";
+import { API_GATEWAY_WS_URL } from "../config/ws";
 import {
   toDbPlatform,
   toQueuedCommentWrite,
@@ -80,7 +80,7 @@ class CommentDeliveryWsClient implements CommentIngestionRuntime {
   private started = false;
 
   constructor(options: CommentDeliveryWsClientOptions = {}) {
-    this.wsUrl = options.wsUrl ?? COMMENT_DELIVERY_WS_URL;
+    this.wsUrl = options.wsUrl ?? API_GATEWAY_WS_URL;
     this.onSessionState = options.onSessionState;
     this.queue = new CommentWriteQueue({
       intervalMs: options.queueIntervalMs ?? 1000,
