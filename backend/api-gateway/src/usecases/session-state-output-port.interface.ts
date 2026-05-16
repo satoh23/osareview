@@ -1,10 +1,6 @@
-import type { SessionPlatform, SessionState } from "@comment-dock/shared";
+import type { StreamingSessionSnapshot } from "@comment-dock/shared";
 
-export type SessionStateOutputEvent = {
-  platform: SessionPlatform;
-  state: SessionState;
-  reason?: string;
-};
+export type SessionStateOutputEvent = StreamingSessionSnapshot;
 
 export interface SessionStateOutputPort {
   publishSessionState(event: SessionStateOutputEvent): Promise<void>;

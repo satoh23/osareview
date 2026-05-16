@@ -8,6 +8,7 @@ import {
   type CommentViewDto,
   type CommentsAppendMessage,
   type SessionStateMessage,
+  type StreamingSessionSnapshots,
 } from "@comment-dock/shared";
 import type { CommentOutputPort } from "@comment-dock/comment-delivery";
 import {
@@ -18,7 +19,6 @@ import type {
   SessionStateOutputEvent,
   SessionStateOutputPort,
 } from "../../usecases/session-state-output-port.interface.js";
-import type { StreamingSessionSnapshots } from "../../usecases/manage-streaming-sessions.usecase.js";
 
 const SESSION_PLATFORMS_LIST = [
   SESSION_PLATFORMS.YOUTUBE,

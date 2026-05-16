@@ -51,6 +51,25 @@ export type SessionStateMessage = {
   };
 };
 
+export type StreamingSessionSnapshot = {
+  platform: SessionPlatform;
+  state: SessionState;
+  reason?: string;
+};
+
+export type StreamingSessionSnapshots = Record<
+  SessionPlatform,
+  StreamingSessionSnapshot
+>;
+
+export type StreamingSessionResponse = {
+  session: StreamingSessionSnapshot;
+};
+
+export type StreamingSessionsResponse = {
+  sessions: StreamingSessionSnapshots;
+};
+
 export type CommentDeliveryMessage =
   | CommentsAppendMessage
   | CommentsBatchMessage

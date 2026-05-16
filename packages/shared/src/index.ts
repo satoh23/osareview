@@ -28,5 +28,9 @@ export type {
   SessionPlatform,
   SessionState,
   SessionStateMessage,
+  StreamingSessionResponse,
+  StreamingSessionSnapshot,
+  StreamingSessionSnapshots,
+  StreamingSessionsResponse,
 } from "./transport/comment-delivery-message.js";
 export type { UserSummaryDto } from "./user/user-summary.dto.js";

@@ -1,6 +1,8 @@
 import {
   COMMENT_DELIVERY_MESSAGE_TYPES,
   type CommentDeliveryMessage,
+  type CommentsAppendMessage,
+  type CommentsBatchMessage,
   type CommentViewDto,
 } from "@comment-dock/shared";
 import { upsertLiveSession } from "../../../entities/live-session/api/live-sessions.repository";
@@ -15,6 +17,10 @@ import { CommentWriteQueue } from "./comment-write-queue";
 const COMMENTS_APPEND = COMMENT_DELIVERY_MESSAGE_TYPES.COMMENTS_APPEND;
 const COMMENTS_BATCH = COMMENT_DELIVERY_MESSAGE_TYPES.COMMENTS_BATCH;
 
+type CommentDeliveryCommentMessage =
+  | CommentsAppendMessage
+  | CommentsBatchMessage;
+
 type CommentDeliveryWsClientOptions = {
   wsUrl?: string;
   queueIntervalMs?: number;
@@ -25,7 +31,7 @@ export type CommentIngestionRuntime = {
   stop: (flushRemaining: boolean) => Promise<void>;
 };
 
-function parseMessage(raw: string): CommentDeliveryMessage | null {
+function parseMessage(raw: string): CommentDeliveryCommentMessage | null {
   try {
     const parsed = JSON.parse(raw) as Partial<CommentDeliveryMessage>;
     if (
@@ -33,14 +39,14 @@ function parseMessage(raw: string): CommentDeliveryMessage | null {
       parsed.payload &&
       "comment" in parsed.payload
     ) {
-      return parsed as CommentDeliveryMessage;
+      return parsed as CommentsAppendMessage;
     }
     if (
       parsed.type === COMMENTS_BATCH &&
       parsed.payload &&
       "comments" in parsed.payload
     ) {
-      return parsed as CommentDeliveryMessage;
+      return parsed as CommentsBatchMessage;
     }
     return null;
   } catch {

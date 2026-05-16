@@ -1,4 +1,9 @@
-import { SESSION_PLATFORMS, type SessionPlatform } from "@comment-dock/shared";
+import {
+  SESSION_PLATFORMS,
+  type SessionPlatform,
+  type StreamingSessionResponse,
+  type StreamingSessionsResponse,
+} from "@comment-dock/shared";
 import type { PipelineRunOptions } from "@comment-dock/comment-fetcher";
 import { Hono } from "hono";
 import type { Context } from "hono";
@@ -16,11 +21,12 @@ export const createSessionsRouter = (
 ): Hono => {
   const app = new Hono();
 
-  app.get("/", (context) =>
-    context.json({
+  app.get("/", (context) => {
+    const response: StreamingSessionsResponse = {
       sessions: manageStreamingSessionsUseCase.getSessions(),
-    }),
-  );
+    };
+    return context.json(response);
+  });
 
   app.post("/:platform/start", async (context) => {
     const platform = parsePlatform(context.req.param("platform"));
@@ -29,14 +35,16 @@ export const createSessionsRouter = (
       await parsePipelineRunOptions(context),
     );
 
-    return context.json({ session });
+    const response: StreamingSessionResponse = { session };
+    return context.json(response);
   });
 
   app.post("/:platform/stop", async (context) => {
     const platform = parsePlatform(context.req.param("platform"));
     const session = await manageStreamingSessionsUseCase.stop(platform);
 
-    return context.json({ session });
+    const response: StreamingSessionResponse = { session };
+    return context.json(response);
   });
 
   return app;

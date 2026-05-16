@@ -3,7 +3,8 @@ import {
   SESSION_PLATFORMS,
   SESSION_STATES,
   type SessionPlatform,
-  type SessionState,
+  type StreamingSessionSnapshot,
+  type StreamingSessionSnapshots,
 } from "@comment-dock/shared";
 import {
   runTwitchPipeline,
@@ -18,17 +19,6 @@ import type {
   SessionStateOutputEvent,
   SessionStateOutputPort,
 } from "./session-state-output-port.interface.js";
-
-export type StreamingSessionSnapshot = {
-  platform: SessionPlatform;
-  state: SessionState;
-  reason?: string;
-};
-
-export type StreamingSessionSnapshots = Record<
-  SessionPlatform,
-  StreamingSessionSnapshot
->;
 
 export type SessionPipelineRunner = (
   options: PipelineRunOptions,
