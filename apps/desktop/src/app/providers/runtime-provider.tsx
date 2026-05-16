@@ -1,6 +1,10 @@
 import { useEffect, type ReactNode } from "react";
 import { createCommentIngestionRuntime } from "../../features/comment-ingestion";
 import {
+  publishSessionState,
+  SessionStateProvider,
+} from "../../features/streaming-session";
+import {
   bindRuntimeCloseLifecycle,
   type RuntimeLifecycleBinding,
 } from "../runtime/lifecycle";
@@ -11,7 +15,9 @@ type RuntimeProviderProps = {
 
 export function RuntimeProvider({ children }: RuntimeProviderProps) {
   useEffect(() => {
-    const runtime = createCommentIngestionRuntime();
+    const runtime = createCommentIngestionRuntime({
+      onSessionState: publishSessionState,
+    });
     runtime.start();
 
     let binding: RuntimeLifecycleBinding | undefined;
@@ -28,5 +34,5 @@ export function RuntimeProvider({ children }: RuntimeProviderProps) {
     };
   }, []);
 
-  return <>{children}</>;
+  return <SessionStateProvider>{children}</SessionStateProvider>;
 }
