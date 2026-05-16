@@ -3,11 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "dist/lib.js",
+  "types": "dist/lib.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lib.d.ts",
+      "default": "./dist/lib.js"
+    }
+  },
   "scripts": {
-    "dev": "pnpm --filter @comment-dock/auth build && pnpm --filter @comment-dock/comment-fetcher build && tsx watch src/index.ts",
     "dev:mock-ws": "tsx scripts/mock-comment-delivery-server.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
     "check-types": "tsc --noEmit",
     "test": "tsx --test \"src/**/*.test.ts\""
   },

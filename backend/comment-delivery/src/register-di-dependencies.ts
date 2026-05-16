@@ -4,11 +4,9 @@ import { DELIVERY_DI_TOKENS } from "./infrastructure/shared/di-tokens.js";
 import type { CommentDecorator } from "./usecases/interfaces/comment-decorator.interface.js";
 import type { CommentOutputPort } from "./usecases/interfaces/comment-output-port.interface.js";
 import { IdentityDecorator } from "./adapters/decorators/identity.decorator.js";
-import type { CommentSource } from "./usecases/interfaces/comment-source.interface.js";
 import { ConsoleCommentOutputPort } from "./adapters/output-ports/console-comment.output-port.js";
 import { MultiCommentOutputPort } from "./adapters/output-ports/multi-comment.output-port.js";
 import { WebSocketCommentOutputPort } from "./adapters/output-ports/websocket-comment.output-port.js";
-import { CommentFetcherSource } from "./adapters/sources/comment-fetcher.source.js";
 import {
   EnvWebSocketConfigProvider,
   type WebSocketConfigProvider,
@@ -22,10 +20,6 @@ export const registerCommentDeliveryDependencies = (
     {
       useClass: IdentityDecorator,
     },
-  );
-  targetContainer.registerSingleton<CommentSource>(
-    DELIVERY_DI_TOKENS.commentSource,
-    CommentFetcherSource,
   );
   targetContainer.registerSingleton<WebSocketConfigProvider>(
     DELIVERY_DI_TOKENS.websocketConfigProvider,

@@ -1,36 +1,36 @@
 # comment-delivery
 
-`comment-fetcher` が取得したコメントを受け取り、装飾パイプラインを通して UI 向けに配信するサービスです。
+`comment-fetcher` が取得したコメントを受け取り、装飾パイプラインを通して UI 向けの DTO へ変換・配信するライブラリです。
 
 現在の既定構成は次のとおりです。
 
-- Source: `CommentFetcherSource`
 - Decorator: `IdentityDecorator`（no-op）
 - Sink: `MultiCommentOutputPort`（`ConsoleCommentOutputPort` + `WebSocketCommentOutputPort` に fanout）
 
-## 起動手順
+## 利用方法
 
-リポジトリルートで実行します。
+`comment-delivery` は単独プロセスとしては起動せず、Gateway などの呼び出し元から `DeliverCommentsUseCase` を利用します。
 
-```bash
-pnpm dev:comment-delivery
+```ts
+import {
+  DeliverCommentsUseCase,
+  registerCommentDeliveryDependencies,
+} from "@comment-dock/comment-delivery";
+import { container } from "tsyringe";
+
+registerCommentDeliveryDependencies();
+
+const deliverCommentsUseCase = container.resolve(DeliverCommentsUseCase);
+await deliverCommentsUseCase.deliverComments(comments);
 ```
 
-`backend/comment-delivery` 直下で実行する場合:
-
-```bash
-pnpm dev
-```
+Gateway では fetcher の `outputComments` から `deliverComments()` を直接呼び、余分な queue / async generator を挟まない構成にします。
 
 ## 環境変数
 
 `.env.example` を参考に `.env` を作成してください。
 
 ```env
-# comment-fetcher 側の設定（最低限）
-TWITCH_CLIENT_ID=
-TWITCH_TARGET_CHANNEL_ID=
-
 # comment-delivery WebSocket
 COMMENT_DELIVERY_WS_HOST=127.0.0.1
 COMMENT_DELIVERY_WS_PORT=17331
@@ -43,7 +43,7 @@ COMMENT_DELIVERY_WS_PORT=17331
 
 本番の `comment-fetcher` なしで、desktop が受け取る **本番と同じ形式**（`comments.append` / `comments.batch`）のメッセージを高速に流せます。負荷試験・イベント種別の確認・YouTube/Twitch 同時流入の確認に使います。
 
-**注意:** 既定ポートは本番の `WebSocketCommentOutputPort` と同じ `17331` です。モックを使うときは **`pnpm dev:comment-delivery` を止めてから** 起動してください（ポート競合します）。
+**注意:** 既定ポートは `WebSocketCommentOutputPort` と同じ `17331` です。Gateway など同じポートを使うプロセスを止めてから起動してください（ポート競合します）。
 
 ### 起動コマンド
 
@@ -107,28 +107,12 @@ desktop 側の接続先を変える場合は、ルートの `.env` の `VITE_COM
 
 ## 拡張ポイント
 
-`comment-delivery` は 3 つの拡張ポイントで構成されています。
+`comment-delivery` は 2 つの拡張ポイントで構成されています。
 
-- Source: コメント入力元（`Comment[]` のストリーム）
 - Decorator: `CommentViewDto` 単位の装飾変換
 - Sink: UI への出力先
 
-### 1) Source を追加する
-
-1. `CommentSource` を実装したクラスを作成  
-   (`src/usecases/interfaces/comment-source.interface.ts`)
-2. `receiveComments(): AsyncIterable<Comment[]>` を実装
-3. `registerCommentDeliveryDependencies` で `DELIVERY_DI_TOKENS.commentSource` に登録
-
-登録例:
-
-```ts
-targetContainer.register<CommentSource>(DELIVERY_DI_TOKENS.commentSource, {
-  useClass: ReplayCommentSource,
-});
-```
-
-### 2) Decorator を追加する
+### 1) Decorator を追加する
 
 1. `CommentDecorator` を実装したクラスを作成  
    (`src/usecases/interfaces/comment-decorator.interface.ts`)
@@ -146,7 +130,7 @@ targetContainer.register<CommentDecorator>(
 );
 ```
 
-### 3) Sink を追加する
+### 2) Sink を追加する
 
 1. `CommentOutputPort` を実装したクラスを作成  
    (`src/usecases/interfaces/comment-output-port.interface.ts`)

@@ -6,7 +6,6 @@ import type { Comment } from "@comment-dock/comment-fetcher";
 import { DecorationPipeline } from "../adapters/decorators/decoration-pipeline.js";
 import type { CommentDecorator } from "./interfaces/comment-decorator.interface.js";
 import type { CommentOutputPort } from "./interfaces/comment-output-port.interface.js";
-import type { CommentSource } from "./interfaces/comment-source.interface.js";
 import { DeliverCommentsUseCase } from "./deliver-comments.usecase.js";
 
 const buildComment = (id: string, text: string): Comment => ({
@@ -19,12 +18,6 @@ const buildComment = (id: string, text: string): Comment => ({
 });
 
 test("DeliverCommentsUseCase は変換と装飾後に UI へ出力する", async () => {
-  const source: CommentSource = {
-    async *receiveComments() {
-      yield [buildComment("c1", "hello")];
-    },
-  };
-
   const outputCalls: string[] = [];
   const outputPort: CommentOutputPort = {
     async outputToUi(comments) {
@@ -41,12 +34,8 @@ test("DeliverCommentsUseCase は変換と装飾後に UI へ出力する", async
   ];
   const decorationPipeline = new DecorationPipeline(decorators);
 
-  const useCase = new DeliverCommentsUseCase(
-    source,
-    outputPort,
-    decorationPipeline,
-  );
-  await useCase.deliverToUi();
+  const useCase = new DeliverCommentsUseCase(outputPort, decorationPipeline);
+  await useCase.deliverComments([buildComment("c1", "hello")]);
 
   assert.deepEqual(outputCalls, ["hello-decorated"]);
 });

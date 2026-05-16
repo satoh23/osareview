@@ -9,6 +9,7 @@ import { ConsoleCommentOutputPort } from "./adapters/output-ports/console-commen
 import { MultiCommentOutputPort } from "./adapters/output-ports/multi-comment.output-port.js";
 import { WebSocketCommentOutputPort } from "./adapters/output-ports/websocket-comment.output-port.js";
 import { registerCommentDeliveryDependencies } from "./register-di-dependencies.js";
+import { DeliverCommentsUseCase } from "./usecases/deliver-comments.usecase.js";
 
 test("register + resolveAll で複数デコレーターを登録順に解決できる", async () => {
   const c = container.createChildContainer();
@@ -56,4 +57,13 @@ test("出力ポートを DI で構成できる", () => {
   assert.ok(
     targets.some((target) => target instanceof WebSocketCommentOutputPort),
   );
+});
+
+test("DeliverCommentsUseCase を DI で解決できる", () => {
+  const c = container.createChildContainer();
+  registerCommentDeliveryDependencies(c);
+
+  const useCase = c.resolve(DeliverCommentsUseCase);
+
+  assert.ok(useCase instanceof DeliverCommentsUseCase);
 });
