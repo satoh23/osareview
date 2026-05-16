@@ -22,6 +22,7 @@ export class CollectYouTubeCommentsUseCase {
     input: CollectCommentsInput,
   ): CollectCommentsStream {
     let nextPageToken = input.pageToken;
+    const retryOnStreamEnd = input.retryOnStreamEnd ?? true;
 
     while (true) {
       try {
@@ -35,11 +36,16 @@ export class CollectYouTubeCommentsUseCase {
           }
         }
       } catch (error) {
-        // streamList 切断時は最後に保持した pageToken から再接続する。
         console.warn(
-          "[CollectYouTubeCommentsUseCase] stream disconnected, reconnecting with last pageToken",
+          retryOnStreamEnd
+            ? "[CollectYouTubeCommentsUseCase] stream disconnected, reconnecting with last pageToken"
+            : "[CollectYouTubeCommentsUseCase] stream disconnected",
           error,
         );
+      }
+
+      if (!retryOnStreamEnd) {
+        return;
       }
 
       await this.wait(this.reconnectIntervalMs);

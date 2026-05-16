@@ -21,6 +21,8 @@ export class CollectTwitchCommentsUseCase {
   async *streamCommentsFromLiveChat(
     input: CollectCommentsInput,
   ): CollectCommentsStream {
+    const retryOnStreamEnd = input.retryOnStreamEnd ?? true;
+
     while (true) {
       try {
         for await (const chunk of this.repository.streamComments({
@@ -31,11 +33,16 @@ export class CollectTwitchCommentsUseCase {
           }
         }
       } catch (error) {
-        // EventSub 切断時は pageToken 無しで再接続する。
         console.warn(
-          "[CollectTwitchCommentsUseCase] stream disconnected, reconnecting",
+          retryOnStreamEnd
+            ? "[CollectTwitchCommentsUseCase] stream disconnected, reconnecting"
+            : "[CollectTwitchCommentsUseCase] stream disconnected",
           error,
         );
+      }
+
+      if (!retryOnStreamEnd) {
+        return;
       }
 
       await this.wait(this.reconnectIntervalMs);

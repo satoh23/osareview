@@ -88,3 +88,36 @@ test("切断後はpageToken無しで再接続する", async () => {
   ]);
   assert.deepEqual(waitCalls, [500]);
 });
+
+test("retryOnStreamEnd が false の場合はストリーム自然終了後に再接続しない", async () => {
+  let streamCalls = 0;
+  const repository = {
+    async *streamComments() {
+      streamCalls += 1;
+      yield {
+        comments: [createComment("1")],
+        nextPageToken: undefined,
+      };
+    },
+  };
+  const waitCalls: number[] = [];
+  const useCase = new CollectTwitchCommentsUseCase(
+    repository,
+    500,
+    async (milliseconds) => {
+      waitCalls.push(milliseconds);
+    },
+  );
+
+  const receivedIds: string[] = [];
+  for await (const comments of useCase.streamCommentsFromLiveChat({
+    liveChatId: "chat-1",
+    retryOnStreamEnd: false,
+  })) {
+    receivedIds.push(...comments.map((comment) => comment.id));
+  }
+
+  assert.deepEqual(receivedIds, ["1"]);
+  assert.equal(streamCalls, 1);
+  assert.deepEqual(waitCalls, []);
+});

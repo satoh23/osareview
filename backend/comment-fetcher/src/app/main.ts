@@ -260,6 +260,7 @@ const collectComments = async (
 
       const commentStream = pipeline.streamCommentsFromLiveChat({
         liveChatId: activeLiveStream.liveChatId,
+        retryOnStreamEnd: options.retryOnLiveStreamNotFound,
       });
       const commentIterator = commentStream[Symbol.asyncIterator]();
       try {

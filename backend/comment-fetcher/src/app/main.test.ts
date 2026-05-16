@@ -36,7 +36,6 @@ const noopOutputPort: CommentOutputPort = {
 };
 
 test("runYouTubePipeline は単発実行で状態遷移を通知する", async () => {
-  const controller = new AbortController();
   const events: unknown[] = [];
   let outputCalls = 0;
 
@@ -74,11 +73,9 @@ test("runYouTubePipeline は単発実行で状態遷移を通知する", async (
         {
           outputComments: async () => {
             outputCalls += 1;
-            controller.abort();
           },
         },
         {
-          signal: controller.signal,
           onStateChange: (event) => {
             events.push(event);
           },

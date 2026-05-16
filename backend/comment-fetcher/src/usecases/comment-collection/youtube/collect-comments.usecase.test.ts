@@ -85,3 +85,36 @@ test("切断後は最後の nextPageToken を使って再接続する", async ()
   assert.deepEqual(requestedPageTokens, [undefined, "resume-token"]);
   assert.deepEqual(waitCalls, [500]);
 });
+
+test("retryOnStreamEnd が false の場合はストリーム自然終了後に再接続しない", async () => {
+  let streamCalls = 0;
+  const repository = {
+    async *streamComments() {
+      streamCalls += 1;
+      yield {
+        comments: [createComment("1")],
+        nextPageToken: "next-1",
+      };
+    },
+  };
+  const waitCalls: number[] = [];
+  const useCase = new CollectYouTubeCommentsUseCase(
+    repository,
+    500,
+    async (milliseconds) => {
+      waitCalls.push(milliseconds);
+    },
+  );
+
+  const receivedIds: string[] = [];
+  for await (const comments of useCase.streamCommentsFromLiveChat({
+    liveChatId: "chat-1",
+    retryOnStreamEnd: false,
+  })) {
+    receivedIds.push(...comments.map((comment) => comment.id));
+  }
+
+  assert.deepEqual(receivedIds, ["1"]);
+  assert.equal(streamCalls, 1);
+  assert.deepEqual(waitCalls, []);
+});
