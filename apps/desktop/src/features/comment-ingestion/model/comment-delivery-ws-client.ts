@@ -4,6 +4,8 @@ import {
   type CommentsAppendMessage,
   type CommentsBatchMessage,
   type CommentViewDto,
+  type SessionStateMessage,
+  type StreamingSessionSnapshot,
 } from "@comment-dock/shared";
 import { upsertLiveSession } from "../../../entities/live-session/api/live-sessions.repository";
 import type { DbPlatform } from "../../../entities/live-session/model/types";
@@ -16,14 +18,20 @@ import { CommentWriteQueue } from "./comment-write-queue";
 
 const COMMENTS_APPEND = COMMENT_DELIVERY_MESSAGE_TYPES.COMMENTS_APPEND;
 const COMMENTS_BATCH = COMMENT_DELIVERY_MESSAGE_TYPES.COMMENTS_BATCH;
+const SESSION_STATE = COMMENT_DELIVERY_MESSAGE_TYPES.SESSION_STATE;
 
 type CommentDeliveryCommentMessage =
   | CommentsAppendMessage
   | CommentsBatchMessage;
 
-type CommentDeliveryWsClientOptions = {
+type SupportedCommentDeliveryMessage =
+  | CommentDeliveryCommentMessage
+  | SessionStateMessage;
+
+export type CommentDeliveryWsClientOptions = {
   wsUrl?: string;
   queueIntervalMs?: number;
+  onSessionState?: (session: StreamingSessionSnapshot) => void;
 };
 
 export type CommentIngestionRuntime = {
@@ -31,7 +39,7 @@ export type CommentIngestionRuntime = {
   stop: (flushRemaining: boolean) => Promise<void>;
 };
 
-function parseMessage(raw: string): CommentDeliveryCommentMessage | null {
+function parseMessage(raw: string): SupportedCommentDeliveryMessage | null {
   try {
     const parsed = JSON.parse(raw) as Partial<CommentDeliveryMessage>;
     if (
@@ -48,6 +56,14 @@ function parseMessage(raw: string): CommentDeliveryCommentMessage | null {
     ) {
       return parsed as CommentsBatchMessage;
     }
+    if (
+      parsed.type === SESSION_STATE &&
+      parsed.payload &&
+      "platform" in parsed.payload &&
+      "state" in parsed.payload
+    ) {
+      return parsed as SessionStateMessage;
+    }
     return null;
   } catch {
     return null;
@@ -57,6 +73,7 @@ function parseMessage(raw: string): CommentDeliveryCommentMessage | null {
 class CommentDeliveryWsClient implements CommentIngestionRuntime {
   private readonly queue: CommentWriteQueue;
   private readonly wsUrl: string;
+  private readonly onSessionState?: (session: StreamingSessionSnapshot) => void;
   private readonly liveSessionIdByPlatform = new Map<DbPlatform, number>();
   private socket: WebSocket | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -64,6 +81,7 @@ class CommentDeliveryWsClient implements CommentIngestionRuntime {
 
   constructor(options: CommentDeliveryWsClientOptions = {}) {
     this.wsUrl = options.wsUrl ?? COMMENT_DELIVERY_WS_URL;
+    this.onSessionState = options.onSessionState;
     this.queue = new CommentWriteQueue({
       intervalMs: options.queueIntervalMs ?? 1000,
     });
@@ -124,6 +142,11 @@ class CommentDeliveryWsClient implements CommentIngestionRuntime {
     }
     const message = parseMessage(rawData);
     if (!message) {
+      return;
+    }
+
+    if (message.type === SESSION_STATE) {
+      this.onSessionState?.(message.payload);
       return;
     }
 
