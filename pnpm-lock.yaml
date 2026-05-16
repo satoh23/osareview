@@ -75,6 +75,46 @@ importers:
         specifier: ^4.1.5
         version: 4.1.5(@types/node@22.19.17)(vite@7.3.1(@types/node@22.19.17)(tsx@4.21.0))
 
+  backend/api-gateway:
+    dependencies:
+      "@comment-dock/auth":
+        specifier: workspace:*
+        version: link:../auth
+      "@comment-dock/comment-delivery":
+        specifier: workspace:*
+        version: link:../comment-delivery
+      "@comment-dock/comment-fetcher":
+        specifier: workspace:*
+        version: link:../comment-fetcher
+      "@comment-dock/shared":
+        specifier: workspace:*
+        version: link:../../packages/shared
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      tsyringe:
+        specifier: ^4.10.0
+        version: 4.10.0
+      ws:
+        specifier: ^8.20.0
+        version: 8.20.0
+    devDependencies:
+      "@types/node":
+        specifier: ^22.19.3
+        version: 22.19.17
+      "@types/ws":
+        specifier: ^8.18.1
+        version: 8.18.1
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+
   backend/auth:
     dependencies:
       "@comment-dock/shared":
