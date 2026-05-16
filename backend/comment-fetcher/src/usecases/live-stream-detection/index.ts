@@ -9,7 +9,11 @@ import {
   getLiveStreamPollingIntervalMs,
 } from "../../infrastructure/shared/config/live-stream-detection.js";
 
-type WaitFn = (milliseconds: number) => Promise<void>;
+type WaitFn = (milliseconds: number, signal?: AbortSignal) => Promise<void>;
+
+export type FindActiveLiveStreamOptions = {
+  signal?: AbortSignal;
+};
 
 export class LiveStreamNotFoundError extends Error {
   constructor(channelId: string, maxAttempts: number) {
@@ -26,19 +30,23 @@ export class DetectLiveStreamUseCase {
     private readonly pollingIntervalMs = getLiveStreamPollingIntervalMs(),
     private readonly maxAttempts = getLiveStreamMaxAttempts(),
     // テスト時に待機処理を差し替えて高速・安定に検証できるよう注入可能にしている。
-    private readonly wait: WaitFn = async (milliseconds) => {
-      await sleep(milliseconds);
+    private readonly wait: WaitFn = async (milliseconds, signal) => {
+      await sleep(milliseconds, undefined, { signal });
     },
   ) {}
 
   async findActiveLiveStream(
     input: FindLiveStreamInput,
+    options: FindActiveLiveStreamOptions = {},
   ): Promise<FindLiveStreamResult> {
     for (let attempt = 1; attempt <= this.maxAttempts; attempt += 1) {
+      options.signal?.throwIfAborted();
       const result = await this.repository.findLiveStream(input);
       if (result) return result;
 
-      if (attempt < this.maxAttempts) await this.wait(this.pollingIntervalMs);
+      if (attempt < this.maxAttempts) {
+        await this.wait(this.pollingIntervalMs, options.signal);
+      }
     }
 
     throw new LiveStreamNotFoundError(input.channelId, this.maxAttempts);

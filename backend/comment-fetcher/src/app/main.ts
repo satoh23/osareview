@@ -1,7 +1,11 @@
 import { container } from "tsyringe";
 import { setTimeout as sleep } from "node:timers/promises";
-import { COMMENT_SOURCES } from "@comment-dock/shared";
-import type { CommentSource } from "@comment-dock/shared";
+import { COMMENT_SOURCES, SESSION_STATES } from "@comment-dock/shared";
+import type {
+  CommentSource,
+  SessionPlatform,
+  SessionState,
+} from "@comment-dock/shared";
 import { YouTubeCommentRepository } from "../adapters/youtube/repository/comment.repository.js";
 import { YouTubeLiveStreamRepository } from "../adapters/youtube/repository/live-stream.repository.js";
 import { YouTubeLiveStreamClient } from "../adapters/youtube/client/live-stream.client.js";
@@ -32,11 +36,35 @@ export type RunCommentFetcherAppOptions = {
   liveStreamRetryIntervalMs?: number;
 };
 
+// NOTE: 単発パイプライン用の公開名を先に分けておく。
+// 現状は既存アプリ実行オプションと同じだが、Gateway 側からの利用が増えた時に
+// runCommentFetcherApp と別のオプション形へ切り出しやすくするため alias にしている。
+export type PipelineRunOptions = RunCommentFetcherAppOptions;
+
+export type SessionStateChangeEvent = {
+  platform: SessionPlatform;
+  state: SessionState;
+  reason?: string;
+};
+
+export type PipelineControlOptions = {
+  signal?: AbortSignal;
+  onStateChange?: (event: SessionStateChangeEvent) => void | Promise<void>;
+};
+
+type ResolvedPipelineRunOptions = Required<
+  Pick<
+    RunCommentFetcherAppOptions,
+    "retryOnLiveStreamNotFound" | "liveStreamRetryIntervalMs"
+  >
+>;
+
 type CommentFetchPipeline = {
-  provider: CommentProvider;
+  provider: CommentProvider & SessionPlatform;
   resolveTargetChannelId: () => Promise<string | null>;
   findActiveLiveStream: (
     input: FindLiveStreamInput,
+    options?: { signal?: AbortSignal },
   ) => Promise<FindLiveStreamResult>;
   streamCommentsFromLiveChat: (
     input: CollectCommentsInput,
@@ -53,6 +81,77 @@ const isAuthorizationMissingError = (error: unknown): boolean => {
     /Invalid OAuth token/.test(error.message)
   );
 };
+
+const isAbortError = (error: unknown): boolean => {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  return error.name === "AbortError";
+};
+
+const emitStateChange = async (
+  pipeline: CommentFetchPipeline,
+  controls: PipelineControlOptions,
+  state: SessionState,
+  reason?: string,
+): Promise<void> => {
+  await controls.onStateChange?.({
+    platform: pipeline.provider,
+    state,
+    ...(reason ? { reason } : {}),
+  });
+};
+
+const waitForRetry = async (
+  milliseconds: number,
+  signal?: AbortSignal,
+): Promise<void> => {
+  await sleep(milliseconds, undefined, { signal });
+};
+
+const nextWithAbort = async <T>(
+  iterator: AsyncIterator<T>,
+  signal?: AbortSignal,
+): Promise<IteratorResult<T>> => {
+  if (!signal) {
+    return iterator.next();
+  }
+
+  signal.throwIfAborted();
+
+  // for await...of では next() 待機中の AbortSignal を直接扱えないため、
+  // iterator.next() と abort 通知を競争させて停止操作に即時反応できるようにする。
+  let removeAbortListener: (() => void) | undefined;
+  const abortPromise = new Promise<never>((_, reject) => {
+    const onAbort = (): void => {
+      reject(signal.reason);
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    removeAbortListener = () => {
+      signal.removeEventListener("abort", onAbort);
+    };
+  });
+
+  try {
+    return await Promise.race([iterator.next(), abortPromise]);
+  } finally {
+    removeAbortListener?.();
+  }
+};
+
+// 外部入力の optional な実行設定を、collectComments が扱う必須設定へ解決する。
+// 既存の runCommentFetcherApp は常駐プロセス互換で再検知あり、
+// 単発パイプラインはボタン起点の実行なので再検知なしを既定にするため、
+// retry の既定値だけ呼び出し元から渡せるようにしている。
+const resolveRuntimeOptions = (
+  options: RunCommentFetcherAppOptions,
+  defaultRetryOnLiveStreamNotFound: boolean,
+): ResolvedPipelineRunOptions => ({
+  retryOnLiveStreamNotFound:
+    options.retryOnLiveStreamNotFound ?? defaultRetryOnLiveStreamNotFound,
+  liveStreamRetryIntervalMs:
+    options.liveStreamRetryIntervalMs ?? getLiveStreamPollingIntervalMs(),
+});
 
 const createYouTubePipeline = (
   options: RunCommentFetcherAppOptions,
@@ -87,8 +186,8 @@ const createYouTubePipeline = (
       );
       return ownChannelId;
     },
-    findActiveLiveStream: (input) =>
-      detectLiveStreamUseCase.findActiveLiveStream(input),
+    findActiveLiveStream: (input, findOptions) =>
+      detectLiveStreamUseCase.findActiveLiveStream(input, findOptions),
     streamCommentsFromLiveChat: (input) =>
       collectCommentsUseCase.streamCommentsFromLiveChat(input),
   };
@@ -116,8 +215,8 @@ const createTwitchPipeline = (): CommentFetchPipeline => {
       }
       return channelId;
     },
-    findActiveLiveStream: (input) =>
-      detectLiveStreamUseCase.findActiveLiveStream(input),
+    findActiveLiveStream: (input, findOptions) =>
+      detectLiveStreamUseCase.findActiveLiveStream(input, findOptions),
     streamCommentsFromLiveChat: (input) =>
       collectCommentsUseCase.streamCommentsFromLiveChat(input),
   };
@@ -126,23 +225,30 @@ const createTwitchPipeline = (): CommentFetchPipeline => {
 const collectComments = async (
   pipeline: CommentFetchPipeline,
   outputPort: CommentOutputPort,
-  options: Required<
-    Pick<
-      RunCommentFetcherAppOptions,
-      "retryOnLiveStreamNotFound" | "liveStreamRetryIntervalMs"
-    >
-  >,
+  options: ResolvedPipelineRunOptions,
+  controls: PipelineControlOptions = {},
 ): Promise<void> => {
   while (true) {
     try {
+      controls.signal?.throwIfAborted();
+      await emitStateChange(pipeline, controls, SESSION_STATES.CONNECTING);
       const channelId = await pipeline.resolveTargetChannelId();
       if (!channelId) {
+        await emitStateChange(
+          pipeline,
+          controls,
+          SESSION_STATES.FAILED,
+          "Target channel could not be resolved.",
+        );
         return;
       }
 
-      const activeLiveStream = await pipeline.findActiveLiveStream({
-        channelId,
-      });
+      const activeLiveStream = await pipeline.findActiveLiveStream(
+        {
+          channelId,
+        },
+        { signal: controls.signal },
+      );
       console.info(
         `[comment-fetcher] ${pipeline.provider} live stream detected`,
         {
@@ -150,23 +256,50 @@ const collectComments = async (
           liveChatId: activeLiveStream.liveChatId,
         },
       );
+      await emitStateChange(pipeline, controls, SESSION_STATES.CONNECTED);
 
-      for await (const comments of pipeline.streamCommentsFromLiveChat({
+      const commentStream = pipeline.streamCommentsFromLiveChat({
         liveChatId: activeLiveStream.liveChatId,
-      })) {
-        await outputPort.outputComments(comments);
+      });
+      const commentIterator = commentStream[Symbol.asyncIterator]();
+      try {
+        while (true) {
+          const nextComments = await nextWithAbort(
+            commentIterator,
+            controls.signal,
+          );
+          if (nextComments.done) {
+            break;
+          }
+
+          controls.signal?.throwIfAborted();
+          await outputPort.outputComments(nextComments.value);
+        }
+      } finally {
+        await commentIterator.return?.();
       }
 
       // 配信終了などでストリームが自然終了した場合は待機して再検知する。
       // テストでは無限待機を避けるため、ここで明示的に終了できるようにする。
       if (!options.retryOnLiveStreamNotFound) {
+        await emitStateChange(pipeline, controls, SESSION_STATES.IDLE);
         return;
       }
-      await sleep(options.liveStreamRetryIntervalMs);
+      await waitForRetry(options.liveStreamRetryIntervalMs, controls.signal);
     } catch (error) {
+      if (controls.signal?.aborted || isAbortError(error)) {
+        await emitStateChange(pipeline, controls, SESSION_STATES.IDLE);
+        return;
+      }
       if (isAuthorizationMissingError(error)) {
         console.warn(
           `[comment-fetcher] ${pipeline.provider} is skipped because authorization is missing.`,
+        );
+        await emitStateChange(
+          pipeline,
+          controls,
+          SESSION_STATES.FAILED,
+          error instanceof Error ? error.message : String(error),
         );
         return;
       }
@@ -175,15 +308,47 @@ const collectComments = async (
           `[comment-fetcher] ${pipeline.provider} live stream not found`,
           error.message,
         );
+        await emitStateChange(
+          pipeline,
+          controls,
+          SESSION_STATES.FAILED,
+          error.message,
+        );
         if (!options.retryOnLiveStreamNotFound) {
           return;
         }
-        await sleep(options.liveStreamRetryIntervalMs);
+        await waitForRetry(options.liveStreamRetryIntervalMs, controls.signal);
         continue;
       }
       throw error;
     }
   }
+};
+
+export const runYouTubePipeline = async (
+  options: PipelineRunOptions,
+  outputPort: CommentOutputPort,
+  controls: PipelineControlOptions = {},
+): Promise<void> => {
+  await collectComments(
+    createYouTubePipeline(options),
+    outputPort,
+    resolveRuntimeOptions(options, false),
+    controls,
+  );
+};
+
+export const runTwitchPipeline = async (
+  options: PipelineRunOptions,
+  outputPort: CommentOutputPort,
+  controls: PipelineControlOptions = {},
+): Promise<void> => {
+  await collectComments(
+    createTwitchPipeline(),
+    outputPort,
+    resolveRuntimeOptions(options, false),
+    controls,
+  );
 };
 
 /**
@@ -194,11 +359,7 @@ export const runCommentFetcherApp = async (
   options: RunCommentFetcherAppOptions = {},
   outputPort: CommentOutputPort,
 ): Promise<void> => {
-  const runtimeOptions = {
-    retryOnLiveStreamNotFound: options.retryOnLiveStreamNotFound ?? true,
-    liveStreamRetryIntervalMs:
-      options.liveStreamRetryIntervalMs ?? getLiveStreamPollingIntervalMs(),
-  };
+  const runtimeOptions = resolveRuntimeOptions(options, true);
 
   const pipelines: CommentFetchPipeline[] = [
     createYouTubePipeline(options),

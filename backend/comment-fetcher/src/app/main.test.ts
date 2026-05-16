@@ -2,7 +2,12 @@ import "reflect-metadata";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { container } from "tsyringe";
-import { runCommentFetcherApp } from "./main.js";
+import { SESSION_STATES } from "@comment-dock/shared";
+import {
+  runCommentFetcherApp,
+  runTwitchPipeline,
+  runYouTubePipeline,
+} from "./main.js";
 import { YouTubeLiveStreamRepository } from "../adapters/youtube/repository/live-stream.repository.js";
 import { YouTubeCommentRepository } from "../adapters/youtube/repository/comment.repository.js";
 import { YouTubeLiveStreamClient } from "../adapters/youtube/client/live-stream.client.js";
@@ -29,6 +34,161 @@ const withMockedResolve = async (
 const noopOutputPort: CommentOutputPort = {
   outputComments: async () => {},
 };
+
+test("runYouTubePipeline は単発実行で状態遷移を通知する", async () => {
+  const controller = new AbortController();
+  const events: unknown[] = [];
+  let outputCalls = 0;
+
+  await withMockedResolve(
+    ((token: unknown) => {
+      if (token === YouTubeLiveStreamRepository) {
+        return {
+          async findLiveStream() {
+            return {
+              liveStreamId: "live-video-1",
+              liveChatId: "chat-1",
+            };
+          },
+        } as unknown as ReturnType<ResolveFn>;
+      }
+      if (token === YouTubeLiveStreamClient) {
+        return {
+          resolveOwnChannelId: async () => "channel-1",
+        } as unknown as ReturnType<ResolveFn>;
+      }
+      if (token === YouTubeCommentRepository) {
+        return {
+          async *streamComments() {
+            yield {
+              comments: [{}],
+            };
+          },
+        } as unknown as ReturnType<ResolveFn>;
+      }
+      throw new Error("unexpected token");
+    }) as ResolveFn,
+    async () => {
+      await runYouTubePipeline(
+        {},
+        {
+          outputComments: async () => {
+            outputCalls += 1;
+            controller.abort();
+          },
+        },
+        {
+          signal: controller.signal,
+          onStateChange: (event) => {
+            events.push(event);
+          },
+        },
+      );
+    },
+  );
+
+  assert.equal(outputCalls, 1);
+  assert.deepEqual(events, [
+    { platform: "youtube", state: SESSION_STATES.CONNECTING },
+    { platform: "youtube", state: SESSION_STATES.CONNECTED },
+    { platform: "youtube", state: SESSION_STATES.IDLE },
+  ]);
+});
+
+test("runTwitchPipeline は配信未検出時に failed を通知して終了する", async () => {
+  const originalTwitchChannelId = process.env.TWITCH_TARGET_CHANNEL_ID;
+  process.env.TWITCH_TARGET_CHANNEL_ID = "target-channel";
+
+  const events: unknown[] = [];
+  const originalWarn = console.warn;
+  console.warn = () => {};
+
+  try {
+    await withMockedResolve(
+      ((token: unknown) => {
+        if (token === TwitchLiveStreamRepository) {
+          return {
+            async findLiveStream() {
+              throw new LiveStreamNotFoundError("target-channel", 5);
+            },
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        if (token === TwitchCommentRepository) {
+          return {
+            async *streamComments() {},
+          } as unknown as ReturnType<ResolveFn>;
+        }
+        throw new Error("unexpected token");
+      }) as ResolveFn,
+      async () => {
+        await runTwitchPipeline({}, noopOutputPort, {
+          onStateChange: (event) => {
+            events.push(event);
+          },
+        });
+      },
+    );
+  } finally {
+    console.warn = originalWarn;
+    if (originalTwitchChannelId) {
+      process.env.TWITCH_TARGET_CHANNEL_ID = originalTwitchChannelId;
+    } else {
+      delete process.env.TWITCH_TARGET_CHANNEL_ID;
+    }
+  }
+
+  assert.deepEqual(events, [
+    { platform: "twitch", state: SESSION_STATES.CONNECTING },
+    {
+      platform: "twitch",
+      state: SESSION_STATES.FAILED,
+      reason:
+        'Live stream was not found for channel "target-channel" after 5 attempts.',
+    },
+  ]);
+});
+
+test("runYouTubePipeline は AbortSignal 中断時に idle を通知して終了する", async () => {
+  const controller = new AbortController();
+  const events: unknown[] = [];
+
+  await withMockedResolve(
+    ((token: unknown) => {
+      if (token === YouTubeLiveStreamRepository) {
+        return {
+          async findLiveStream() {
+            controller.abort();
+            throw controller.signal.reason;
+          },
+        } as unknown as ReturnType<ResolveFn>;
+      }
+      if (token === YouTubeLiveStreamClient) {
+        return {
+          resolveOwnChannelId: async () => "channel-1",
+        } as unknown as ReturnType<ResolveFn>;
+      }
+      if (token === YouTubeCommentRepository) {
+        return {
+          async *streamComments() {},
+        } as unknown as ReturnType<ResolveFn>;
+      }
+      throw new Error("unexpected token");
+    }) as ResolveFn,
+    async () => {
+      await runYouTubePipeline({}, noopOutputPort, {
+        signal: controller.signal,
+        onStateChange: (event) => {
+          events.push(event);
+        },
+      });
+    },
+  );
+
+  assert.deepEqual(events, [
+    { platform: "youtube", state: SESSION_STATES.CONNECTING },
+    { platform: "youtube", state: SESSION_STATES.IDLE },
+  ]);
+});
 
 test("YouTube自身の channelId を解決できない場合は provider をスキップする", async () => {
   const originalTwitchChannelId = process.env.TWITCH_TARGET_CHANNEL_ID;

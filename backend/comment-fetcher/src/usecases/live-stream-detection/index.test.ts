@@ -87,3 +87,69 @@ test("規定回数で見つからない場合は LiveStreamNotFoundError を投�
   );
   assert.equal(waitCalls, 2);
 });
+
+test("AbortSignal が中断済みの場合は repository を呼ばずに中断する", async () => {
+  let callCount = 0;
+  const repository = {
+    async findLiveStream() {
+      callCount += 1;
+      return null;
+    },
+  };
+  const controller = new AbortController();
+  controller.abort();
+  const useCase = new DetectLiveStreamUseCase(repository, 1000, 3);
+
+  await assert.rejects(
+    () =>
+      useCase.findActiveLiveStream(
+        {
+          channelId: "channel-1",
+        },
+        { signal: controller.signal },
+      ),
+    (error: unknown) =>
+      typeof error === "object" &&
+      error !== null &&
+      "name" in error &&
+      error.name === "AbortError",
+  );
+  assert.equal(callCount, 0);
+});
+
+test("ポーリング待機中の AbortSignal 中断を呼び出し元へ伝播する", async () => {
+  const repository = {
+    async findLiveStream() {
+      return null;
+    },
+  };
+  const controller = new AbortController();
+  let waitCalls = 0;
+  const useCase = new DetectLiveStreamUseCase(
+    repository,
+    1000,
+    3,
+    async (_milliseconds, signal) => {
+      waitCalls += 1;
+      assert.equal(signal, controller.signal);
+      controller.abort();
+      signal?.throwIfAborted();
+    },
+  );
+
+  await assert.rejects(
+    () =>
+      useCase.findActiveLiveStream(
+        {
+          channelId: "channel-1",
+        },
+        { signal: controller.signal },
+      ),
+    (error: unknown) =>
+      typeof error === "object" &&
+      error !== null &&
+      "name" in error &&
+      error.name === "AbortError",
+  );
+  assert.equal(waitCalls, 1);
+});
