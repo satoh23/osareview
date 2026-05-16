@@ -21,12 +21,18 @@ import { SHARED_AUTH_DI_TOKENS } from "./infrastructure/shared/auth/di-tokens.js
 import { EnvTwitchConfigProvider } from "./infrastructure/twitch/config/api-config.js";
 import { EnvYouTubeConfigProvider } from "./infrastructure/youtube/config/api-config.js";
 
-export const registerCommentFetcherDependencies = (): void => {
+export type RegisterCommentFetcherDependenciesOptions = {
+  authClient?: AuthClient;
+};
+
+export const registerCommentFetcherDependencies = (
+  options: RegisterCommentFetcherDependenciesOptions = {},
+): void => {
   container.register(SHARED_DI_TOKENS.httpClient, {
     useValue: fetch,
   });
   container.register<AuthClient>(SHARED_AUTH_DI_TOKENS.authClient, {
-    useValue: createAuthClient(),
+    useValue: options.authClient ?? createAuthClient(),
   });
   container.register(YOUTUBE_DI_TOKENS.accessTokenProvider, {
     useClass: YouTubeAccessTokenProvider,

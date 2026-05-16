@@ -1,4 +1,5 @@
 import { container } from "tsyringe";
+import { createAuthClient, type AuthClient } from "@comment-dock/auth";
 import {
   registerCommentFetcherDependencies,
   runTwitchPipeline,
@@ -39,9 +40,13 @@ const twitchPipelineRunner: SessionPipelineRunner = (
 ) => runTwitchPipeline(options, outputPort, controls);
 
 export const registerApiGatewayDependencies = (): void => {
-  // Fetcher はライブラリとして同一コンテナに登録し、delivery は Gateway の
-  // WebSocket 出力ポートを sink にできるようこの境界で組み立てる。
-  registerCommentFetcherDependencies();
+  // auth / fetcher / delivery は Gateway プロセスの同一コンテナで束ねる。
+  // fetcher には Gateway 管理下の AuthClient を渡し、認証経路を一元化する。
+  const authClient = createAuthClient();
+  container.register<AuthClient>(API_GATEWAY_DI_TOKENS.authClient, {
+    useValue: authClient,
+  });
+  registerCommentFetcherDependencies({ authClient });
   registerGatewayCommentDeliveryDependencies();
   container.register<SessionPipelineRunner>(
     API_GATEWAY_DI_TOKENS.youtubePipelineRunner,
