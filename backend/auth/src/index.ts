@@ -32,7 +32,11 @@ import {
   CreateAuthorizedTokenAccessorUsecase,
   type AuthorizedTokenAccessor,
 } from "./usecases/create-authorized-token-accessor.usecase.js";
-import { AuthorizationLostNotifier } from "./shared/authorization-lost-notifier.js";
+import {
+  AuthorizationLostNotifier,
+  type AuthorizationLostEvent,
+  type AuthorizationLostListener,
+} from "./shared/authorization-lost-notifier.js";
 import { AUTH_DI_TOKENS } from "./shared/di-tokens.js";
 import { DEFAULT_ACCESS_TOKEN_CLOCK_SKEW_MS } from "./entities/token/token-set.js";
 import type {
@@ -43,7 +47,12 @@ import type {
 import { UnauthorizedRequestError } from "./errors/unauthorized-request.error.js";
 
 export type { Provider };
-export type { AuthorizedTokenAccessor, LinkStatus };
+export type {
+  AuthorizationLostEvent,
+  AuthorizationLostListener,
+  AuthorizedTokenAccessor,
+  LinkStatus,
+};
 export { NotAuthorizedError, UnauthorizedRequestError };
 
 export interface AuthClient {
@@ -55,6 +64,7 @@ export interface AuthClient {
     requestFn: AuthorizedRequestFn<T>,
   ): Promise<T>;
   createAuthorizedTokenAccessor(provider: Provider): AuthorizedTokenAccessor;
+  onAuthorizationLost(listener: AuthorizationLostListener): () => void;
   refresh(provider: Provider): Promise<string>;
   logout(provider: Provider): Promise<void>;
 }
@@ -180,6 +190,10 @@ export function createAuthClient(
       return createAuthorizedTokenAccessorUsecase.createAuthorizedTokenAccessor(
         provider,
       );
+    },
+
+    onAuthorizationLost(listener: AuthorizationLostListener): () => void {
+      return authorizationLostNotifier.subscribe(listener);
     },
 
     async refresh(provider: Provider): Promise<string> {

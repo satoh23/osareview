@@ -9,6 +9,7 @@ YouTube / Twitch OAuth とトークン保管を担当するライブラリです
 - 有効なアクセストークンの取得 (`getValidAccessToken`)
 - 認証付き REST 呼び出しの refresh + retry (`withAuthorizedRequest`)
 - 長期接続向け access token accessor (`createAuthorizedTokenAccessor`)
+- refresh 失敗時の認可喪失通知 (`onAuthorizationLost`)
 - 明示 refresh (`refresh`)
 - ログアウト (`logout`)
 
@@ -72,6 +73,16 @@ const token = await accessor.getCurrentAccessToken();
 
 // 長期接続側で 401 / UNAUTHENTICATED を検知したときだけ呼ぶ。
 const refreshedToken = await accessor.refresh();
+```
+
+refresh に失敗して再ログインが必要になった場合は、認可喪失イベントを購読できます。戻り値の関数を呼ぶと購読解除します。
+
+```ts
+const unsubscribe = authClient.onAuthorizationLost((event) => {
+  console.log(event.provider, event.reason);
+});
+
+unsubscribe();
 ```
 
 Twitch も同じ API で利用できます。
