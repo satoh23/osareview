@@ -2,7 +2,7 @@ import { injectable } from "tsyringe";
 import type {
   SessionStateOutputEvent,
   SessionStateOutputPort,
-} from "../../usecases/session-state-output-port.interface.js";
+} from "../../usecases/interfaces/session-state-output-port.interface.js";
 
 @injectable()
 export class NoopSessionStateOutputPort implements SessionStateOutputPort {

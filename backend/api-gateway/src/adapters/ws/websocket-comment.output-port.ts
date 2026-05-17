@@ -18,7 +18,7 @@ import {
 import type {
   SessionStateOutputEvent,
   SessionStateOutputPort,
-} from "../../usecases/session-state-output-port.interface.js";
+} from "../../usecases/interfaces/session-state-output-port.interface.js";
 
 const SESSION_PLATFORMS_LIST = [
   SESSION_PLATFORMS.YOUTUBE,

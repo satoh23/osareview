@@ -18,7 +18,7 @@ import { API_GATEWAY_DI_TOKENS } from "../infrastructure/shared/di-tokens.js";
 import type {
   SessionStateOutputEvent,
   SessionStateOutputPort,
-} from "./session-state-output-port.interface.js";
+} from "./interfaces/session-state-output-port.interface.js";
 
 export type SessionPipelineRunner = (
   options: PipelineRunOptions,

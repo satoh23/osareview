@@ -16,7 +16,7 @@ import {
 import type {
   SessionStateOutputEvent,
   SessionStateOutputPort,
-} from "./session-state-output-port.interface.js";
+} from "./interfaces/session-state-output-port.interface.js";
 
 const buildComment = (id: string): Comment => ({
   id,

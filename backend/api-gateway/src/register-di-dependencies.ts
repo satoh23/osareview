@@ -21,11 +21,14 @@ import {
 import { API_GATEWAY_DI_TOKENS } from "./infrastructure/shared/di-tokens.js";
 import { HttpControlServer } from "./adapters/http/server.js";
 import { WebSocketCommentOutputPort } from "./adapters/ws/websocket-comment.output-port.js";
+import { NoopAccountStateOutputPort } from "./adapters/output-ports/noop-account-state.output-port.js";
 import {
   ManageStreamingSessionsUseCase,
   type SessionPipelineRunner,
 } from "./usecases/manage-streaming-sessions.usecase.js";
-import type { SessionStateOutputPort } from "./usecases/session-state-output-port.interface.js";
+import { ManageAccountLinksUseCase } from "./usecases/manage-account-links.usecase.js";
+import type { SessionStateOutputPort } from "./usecases/interfaces/session-state-output-port.interface.js";
+import type { AccountStateOutputPort } from "./usecases/interfaces/account-state-output-port.interface.js";
 
 const youtubePipelineRunner: SessionPipelineRunner = (
   options: PipelineRunOptions,
@@ -60,6 +63,7 @@ export const registerApiGatewayDependencies = (): void => {
     useValue: 3000,
   });
   container.registerSingleton(ManageStreamingSessionsUseCase);
+  container.registerSingleton(ManageAccountLinksUseCase);
   container.registerSingleton(HttpControlServer);
 };
 
@@ -90,6 +94,12 @@ const registerGatewayCommentDeliveryDependencies = (): void => {
     {
       useFactory: (dependencyContainer) =>
         dependencyContainer.resolve(WebSocketCommentOutputPort),
+    },
+  );
+  container.register<AccountStateOutputPort>(
+    API_GATEWAY_DI_TOKENS.accountStateOutputPort,
+    {
+      useClass: NoopAccountStateOutputPort,
     },
   );
 };
