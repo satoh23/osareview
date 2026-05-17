@@ -1,4 +1,8 @@
 import { useEffect, type ReactNode } from "react";
+import {
+  AccountLinkProvider,
+  publishAccountLinkState,
+} from "../../features/account-link";
 import { createCommentIngestionRuntime } from "../../features/comment-ingestion";
 import {
   publishSessionState,
@@ -17,6 +21,7 @@ export function RuntimeProvider({ children }: RuntimeProviderProps) {
   useEffect(() => {
     const runtime = createCommentIngestionRuntime({
       onSessionState: publishSessionState,
+      onAccountState: publishAccountLinkState,
     });
     runtime.start();
 
@@ -34,5 +39,9 @@ export function RuntimeProvider({ children }: RuntimeProviderProps) {
     };
   }, []);
 
-  return <SessionStateProvider>{children}</SessionStateProvider>;
+  return (
+    <AccountLinkProvider>
+      <SessionStateProvider>{children}</SessionStateProvider>
+    </AccountLinkProvider>
+  );
 }
