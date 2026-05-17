@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { CommentViewDto } from "@comment-dock/shared";
 import { COMMENT_STREAM_ERROR_MESSAGES } from "../../../shared/const";
+import { COMMENT_STREAM_BUFFER_SIZE } from "../config/buffer";
 import {
   COMMENT_STREAM_EVENT_TYPES,
   subscribeCommentStream,
@@ -18,8 +19,6 @@ import {
   commentStreamReducer,
   createInitialCommentStreamStore,
 } from "./comment-stream-reducer";
-
-const DEFAULT_COMMENT_STREAM_BUFFER_SIZE = 500;
 
 type CommentStreamContextValue = {
   comments: CommentViewDto[];
@@ -37,7 +36,7 @@ const CommentStreamContext = createContext<CommentStreamContextValue | null>(
 
 export function CommentStreamProvider({
   children,
-  bufferSize = DEFAULT_COMMENT_STREAM_BUFFER_SIZE,
+  bufferSize = COMMENT_STREAM_BUFFER_SIZE,
 }: CommentStreamProviderProps) {
   const [store, dispatch] = useReducer(
     commentStreamReducer,
