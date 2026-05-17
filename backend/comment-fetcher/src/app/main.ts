@@ -1,5 +1,6 @@
 import { container } from "tsyringe";
 import { setTimeout as sleep } from "node:timers/promises";
+import { NotAuthorizedError } from "@comment-dock/auth";
 import { COMMENT_SOURCES, SESSION_STATES } from "@comment-dock/shared";
 import type {
   CommentSource,
@@ -76,6 +77,7 @@ const isAuthorizationMissingError = (error: unknown): boolean => {
     return false;
   }
   return (
+    error instanceof NotAuthorizedError ||
     /access token is missing from AccessTokenProvider\./.test(error.message) ||
     /Twitch Helix request failed: 401 Unauthorized/.test(error.message) ||
     /Invalid OAuth token/.test(error.message)

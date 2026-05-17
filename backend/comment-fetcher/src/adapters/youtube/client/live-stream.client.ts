@@ -1,6 +1,7 @@
 import { inject, injectable } from "tsyringe";
+import { UnauthorizedRequestError } from "@comment-dock/auth";
 import { YOUTUBE_DI_TOKENS } from "../access-token/di-tokens.js";
-import type { AccessTokenProvider } from "../../../infrastructure/shared/auth/access-token-provider.js";
+import type { AuthorizedHttpClient } from "../../../infrastructure/shared/auth/access-token-provider.js";
 import { SHARED_DI_TOKENS } from "../../../infrastructure/shared/http/http-client.js";
 import type { HttpClient } from "../../../infrastructure/shared/http/http-client.js";
 import type { YouTubeConfigProvider } from "../../../infrastructure/youtube/config/api-config.js";
@@ -14,7 +15,7 @@ import type {
 export class YouTubeLiveStreamClient {
   constructor(
     @inject(YOUTUBE_DI_TOKENS.accessTokenProvider)
-    private readonly accessTokenProvider: AccessTokenProvider,
+    private readonly authorizedHttpClient: AuthorizedHttpClient,
     @inject(SHARED_DI_TOKENS.httpClient)
     private readonly httpClient: HttpClient,
     @inject(YOUTUBE_DI_TOKENS.configProvider)
@@ -78,28 +79,29 @@ export class YouTubeLiveStreamClient {
   }
 
   private async request<T>(url: string): Promise<T> {
-    const accessToken = await this.accessTokenProvider.getAccessToken();
-    if (!accessToken) {
-      throw new Error(
-        "YouTube access token is missing from AccessTokenProvider.",
-      );
-    }
+    // token の取得・refresh・retry は auth 側へ委譲し、
+    // このクライアントは YouTube Data API のリクエスト内容だけを組み立てる。
+    return this.authorizedHttpClient.request(async (accessToken) => {
+      const response = await this.httpClient(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
+        },
+      });
 
-    const response = await this.httpClient(url, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: "application/json",
-      },
+      if (response.status === 401) {
+        throw new UnauthorizedRequestError();
+      }
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(
+          `YouTube API request failed: ${response.status} ${response.statusText} ${errorBody}`,
+        );
+      }
+
+      return (await response.json()) as T;
     });
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(
-        `YouTube API request failed: ${response.status} ${response.statusText} ${errorBody}`,
-      );
-    }
-
-    return (await response.json()) as T;
   }
 }

@@ -1,6 +1,7 @@
 import { inject, injectable } from "tsyringe";
+import { UnauthorizedRequestError } from "@comment-dock/auth";
 import { TWITCH_DI_TOKENS } from "../access-token/di-tokens.js";
-import type { AccessTokenProvider } from "../../../infrastructure/shared/auth/access-token-provider.js";
+import type { AuthorizedHttpClient } from "../../../infrastructure/shared/auth/access-token-provider.js";
 import { SHARED_DI_TOKENS } from "../../../infrastructure/shared/http/http-client.js";
 import type { HttpClient } from "../../../infrastructure/shared/http/http-client.js";
 import type { TwitchConfigProvider } from "../../../infrastructure/twitch/config/api-config.js";
@@ -18,7 +19,7 @@ export class TwitchHelixClient {
 
   constructor(
     @inject(TWITCH_DI_TOKENS.accessTokenProvider)
-    private readonly accessTokenProvider: AccessTokenProvider,
+    private readonly authorizedHttpClient: AuthorizedHttpClient,
     @inject(SHARED_DI_TOKENS.httpClient)
     private readonly httpClient: HttpClient,
     @inject(TWITCH_DI_TOKENS.configProvider)
@@ -92,36 +93,37 @@ export class TwitchHelixClient {
     method: "GET" | "POST",
     body?: string,
   ): Promise<T> {
-    const accessToken = await this.accessTokenProvider.getAccessToken();
-    if (!accessToken) {
-      throw new Error(
-        "Twitch access token is missing from AccessTokenProvider.",
-      );
-    }
-
     const clientId = this.configProvider.getClientId();
     if (!clientId) {
       throw new Error("Twitch client ID is missing from TwitchConfigProvider.");
     }
 
-    const response = await this.httpClient(url, {
-      method,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Client-Id": clientId,
-        Accept: "application/json",
-        ...(body ? { "Content-Type": "application/json" } : {}),
-      },
-      ...(body ? { body } : {}),
+    // token の取得・refresh・retry は auth 側へ委譲し、
+    // このクライアントは Helix API のリクエスト内容だけを組み立てる。
+    return this.authorizedHttpClient.request(async (accessToken) => {
+      const response = await this.httpClient(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Client-Id": clientId,
+          Accept: "application/json",
+          ...(body ? { "Content-Type": "application/json" } : {}),
+        },
+        ...(body ? { body } : {}),
+      });
+
+      if (response.status === 401) {
+        throw new UnauthorizedRequestError();
+      }
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(
+          `Twitch Helix request failed: ${response.status} ${response.statusText} ${errorBody}`,
+        );
+      }
+
+      return (await response.json()) as T;
     });
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(
-        `Twitch Helix request failed: ${response.status} ${response.statusText} ${errorBody}`,
-      );
-    }
-
-    return (await response.json()) as T;
   }
 }

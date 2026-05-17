@@ -1,13 +1,20 @@
 import "reflect-metadata";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { UnauthorizedRequestError } from "@comment-dock/auth";
 import { TwitchHelixClient } from "./helix.client.js";
 
-test("アクセストークンが無い場合はエラーを投げる", async () => {
+const authorizedHttpClient = (accessToken: string) => ({
+  async request<T>(request: (token: string) => Promise<T>): Promise<T> {
+    return request(accessToken);
+  },
+});
+
+test("認可境界でアクセストークン取得に失敗した場合はエラーを伝播する", async () => {
   const client = new TwitchHelixClient(
     {
-      async getAccessToken() {
-        return "";
+      async request() {
+        throw new Error("Twitch authorization failed.");
       },
     },
     async () => new Response() as never,
@@ -26,17 +33,13 @@ test("アクセストークンが無い場合はエラーを投げる", async ()
 
   await assert.rejects(
     () => client.resolveUserIdByLogin("twitchdev"),
-    /Twitch access token is missing from AccessTokenProvider/,
+    /Twitch authorization failed/,
   );
 });
 
 test("クライアントIDが無い場合はエラーを投げる", async () => {
   const client = new TwitchHelixClient(
-    {
-      async getAccessToken() {
-        return "token";
-      },
-    },
+    authorizedHttpClient("token"),
     async () => new Response() as never,
     {
       getHelixApiBaseUrl() {
@@ -75,11 +78,7 @@ test("users APIからuser idを解決して返す", async () => {
   };
 
   const client = new TwitchHelixClient(
-    {
-      async getAccessToken() {
-        return "test-token";
-      },
-    },
+    authorizedHttpClient("test-token"),
     httpClient,
     {
       getHelixApiBaseUrl() {
@@ -104,11 +103,7 @@ test("users APIからuser idを解決して返す", async () => {
 
 test("users APIが空配列ならnullを返す", async () => {
   const client = new TwitchHelixClient(
-    {
-      async getAccessToken() {
-        return "test-token";
-      },
-    },
+    authorizedHttpClient("test-token"),
     async () =>
       new Response(JSON.stringify({ data: [] }), {
         status: 200,
@@ -131,6 +126,61 @@ test("users APIが空配列ならnullを返す", async () => {
   assert.equal(userId, null);
 });
 
+test("401 応答は UnauthorizedRequestError として投げ、認可境界で再実行できる", async () => {
+  const calledTokens: string[] = [];
+  const httpClient: typeof fetch = async (_input, init) => {
+    const headers = (init?.headers ?? {}) as Record<string, string>;
+    calledTokens.push(headers.Authorization);
+    if (calledTokens.length === 1) {
+      return new Response("expired", {
+        status: 401,
+        statusText: "Unauthorized",
+      });
+    }
+
+    return new Response(
+      JSON.stringify({
+        data: [{ id: "141981764", login: "twitchdev" }],
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  };
+
+  const client = new TwitchHelixClient(
+    {
+      async request<T>(request: (token: string) => Promise<T>): Promise<T> {
+        try {
+          return await request("expired-token");
+        } catch (error) {
+          if (error instanceof UnauthorizedRequestError) {
+            return request("refreshed-token");
+          }
+          throw error;
+        }
+      },
+    },
+    httpClient,
+    {
+      getHelixApiBaseUrl() {
+        return "https://api.twitch.tv/helix";
+      },
+      getEventSubWebSocketUrl() {
+        return "wss://eventsub.wss.twitch.tv/ws";
+      },
+      getClientId() {
+        return "test-client-id";
+      },
+    },
+  );
+
+  const userId = await client.resolveUserIdByLogin("twitchdev");
+  assert.equal(userId, "141981764");
+  assert.deepEqual(calledTokens, [
+    "Bearer expired-token",
+    "Bearer refreshed-token",
+  ]);
+});
+
 test("streams APIから配信中stream idを返す", async () => {
   const calledUrls: string[] = [];
   const httpClient: typeof fetch = async (input) => {
@@ -144,11 +194,7 @@ test("streams APIから配信中stream idを返す", async () => {
   };
 
   const client = new TwitchHelixClient(
-    {
-      async getAccessToken() {
-        return "test-token";
-      },
-    },
+    authorizedHttpClient("test-token"),
     httpClient,
     {
       getHelixApiBaseUrl() {
@@ -171,11 +217,7 @@ test("streams APIから配信中stream idを返す", async () => {
 
 test("streams APIが空配列ならnullを返す", async () => {
   const client = new TwitchHelixClient(
-    {
-      async getAccessToken() {
-        return "test-token";
-      },
-    },
+    authorizedHttpClient("test-token"),
     async () =>
       new Response(JSON.stringify({ data: [] }), {
         status: 200,
@@ -229,11 +271,7 @@ test("EventSub subscription を作成できる", async () => {
   };
 
   const client = new TwitchHelixClient(
-    {
-      async getAccessToken() {
-        return "test-token";
-      },
-    },
+    authorizedHttpClient("test-token"),
     httpClient,
     {
       getHelixApiBaseUrl() {
@@ -291,11 +329,7 @@ test("self user id を取得できる", async () => {
   };
 
   const client = new TwitchHelixClient(
-    {
-      async getAccessToken() {
-        return "test-token";
-      },
-    },
+    authorizedHttpClient("test-token"),
     httpClient,
     {
       getHelixApiBaseUrl() {
@@ -329,11 +363,7 @@ test("self user id は2回目以降キャッシュを返す", async () => {
   };
 
   const client = new TwitchHelixClient(
-    {
-      async getAccessToken() {
-        return "test-token";
-      },
-    },
+    authorizedHttpClient("test-token"),
     httpClient,
     {
       getHelixApiBaseUrl() {
@@ -357,11 +387,7 @@ test("self user id は2回目以降キャッシュを返す", async () => {
 
 test("self user が取得できない場合はエラーを投げる", async () => {
   const client = new TwitchHelixClient(
-    {
-      async getAccessToken() {
-        return "test-token";
-      },
-    },
+    authorizedHttpClient("test-token"),
     async () =>
       new Response(JSON.stringify({ data: [] }), {
         status: 200,
