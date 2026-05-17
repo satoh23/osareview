@@ -1,3 +1,5 @@
+import type { AuthorizedTokenAccessor } from "@comment-dock/auth";
+
 export interface AccessTokenProvider {
   getAccessToken(): Promise<string>;
 }
@@ -10,4 +12,12 @@ export type AuthorizedHttpRequest<T> = (accessToken: string) => Promise<T>;
  */
 export interface AuthorizedHttpClient {
   request<T>(request: AuthorizedHttpRequest<T>): Promise<T>;
+}
+
+/**
+ * gRPC / WebSocket など、接続中に token refresh が必要になる処理へ accessor を渡す境界。
+ * 長期接続側は refresh の実装を知らず、認可エラーを検知した時だけ accessor.refresh() を呼べばよい。
+ */
+export interface AuthorizedTokenAccessorProvider {
+  createAuthorizedTokenAccessor(): AuthorizedTokenAccessor;
 }

@@ -1,14 +1,18 @@
 import { inject, injectable } from "tsyringe";
 import WebSocket from "ws";
+import type { AuthorizedTokenAccessor } from "@comment-dock/auth";
 import { TWITCH_DI_TOKENS } from "../access-token/di-tokens.js";
 import type { TwitchHelixClient } from "./helix.client.js";
 import type { TwitchConfigProvider } from "../../../infrastructure/twitch/config/api-config.js";
+import type { AuthorizedTokenAccessorProvider } from "../../../infrastructure/shared/auth/access-token-provider.js";
+import { isUnauthorizedRequestError } from "../../shared/auth/error.js";
 import {
   TWITCH_EVENTSUB_MESSAGE_TYPES,
   type TwitchChatMessageEventDto,
   type TwitchChatNotificationEventDto,
   type TwitchEventSubEnvelopeDto,
   type TwitchEventSubNotificationEnvelopeDto,
+  type TwitchEventSubReconnectEnvelopeDto,
   type TwitchEventSubSessionWelcomeEnvelopeDto,
 } from "../dto/raw.dto.js";
 
@@ -35,6 +39,8 @@ export class TwitchEventSubWebSocketClient {
   constructor(
     @inject(TWITCH_DI_TOKENS.helixClient)
     private readonly helixClient: TwitchHelixClient,
+    @inject(TWITCH_DI_TOKENS.accessTokenProvider)
+    private readonly authorizedTokenAccessorProvider: AuthorizedTokenAccessorProvider,
     @inject(TWITCH_DI_TOKENS.configProvider)
     private readonly configProvider: TwitchConfigProvider,
     @inject(TWITCH_DI_TOKENS.eventSubWebSocketRuntime)
@@ -48,8 +54,10 @@ export class TwitchEventSubWebSocketClient {
     broadcasterUserId: string;
     userId: string;
   }): AsyncIterable<TwitchChatEvent> {
-    const session = await this.connectAndSubscribeChatEvents(input);
-    const { socket } = session;
+    const accessor =
+      this.authorizedTokenAccessorProvider.createAuthorizedTokenAccessor();
+    const session = await this.connectAndSubscribeChatEvents(input, accessor);
+    let socket = session.socket;
 
     const queue: TwitchChatEvent[] = [];
     let done = false;
@@ -69,6 +77,16 @@ export class TwitchEventSubWebSocketClient {
       try {
         const payload = this.rawDataToString(raw);
         const envelope = this.parseEnvelope(payload);
+        if (
+          envelope.metadata.message_type ===
+          TWITCH_EVENTSUB_MESSAGE_TYPES.SESSION_RECONNECT
+        ) {
+          const reconnectEnvelope =
+            envelope as TwitchEventSubReconnectEnvelopeDto;
+          void reconnectSocket(reconnectEnvelope.payload.session.reconnect_url);
+          return;
+        }
+
         if (
           envelope.metadata.message_type !==
           TWITCH_EVENTSUB_MESSAGE_TYPES.NOTIFICATION
@@ -101,9 +119,38 @@ export class TwitchEventSubWebSocketClient {
       notify();
     };
 
-    socket.on("message", handleMessage);
-    socket.on("error", handleError);
-    socket.on("close", handleClose);
+    const reconnectSocket = async (url: string): Promise<void> => {
+      try {
+        const nextSession = await this.connect(url);
+        detachSocketHandlers(socket);
+        if (
+          socket.readyState === WebSocket.OPEN ||
+          socket.readyState === WebSocket.CONNECTING
+        ) {
+          socket.close();
+        }
+        socket = nextSession.socket;
+        attachSocketHandlers(socket);
+      } catch (error) {
+        streamError = error instanceof Error ? error : new Error(String(error));
+        done = true;
+        notify();
+      }
+    };
+
+    const attachSocketHandlers = (target: WebSocket) => {
+      target.on("message", handleMessage);
+      target.on("error", handleError);
+      target.on("close", handleClose);
+    };
+
+    const detachSocketHandlers = (target: WebSocket) => {
+      target.off("message", handleMessage);
+      target.off("error", handleError);
+      target.off("close", handleClose);
+    };
+
+    attachSocketHandlers(socket);
 
     try {
       while (true) {
@@ -128,9 +175,7 @@ export class TwitchEventSubWebSocketClient {
         });
       }
     } finally {
-      socket.off("message", handleMessage);
-      socket.off("error", handleError);
-      socket.off("close", handleClose);
+      detachSocketHandlers(socket);
 
       if (
         socket.readyState === WebSocket.OPEN ||
@@ -143,17 +188,54 @@ export class TwitchEventSubWebSocketClient {
 
   /**
    * EventSubへ接続し、チャット受信用の2購読を作成した状態を返す。
+   * subscription 作成時の token 取得・refresh は auth の accessor に委譲する。
    */
-  private async connectAndSubscribeChatEvents(input: {
-    broadcasterUserId: string;
-    userId: string;
-  }): Promise<ConnectedEventSubSession> {
+  private async connectAndSubscribeChatEvents(
+    input: {
+      broadcasterUserId: string;
+      userId: string;
+    },
+    accessor: AuthorizedTokenAccessor,
+  ): Promise<ConnectedEventSubSession> {
+    let accessToken = await accessor.getCurrentAccessToken();
+
+    try {
+      return await this.connectAndSubscribeChatEventsOnce(input, accessToken);
+    } catch (error) {
+      if (!isUnauthorizedRequestError(error)) {
+        throw error;
+      }
+      accessToken = await accessor.refresh();
+      return this.connectAndSubscribeChatEventsOnce(input, accessToken);
+    }
+  }
+
+  private async connectAndSubscribeChatEventsOnce(
+    input: {
+      broadcasterUserId: string;
+      userId: string;
+    },
+    accessToken: string,
+  ): Promise<ConnectedEventSubSession> {
     const session = await this.connect();
-    await this.subscribeChatEvents({
-      sessionId: session.sessionId,
-      broadcasterUserId: input.broadcasterUserId,
-      userId: input.userId,
-    });
+    try {
+      await this.subscribeChatEvents(
+        {
+          sessionId: session.sessionId,
+          broadcasterUserId: input.broadcasterUserId,
+          userId: input.userId,
+        },
+        accessToken,
+      );
+    } catch (error) {
+      if (
+        session.socket.readyState === WebSocket.OPEN ||
+        session.socket.readyState === WebSocket.CONNECTING
+      ) {
+        session.socket.close();
+      }
+      throw error;
+    }
     return session;
   }
 
@@ -163,8 +245,9 @@ export class TwitchEventSubWebSocketClient {
    * - socket: 以降の message/error/close 監視と受信継続に使う接続本体
    * - sessionId: Helix の eventsub/subscriptions 作成時の transport.session_id に使う
    */
-  private async connect(): Promise<ConnectedEventSubSession> {
-    const url = this.configProvider.getEventSubWebSocketUrl();
+  private async connect(
+    url = this.configProvider.getEventSubWebSocketUrl(),
+  ): Promise<ConnectedEventSubSession> {
     const socket = this.runtime.createClient(url);
 
     await new Promise<void>((resolve, reject) => {
@@ -208,30 +291,39 @@ export class TwitchEventSubWebSocketClient {
    * - channel.chat.message
    * - channel.chat.notification
    */
-  private async subscribeChatEvents(input: {
-    sessionId: string;
-    broadcasterUserId: string;
-    userId: string;
-  }): Promise<void> {
+  private async subscribeChatEvents(
+    input: {
+      sessionId: string;
+      broadcasterUserId: string;
+      userId: string;
+    },
+    accessToken: string,
+  ): Promise<void> {
     await Promise.all([
-      this.helixClient.createEventSubSubscription({
-        type: "channel.chat.message",
-        version: "1",
-        condition: {
-          broadcaster_user_id: input.broadcasterUserId,
-          user_id: input.userId,
+      this.helixClient.createEventSubSubscriptionWithToken(
+        {
+          type: "channel.chat.message",
+          version: "1",
+          condition: {
+            broadcaster_user_id: input.broadcasterUserId,
+            user_id: input.userId,
+          },
+          sessionId: input.sessionId,
         },
-        sessionId: input.sessionId,
-      }),
-      this.helixClient.createEventSubSubscription({
-        type: "channel.chat.notification",
-        version: "1",
-        condition: {
-          broadcaster_user_id: input.broadcasterUserId,
-          user_id: input.userId,
+        accessToken,
+      ),
+      this.helixClient.createEventSubSubscriptionWithToken(
+        {
+          type: "channel.chat.notification",
+          version: "1",
+          condition: {
+            broadcaster_user_id: input.broadcasterUserId,
+            user_id: input.userId,
+          },
+          sessionId: input.sessionId,
         },
-        sessionId: input.sessionId,
-      }),
+        accessToken,
+      ),
     ]);
   }
 

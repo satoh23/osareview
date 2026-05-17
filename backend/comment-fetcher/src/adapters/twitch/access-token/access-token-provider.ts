@@ -4,12 +4,16 @@ import type {
   AccessTokenProvider,
   AuthorizedHttpClient,
   AuthorizedHttpRequest,
+  AuthorizedTokenAccessorProvider,
 } from "../../../infrastructure/shared/auth/access-token-provider.js";
 import { SHARED_AUTH_DI_TOKENS } from "../../../infrastructure/shared/auth/di-tokens.js";
 
 @injectable()
 export class TwitchAccessTokenProvider
-  implements AccessTokenProvider, AuthorizedHttpClient
+  implements
+    AccessTokenProvider,
+    AuthorizedHttpClient,
+    AuthorizedTokenAccessorProvider
 {
   constructor(
     @inject(SHARED_AUTH_DI_TOKENS.authClient)
@@ -32,5 +36,9 @@ export class TwitchAccessTokenProvider
 
   request<T>(request: AuthorizedHttpRequest<T>): Promise<T> {
     return this.authClient.withAuthorizedRequest("twitch", request);
+  }
+
+  createAuthorizedTokenAccessor() {
+    return this.authClient.createAuthorizedTokenAccessor("twitch");
   }
 }

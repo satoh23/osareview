@@ -72,19 +72,41 @@ export class TwitchHelixClient {
     };
     sessionId: string;
   }): Promise<void> {
+    await this.createEventSubSubscriptionWithToken(input);
+  }
+
+  /**
+   * EventSub の長期接続側が保持している token で購読を作成する。
+   * 401 は UnauthorizedRequestError として返し、呼び出し側が accessor.refresh() で再接続できるようにする。
+   */
+  async createEventSubSubscriptionWithToken(
+    input: {
+      type: TwitchEventSubSubscriptionType;
+      version: "1";
+      condition: {
+        broadcaster_user_id: string;
+        user_id: string;
+      };
+      sessionId: string;
+    },
+    accessToken?: string,
+  ): Promise<void> {
     const url = `${this.configProvider.getHelixApiBaseUrl()}/eventsub/subscriptions`;
+    const body = JSON.stringify({
+      type: input.type,
+      version: input.version,
+      condition: input.condition,
+      transport: {
+        method: "websocket",
+        session_id: input.sessionId,
+      },
+    });
+
     await this.request<TwitchEventSubSubscriptionsResponseDto>(
       url,
       "POST",
-      JSON.stringify({
-        type: input.type,
-        version: input.version,
-        condition: input.condition,
-        transport: {
-          method: "websocket",
-          session_id: input.sessionId,
-        },
-      }),
+      body,
+      accessToken,
     );
   }
 
@@ -92,38 +114,65 @@ export class TwitchHelixClient {
     url: string,
     method: "GET" | "POST",
     body?: string,
+    accessToken?: string,
   ): Promise<T> {
     const clientId = this.configProvider.getClientId();
     if (!clientId) {
       throw new Error("Twitch client ID is missing from TwitchConfigProvider.");
     }
 
+    if (accessToken) {
+      return this.requestWithAccessToken(
+        url,
+        method,
+        clientId,
+        accessToken,
+        body,
+      );
+    }
+
     // token の取得・refresh・retry は auth 側へ委譲し、
     // このクライアントは Helix API のリクエスト内容だけを組み立てる。
     return this.authorizedHttpClient.request(async (accessToken) => {
-      const response = await this.httpClient(url, {
+      return this.requestWithAccessToken(
+        url,
         method,
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Client-Id": clientId,
-          Accept: "application/json",
-          ...(body ? { "Content-Type": "application/json" } : {}),
-        },
-        ...(body ? { body } : {}),
-      });
-
-      if (response.status === 401) {
-        throw new UnauthorizedRequestError();
-      }
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(
-          `Twitch Helix request failed: ${response.status} ${response.statusText} ${errorBody}`,
-        );
-      }
-
-      return (await response.json()) as T;
+        clientId,
+        accessToken,
+        body,
+      );
     });
+  }
+
+  private async requestWithAccessToken<T>(
+    url: string,
+    method: "GET" | "POST",
+    clientId: string,
+    accessToken: string,
+    body?: string,
+  ): Promise<T> {
+    const response = await this.httpClient(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Client-Id": clientId,
+        Accept: "application/json",
+        ...(body ? { "Content-Type": "application/json" } : {}),
+      },
+      ...(body ? { body } : {}),
+    });
+
+    if (response.status === 401) {
+      throw new UnauthorizedRequestError();
+    }
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(
+        `Twitch Helix request failed: ${response.status} ${response.statusText} ${errorBody}`,
+      );
+    }
+
+    return (await response.json()) as T;
   }
 }

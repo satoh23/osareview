@@ -23,3 +23,26 @@ test("YouTube の認証付き HTTP 呼び出しは authClient.withAuthorizedRequ
   assert.equal(result, "Bearer youtube-token");
   assert.deepEqual(calls, ["youtube"]);
 });
+
+test("YouTube の長期接続用 accessor は authClient.createAuthorizedTokenAccessor に委譲する", async () => {
+  const calls: Provider[] = [];
+  const provider = new YouTubeAccessTokenProvider({
+    createAuthorizedTokenAccessor(providerName: Provider) {
+      calls.push(providerName);
+      return {
+        async getCurrentAccessToken() {
+          return "youtube-current-token";
+        },
+        async refresh() {
+          return "youtube-refreshed-token";
+        },
+      };
+    },
+  } as AuthClient);
+
+  const accessor = provider.createAuthorizedTokenAccessor();
+
+  assert.equal(await accessor.getCurrentAccessToken(), "youtube-current-token");
+  assert.equal(await accessor.refresh(), "youtube-refreshed-token");
+  assert.deepEqual(calls, ["youtube"]);
+});
