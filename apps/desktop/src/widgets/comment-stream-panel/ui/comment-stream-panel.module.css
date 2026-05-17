@@ -1,0 +1,50 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+}
+
+.header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.count {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.scrollArea {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.empty {
+  align-items: center;
+  border: 1px dashed rgba(127, 127, 127, 0.4);
+  border-radius: 12px;
+  color: #6b7280;
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  min-height: 10rem;
+}
+
+.latestButton {
+  align-self: center;
+  bottom: 1rem;
+  position: absolute;
+}
