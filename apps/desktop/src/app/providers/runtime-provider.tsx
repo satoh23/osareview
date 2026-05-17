@@ -4,6 +4,7 @@ import {
   publishAccountLinkState,
 } from "../../features/account-link";
 import { createCommentIngestionRuntime } from "../../features/comment-ingestion";
+import { publishComment, publishComments } from "../../features/comment-stream";
 import {
   publishSessionState,
   SessionStateProvider,
@@ -22,6 +23,8 @@ export function RuntimeProvider({ children }: RuntimeProviderProps) {
     const runtime = createCommentIngestionRuntime({
       onSessionState: publishSessionState,
       onAccountState: publishAccountLinkState,
+      onComment: publishComment,
+      onComments: publishComments,
     });
     runtime.start();
 
