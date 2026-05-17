@@ -1,10 +1,19 @@
 import { useState } from "react";
 import {
+  ACCOUNT_LINK_STATES,
   SESSION_PLATFORMS,
+  type AccountLinkProvider as AccountLinkProviderName,
+  type AccountLinkState,
   type SessionPlatform,
   type SessionState,
 } from "@comment-dock/shared";
 import reactLogo from "../../../assets/react.svg";
+import {
+  useAccountLink,
+  useLinkAccount,
+  useUnlinkAccount,
+  type AccountLinkStatus,
+} from "../../../features/account-link";
 import {
   useSessionState,
   useStartSession,
@@ -19,6 +28,13 @@ const SESSION_STATE_LABELS: Record<SessionState, string> = {
   connecting: "接続中…",
   connected: "接続済",
   failed: "接続失敗",
+};
+
+const ACCOUNT_LINK_STATE_LABELS: Record<AccountLinkState, string> = {
+  unlinked: "非連携",
+  linking: "連携中…",
+  linked: "連携済",
+  failed: "連携失敗",
 };
 
 const PLATFORM_LABELS: Record<SessionPlatform, string> = {
@@ -67,12 +83,64 @@ export function HomePage() {
       </form>
       <p>{greetMsg}</p>
 
+      <section className="session-panel" aria-labelledby="account-panel-title">
+        <h2 id="account-panel-title">アカウント連携</h2>
+        <AccountLinkRow provider={SESSION_PLATFORMS.YOUTUBE} />
+        <AccountLinkRow provider={SESSION_PLATFORMS.TWITCH} />
+      </section>
+
       <section className="session-panel" aria-labelledby="session-panel-title">
         <h2 id="session-panel-title">配信セッション</h2>
         <StreamingSessionRow platform={SESSION_PLATFORMS.YOUTUBE} />
         <StreamingSessionRow platform={SESSION_PLATFORMS.TWITCH} />
       </section>
     </main>
+  );
+}
+
+function AccountLinkRow({ provider }: { provider: AccountLinkProviderName }) {
+  const account = useAccountLink(provider);
+  const linkAccount = useLinkAccount();
+  const unlinkAccount = useUnlinkAccount();
+  const canLink =
+    !account.isRequesting &&
+    (account.snapshot.state === ACCOUNT_LINK_STATES.UNLINKED ||
+      account.snapshot.state === ACCOUNT_LINK_STATES.FAILED);
+  const canUnlink =
+    !account.isRequesting &&
+    account.snapshot.state === ACCOUNT_LINK_STATES.LINKED;
+
+  async function handleLink() {
+    try {
+      await linkAccount(provider);
+    } catch (error) {
+      console.warn("[desktop] failed to link account", error);
+    }
+  }
+
+  async function handleUnlink() {
+    try {
+      await unlinkAccount(provider);
+    } catch (error) {
+      console.warn("[desktop] failed to unlink account", error);
+    }
+  }
+
+  return (
+    <div className="session-row">
+      <div className="session-summary">
+        <strong>{PLATFORM_LABELS[provider]}</strong>
+        <span>{getAccountLinkStatusLabel(account)}</span>
+      </div>
+      <div className="session-actions">
+        <button type="button" disabled={!canLink} onClick={handleLink}>
+          連携
+        </button>
+        <button type="button" disabled={!canUnlink} onClick={handleUnlink}>
+          解除
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -121,6 +189,20 @@ function StreamingSessionRow({ platform }: { platform: SessionPlatform }) {
     </div>
   );
 }
+
+const getAccountLinkStatusLabel = (account: AccountLinkStatus): string => {
+  const baseLabel = ACCOUNT_LINK_STATE_LABELS[account.snapshot.state];
+  if (account.isRequesting) {
+    return `${baseLabel}（処理中）`;
+  }
+  if (account.error) {
+    return `${baseLabel}（${account.error}）`;
+  }
+  if (account.snapshot.reason) {
+    return `${baseLabel}（${account.snapshot.reason}）`;
+  }
+  return baseLabel;
+};
 
 const getSessionStatusLabel = (session: StreamingSessionStatus): string => {
   const baseLabel = SESSION_STATE_LABELS[session.snapshot.state];
