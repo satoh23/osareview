@@ -30,7 +30,7 @@ vi.mock("./comment-write-queue", () => ({
   },
 }));
 
-import { createCommentIngestionRuntime } from "./comment-delivery-ws-client";
+import { createCommentIngestionRuntime } from "./comment-ingestion-runtime";
 
 class FakeWebSocket {
   static instances: FakeWebSocket[] = [];

@@ -5,5 +5,8 @@ export type {
   CommentIngestionRuntime,
   CommentDeliveryWsClientOptions,
 } from "./model/comment-delivery-ws-client";
-export { createCommentIngestionRuntime } from "./model/comment-delivery-ws-client";
+export {
+  createCommentIngestionRuntime,
+  type CommentIngestionRuntimeOptions,
+} from "./model/comment-ingestion-runtime";
 export type { QueuedCommentWrite } from "./model/types";

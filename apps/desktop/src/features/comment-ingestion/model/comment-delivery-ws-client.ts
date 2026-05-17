@@ -86,7 +86,7 @@ function parseMessage(raw: string): SupportedCommentDeliveryMessage | null {
   }
 }
 
-class CommentDeliveryWsClient implements CommentIngestionRuntime {
+export class CommentDeliveryWsClient implements CommentIngestionRuntime {
   private readonly queue: CommentWriteQueue;
   private readonly wsUrl: string;
   private readonly onComment?: (comment: CommentViewDto) => void;
@@ -255,10 +255,4 @@ class CommentDeliveryWsClient implements CommentIngestionRuntime {
     this.liveSessionIdByPlatform.set(platform, created);
     return created;
   }
-}
-
-export function createCommentIngestionRuntime(
-  options: CommentDeliveryWsClientOptions = {},
-): CommentIngestionRuntime {
-  return new CommentDeliveryWsClient(options);
 }
