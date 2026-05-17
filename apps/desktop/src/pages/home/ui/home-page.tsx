@@ -32,7 +32,7 @@ const SESSION_STATE_LABELS: Record<SessionState, string> = {
 
 const ACCOUNT_LINK_STATE_LABELS: Record<AccountLinkState, string> = {
   unlinked: "非連携",
-  linking: "連携中…",
+  linking: "非連携",
   linked: "連携済",
   failed: "連携失敗",
 };
@@ -103,9 +103,9 @@ function AccountLinkRow({ provider }: { provider: AccountLinkProviderName }) {
   const linkAccount = useLinkAccount();
   const unlinkAccount = useUnlinkAccount();
   const canLink =
-    !account.isRequesting &&
-    (account.snapshot.state === ACCOUNT_LINK_STATES.UNLINKED ||
-      account.snapshot.state === ACCOUNT_LINK_STATES.FAILED);
+    account.snapshot.state === ACCOUNT_LINK_STATES.UNLINKED ||
+    account.snapshot.state === ACCOUNT_LINK_STATES.LINKING ||
+    account.snapshot.state === ACCOUNT_LINK_STATES.FAILED;
   const canUnlink =
     !account.isRequesting &&
     account.snapshot.state === ACCOUNT_LINK_STATES.LINKED;
@@ -192,9 +192,6 @@ function StreamingSessionRow({ platform }: { platform: SessionPlatform }) {
 
 const getAccountLinkStatusLabel = (account: AccountLinkStatus): string => {
   const baseLabel = ACCOUNT_LINK_STATE_LABELS[account.snapshot.state];
-  if (account.isRequesting) {
-    return `${baseLabel}（処理中）`;
-  }
   if (account.error) {
     return `${baseLabel}（${account.error}）`;
   }

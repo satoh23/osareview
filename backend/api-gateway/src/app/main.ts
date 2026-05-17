@@ -17,7 +17,7 @@ type RuntimeHttpControlServer = Pick<HttpControlServer, "close" | "start">;
  */
 type RuntimeWebSocketOutputPort = Pick<
   WebSocketCommentOutputPort,
-  "close" | "start"
+  "close" | "publishAccountState" | "start"
 >;
 
 /**
@@ -25,7 +25,7 @@ type RuntimeWebSocketOutputPort = Pick<
  */
 type RuntimeManageAccountLinksUseCase = Pick<
   ManageAccountLinksUseCase,
-  "initialize" | "markAsUnlinked"
+  "getSnapshot" | "initialize" | "markAsUnlinked"
 >;
 
 /**
@@ -65,6 +65,11 @@ export const runApiGateway = async (
   } = deps;
 
   await manageAccountLinksUseCase.initialize();
+  for (const account of Object.values(
+    manageAccountLinksUseCase.getSnapshot(),
+  )) {
+    await webSocketCommentOutputPort.publishAccountState(account);
+  }
   const unsubscribeAuthorizationLost = authClient.onAuthorizationLost(
     (event) => {
       void manageAccountLinksUseCase

@@ -7,9 +7,10 @@ import {
   useReducer,
   type ReactNode,
 } from "react";
-import type {
-  AccountLinkProvider,
-  AccountLinkSnapshot,
+import {
+  ACCOUNT_LINK_STATES,
+  type AccountLinkProvider,
+  type AccountLinkSnapshot,
 } from "@comment-dock/shared";
 import {
   createAccountLinkClient,
@@ -44,8 +45,13 @@ const AccountLinkContext = createContext<AccountLinkContextValue | null>(null);
 
 export function AccountLinkProvider({
   children,
-  client = createAccountLinkClient(),
+  client,
 }: AccountLinkProviderProps) {
+  const accountLinkClient = useMemo(
+    () => client ?? createAccountLinkClient(),
+    [client],
+  );
+
   // reducer は状態遷移だけを担当し、Context は API やイベント購読の副作用を束ねる。
   const [store, dispatch] = useReducer(
     accountLinkReducer,
@@ -66,7 +72,7 @@ export function AccountLinkProvider({
     dispatch({ type: ACCOUNT_LINK_ACTION_TYPES.INITIAL_SYNC_STARTED });
 
     // 初回表示時に backend の現在状態を取得し、ローカル store を同期する。
-    void client
+    void accountLinkClient
       .getAccountLinkStates()
       .then((accounts) => {
         if (!isActive) {
@@ -90,7 +96,7 @@ export function AccountLinkProvider({
     return () => {
       isActive = false;
     };
-  }, [client]);
+  }, [accountLinkClient]);
 
   // WS 受信処理とは events を介してつなぎ、React Context との直接結合を避ける。
   useEffect(
@@ -102,8 +108,12 @@ export function AccountLinkProvider({
     async (provider: AccountLinkProvider): Promise<AccountLinkSnapshot> => {
       // リクエスト中・成功・失敗を reducer に渡し、API 呼び出しの副作用を Context に閉じる。
       dispatch({ type: ACCOUNT_LINK_ACTION_TYPES.REQUEST_STARTED, provider });
+      applyAccountState({
+        provider,
+        state: ACCOUNT_LINK_STATES.LINKING,
+      });
       try {
-        const account = await client.linkAccount(provider);
+        const account = await accountLinkClient.linkAccount(provider);
         applyAccountState(account);
         return account;
       } catch (error) {
@@ -115,15 +125,19 @@ export function AccountLinkProvider({
         throw error;
       }
     },
-    [applyAccountState, client],
+    [accountLinkClient, applyAccountState],
   );
 
   const unlinkAccount = useCallback(
     async (provider: AccountLinkProvider): Promise<AccountLinkSnapshot> => {
       // 解除操作も連携操作と同じ状態遷移に揃え、UI が同じ形で扱えるようにする。
       dispatch({ type: ACCOUNT_LINK_ACTION_TYPES.REQUEST_STARTED, provider });
+      applyAccountState({
+        provider,
+        state: ACCOUNT_LINK_STATES.UNLINKED,
+      });
       try {
-        const account = await client.unlinkAccount(provider);
+        const account = await accountLinkClient.unlinkAccount(provider);
         applyAccountState(account);
         return account;
       } catch (error) {
@@ -135,7 +149,7 @@ export function AccountLinkProvider({
         throw error;
       }
     },
-    [applyAccountState, client],
+    [accountLinkClient, applyAccountState],
   );
 
   const value = useMemo(

@@ -33,6 +33,19 @@ test("起動時に account link を初期化し、認可喪失通知を購読す
       async initialize() {
         calls.push("account:initialize");
       },
+      getSnapshot() {
+        calls.push("account:getSnapshot");
+        return {
+          youtube: {
+            provider: "youtube",
+            state: "linked",
+          },
+          twitch: {
+            provider: "twitch",
+            state: "unlinked",
+          },
+        };
+      },
       async markAsUnlinked(provider, reason) {
         calls.push(`account:markAsUnlinked:${provider}:${reason ?? ""}`);
         return {
@@ -47,6 +60,11 @@ test("起動時に account link を初期化し、認可喪失通知を購読す
       signalHandlers[signal] = handler;
     },
     webSocketCommentOutputPort: {
+      async publishAccountState(account) {
+        calls.push(
+          `ws:publishAccountState:${account.provider}:${account.state}`,
+        );
+      },
       async start() {
         calls.push("ws:start");
       },
@@ -58,6 +76,9 @@ test("起動時に account link を初期化し、認可喪失通知を購読す
 
   assert.deepEqual(calls, [
     "account:initialize",
+    "account:getSnapshot",
+    "ws:publishAccountState:youtube:linked",
+    "ws:publishAccountState:twitch:unlinked",
     "auth:onAuthorizationLost",
     "ws:start",
     "http:start",
