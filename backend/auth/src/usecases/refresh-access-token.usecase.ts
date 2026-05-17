@@ -3,6 +3,10 @@ import { inject, injectable } from "tsyringe";
 import type { Provider } from "../provider.js";
 import type { OAuthTokenRefresher, TokenStore } from "./interfaces/index.js";
 import { AUTH_DI_TOKENS } from "../shared/di-tokens.js";
+import {
+  AUTH_NOT_AUTHORIZED_REASON,
+  AUTHORIZATION_LOST_REASON,
+} from "../shared/authorization-reasons.js";
 import { NotAuthorizedError } from "./get-valid-access-token.usecase.js";
 
 @injectable()
@@ -25,7 +29,7 @@ export class RefreshAccessTokenUsecase {
 
     const tokenSet = await this.tokenStore.get(provider);
     if (tokenSet === null) {
-      throw new NotAuthorizedError("Not authorized. Please login first.");
+      throw new NotAuthorizedError(AUTH_NOT_AUTHORIZED_REASON);
     }
 
     try {
@@ -36,10 +40,7 @@ export class RefreshAccessTokenUsecase {
       return refreshed.accessToken;
     } catch (err) {
       await this.tokenStore.clear(provider);
-      throw new NotAuthorizedError(
-        "Authorization expired. Please login again.",
-        { cause: err },
-      );
+      throw new NotAuthorizedError(AUTHORIZATION_LOST_REASON, { cause: err });
     }
   }
 }

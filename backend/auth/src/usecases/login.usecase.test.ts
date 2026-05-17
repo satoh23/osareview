@@ -5,6 +5,7 @@ import { LoginUsecase } from "./login.usecase.js";
 import { NotAuthorizedError } from "./get-valid-access-token.usecase.js";
 import type { LoginStrategy, TokenStore } from "./interfaces/index.js";
 import type { Provider } from "../provider.js";
+import { AUTHORIZATION_FAILED_REASON } from "../shared/authorization-reasons.js";
 
 class FakeTokenStore implements TokenStore {
   saved: { provider: Provider; tokenSet: TokenSet } | null = null;
@@ -61,7 +62,7 @@ test("login: strategy 失敗時は NotAuthorizedError に正規化する", async
     usecase.login("twitch"),
     (err: unknown) =>
       err instanceof NotAuthorizedError &&
-      err.message === "Authorization failed. Please login again.",
+      err.message === AUTHORIZATION_FAILED_REASON,
   );
   assert.equal(tokenStore.saved, null);
 });

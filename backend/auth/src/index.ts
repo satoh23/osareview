@@ -28,6 +28,10 @@ import {
   WithAuthorizedRequestUsecase,
   type AuthorizedRequestFn,
 } from "./usecases/with-authorized-request.usecase.js";
+import {
+  CreateAuthorizedTokenAccessorUsecase,
+  type AuthorizedTokenAccessor,
+} from "./usecases/create-authorized-token-accessor.usecase.js";
 import { AuthorizationLostNotifier } from "./shared/authorization-lost-notifier.js";
 import { AUTH_DI_TOKENS } from "./shared/di-tokens.js";
 import { DEFAULT_ACCESS_TOKEN_CLOCK_SKEW_MS } from "./entities/token/token-set.js";
@@ -39,7 +43,7 @@ import type {
 import { UnauthorizedRequestError } from "./errors/unauthorized-request.error.js";
 
 export type { Provider };
-export type { LinkStatus };
+export type { AuthorizedTokenAccessor, LinkStatus };
 export { NotAuthorizedError, UnauthorizedRequestError };
 
 export interface AuthClient {
@@ -50,6 +54,7 @@ export interface AuthClient {
     provider: Provider,
     requestFn: AuthorizedRequestFn<T>,
   ): Promise<T>;
+  createAuthorizedTokenAccessor(provider: Provider): AuthorizedTokenAccessor;
   refresh(provider: Provider): Promise<string>;
   logout(provider: Provider): Promise<void>;
 }
@@ -142,6 +147,9 @@ export function createAuthClient(
     refreshAccessTokenUsecase,
   );
   const withAuthorizedRequestUsecase = c.resolve(WithAuthorizedRequestUsecase);
+  const createAuthorizedTokenAccessorUsecase = c.resolve(
+    CreateAuthorizedTokenAccessorUsecase,
+  );
 
   return {
     async login(provider: Provider): Promise<void> {
@@ -165,6 +173,13 @@ export function createAuthClient(
     ): Promise<T> {
       assertSupportedProvider(provider);
       return withAuthorizedRequestUsecase.execute(provider, requestFn);
+    },
+
+    createAuthorizedTokenAccessor(provider: Provider): AuthorizedTokenAccessor {
+      assertSupportedProvider(provider);
+      return createAuthorizedTokenAccessorUsecase.createAuthorizedTokenAccessor(
+        provider,
+      );
     },
 
     async refresh(provider: Provider): Promise<string> {

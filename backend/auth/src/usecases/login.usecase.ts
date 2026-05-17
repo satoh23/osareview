@@ -3,6 +3,7 @@ import "reflect-metadata";
 import { inject, injectable } from "tsyringe";
 import type { LoginStrategy, TokenStore } from "./interfaces/index.js";
 import { AUTH_DI_TOKENS } from "../shared/di-tokens.js";
+import { AUTHORIZATION_FAILED_REASON } from "../shared/authorization-reasons.js";
 import { NotAuthorizedError } from "./get-valid-access-token.usecase.js";
 
 export type LoginUsecaseDeps = {
@@ -34,10 +35,7 @@ export class LoginUsecase {
       if (err instanceof NotAuthorizedError) {
         throw err;
       }
-      throw new NotAuthorizedError(
-        "Authorization failed. Please login again.",
-        { cause: err },
-      );
+      throw new NotAuthorizedError(AUTHORIZATION_FAILED_REASON, { cause: err });
     }
   }
 }

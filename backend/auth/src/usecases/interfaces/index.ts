@@ -18,6 +18,7 @@ export type { PkceGenerator, PkcePair } from "./pkce.interface.js";
 export type { StateGenerator } from "./state-generator.interface.js";
 export type { LoginPolicy } from "./login-policy.interface.js";
 export type { LoginStrategy } from "./login-strategy.interface.js";
+export type { RefreshAccessTokenPort } from "./refresh-access-token-port.interface.js";
 export type {
   DeviceAuthorization,
   DeviceCodeOAuthClient,

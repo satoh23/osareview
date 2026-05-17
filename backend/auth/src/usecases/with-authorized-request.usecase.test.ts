@@ -2,17 +2,15 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import type { Provider } from "../provider.js";
 import { TokenSet } from "../entities/token/token-set.js";
-import type { TokenStore } from "./interfaces/index.js";
+import type { RefreshAccessTokenPort, TokenStore } from "./interfaces/index.js";
 import { UnauthorizedRequestError } from "../errors/unauthorized-request.error.js";
 import { NotAuthorizedError } from "./get-valid-access-token.usecase.js";
-import {
-  type RefreshAccessTokenPort,
-  WithAuthorizedRequestUsecase,
-} from "./with-authorized-request.usecase.js";
+import { WithAuthorizedRequestUsecase } from "./with-authorized-request.usecase.js";
 import {
   type AuthorizationLostEvent,
   AuthorizationLostNotifier,
 } from "../shared/authorization-lost-notifier.js";
+import { AUTHORIZATION_LOST_REASON } from "../shared/authorization-reasons.js";
 
 const makeTokenSet = (accessToken: string): TokenSet =>
   TokenSet.create({
@@ -119,7 +117,7 @@ test("refresh 失敗時は token を clear して通知し NotAuthorizedError �
   assert.deepEqual(store.cleared, ["youtube"]);
   assert.equal(events.length, 1);
   assert.equal(events[0]?.provider, "youtube");
-  assert.equal(events[0]?.reason, "Authorization expired. Please login again.");
+  assert.equal(events[0]?.reason, AUTHORIZATION_LOST_REASON);
   assert.equal(events[0]?.occurredAt, 1_700_000_000_000);
 });
 

@@ -1,9 +1,13 @@
 import "reflect-metadata";
 import { inject, injectable } from "tsyringe";
 import type { Provider } from "../provider.js";
-import type { TokenStore } from "./interfaces/index.js";
+import type { RefreshAccessTokenPort, TokenStore } from "./interfaces/index.js";
 import { AUTH_DI_TOKENS } from "../shared/di-tokens.js";
 import { AuthorizationLostNotifier } from "../shared/authorization-lost-notifier.js";
+import {
+  AUTH_NOT_AUTHORIZED_REASON,
+  AUTHORIZATION_LOST_REASON,
+} from "../shared/authorization-reasons.js";
 import { NotAuthorizedError } from "./get-valid-access-token.usecase.js";
 import { UnauthorizedRequestError } from "../errors/unauthorized-request.error.js";
 
@@ -12,16 +16,6 @@ import { UnauthorizedRequestError } from "../errors/unauthorized-request.error.j
  * 処理本体を関数として受け取ることで、トークン取得・refresh・retry の制御と外部 API 呼び出しを分離し、テストしやすくする。
  */
 export type AuthorizedRequestFn<T> = (accessToken: string) => Promise<T>;
-
-/**
- * refresh 処理だけに絞った依存境界。
- * `RefreshAccessTokenUsecase` 全体ではなく必要な操作だけに依存し、差し替え可能な設計にしてテストしやすくする。
- */
-export type RefreshAccessTokenPort = {
-  refresh(provider: Provider): Promise<string>;
-};
-
-const AUTHORIZATION_LOST_REASON = "Authorization expired. Please login again.";
 
 @injectable()
 export class WithAuthorizedRequestUsecase {
@@ -49,7 +43,7 @@ export class WithAuthorizedRequestUsecase {
   ): Promise<T> {
     const tokenSet = await this.tokenStore.get(provider);
     if (tokenSet === null) {
-      throw new NotAuthorizedError("Not authorized. Please login first.");
+      throw new NotAuthorizedError(AUTH_NOT_AUTHORIZED_REASON);
     }
 
     try {
