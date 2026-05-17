@@ -11,6 +11,7 @@ import {
 } from "@comment-dock/shared";
 import { upsertLiveSession } from "../../../entities/live-session/api/live-sessions.repository";
 import type { DbPlatform } from "../../../entities/live-session/model/types";
+import { COMMENT_DELIVERY_WS_WARN_MESSAGES } from "../../../shared/const";
 import { API_GATEWAY_WS_URL } from "../config/ws";
 import {
   toDbPlatform,
@@ -35,6 +36,8 @@ type SupportedCommentDeliveryMessage =
 export type CommentDeliveryWsClientOptions = {
   wsUrl?: string;
   queueIntervalMs?: number;
+  onComment?: (comment: CommentViewDto) => void;
+  onComments?: (comments: CommentViewDto[]) => void;
   onSessionState?: (session: StreamingSessionSnapshot) => void;
   onAccountState?: (account: AccountLinkSnapshot) => void;
 };
@@ -86,6 +89,8 @@ function parseMessage(raw: string): SupportedCommentDeliveryMessage | null {
 class CommentDeliveryWsClient implements CommentIngestionRuntime {
   private readonly queue: CommentWriteQueue;
   private readonly wsUrl: string;
+  private readonly onComment?: (comment: CommentViewDto) => void;
+  private readonly onComments?: (comments: CommentViewDto[]) => void;
   private readonly onSessionState?: (session: StreamingSessionSnapshot) => void;
   private readonly onAccountState?: (account: AccountLinkSnapshot) => void;
   private readonly liveSessionIdByPlatform = new Map<DbPlatform, number>();
@@ -95,6 +100,8 @@ class CommentDeliveryWsClient implements CommentIngestionRuntime {
 
   constructor(options: CommentDeliveryWsClientOptions = {}) {
     this.wsUrl = options.wsUrl ?? API_GATEWAY_WS_URL;
+    this.onComment = options.onComment;
+    this.onComments = options.onComments;
     this.onSessionState = options.onSessionState;
     this.onAccountState = options.onAccountState;
     this.queue = new CommentWriteQueue({
@@ -171,12 +178,50 @@ class CommentDeliveryWsClient implements CommentIngestionRuntime {
     }
 
     if (message.type === COMMENTS_APPEND) {
-      await this.enqueueOne(message.payload.comment);
+      await this.enqueueOneSafely(message.payload.comment);
+      this.notifyComment(message.payload.comment);
       return;
     }
 
     for (const comment of message.payload.comments) {
+      await this.enqueueOneSafely(comment);
+    }
+    this.notifyComments(message.payload.comments);
+  }
+
+  // 永続化経路。enqueue が失敗しても例外は外に出さずログのみにし、同一メッセージの通知処理まで進める。
+  private async enqueueOneSafely(comment: CommentViewDto): Promise<void> {
+    try {
       await this.enqueueOne(comment);
+    } catch (error) {
+      console.warn(
+        COMMENT_DELIVERY_WS_WARN_MESSAGES.FAILED_TO_ENQUEUE_COMMENT_FROM_WEBSOCKET,
+        error,
+      );
+    }
+  }
+
+  // 画面通知経路（単件）。onComment 内の例外で WebSocket 受信やキュー処理全体を落とさない。
+  private notifyComment(comment: CommentViewDto): void {
+    try {
+      this.onComment?.(comment);
+    } catch (error) {
+      console.warn(
+        COMMENT_DELIVERY_WS_WARN_MESSAGES.FAILED_TO_NOTIFY_COMMENT_LISTENER,
+        error,
+      );
+    }
+  }
+
+  // 画面通知経路（バッチ）。notifyComment と同様に例外を握りつぶすだけ。
+  private notifyComments(comments: CommentViewDto[]): void {
+    try {
+      this.onComments?.(comments);
+    } catch (error) {
+      console.warn(
+        COMMENT_DELIVERY_WS_WARN_MESSAGES.FAILED_TO_NOTIFY_COMMENTS_LISTENER,
+        error,
+      );
     }
   }
 

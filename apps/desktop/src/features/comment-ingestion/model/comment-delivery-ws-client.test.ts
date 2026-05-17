@@ -148,4 +148,89 @@ describe("CommentDeliveryWsClient", () => {
 
     await runtime.stop(false);
   });
+
+  it("comments.append メッセージはキューへ積み onComment に渡す", async () => {
+    const onComment = vi.fn();
+    const runtime = createCommentIngestionRuntime({
+      wsUrl: "ws://localhost:17331",
+      onComment,
+    });
+    const comment = createComment("comment-1");
+
+    runtime.start();
+    FakeWebSocket.instances[0]?.emitMessage(
+      JSON.stringify({
+        type: COMMENT_DELIVERY_MESSAGE_TYPES.COMMENTS_APPEND,
+        payload: { comment },
+      }),
+    );
+
+    await vi.waitFor(() => {
+      expect(enqueueMock).toHaveBeenCalledTimes(1);
+      expect(onComment).toHaveBeenCalledWith(comment);
+    });
+
+    await runtime.stop(false);
+  });
+
+  it("comments.batch メッセージは各コメントをキューへ積み onComments に渡す", async () => {
+    const onComments = vi.fn();
+    const runtime = createCommentIngestionRuntime({
+      wsUrl: "ws://localhost:17331",
+      onComments,
+    });
+    const comments = [createComment("comment-1"), createComment("comment-2")];
+
+    runtime.start();
+    FakeWebSocket.instances[0]?.emitMessage(
+      JSON.stringify({
+        type: COMMENT_DELIVERY_MESSAGE_TYPES.COMMENTS_BATCH,
+        payload: { comments },
+      }),
+    );
+
+    await vi.waitFor(() => {
+      expect(enqueueMock).toHaveBeenCalledTimes(2);
+      expect(onComments).toHaveBeenCalledWith(comments);
+    });
+
+    await runtime.stop(false);
+  });
+
+  it("onComment が失敗してもキュー投入は壊れない", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const onComment = vi.fn(() => {
+      throw new Error("listener failed");
+    });
+    const runtime = createCommentIngestionRuntime({
+      wsUrl: "ws://localhost:17331",
+      onComment,
+    });
+    const comment = createComment("comment-1");
+
+    runtime.start();
+    FakeWebSocket.instances[0]?.emitMessage(
+      JSON.stringify({
+        type: COMMENT_DELIVERY_MESSAGE_TYPES.COMMENTS_APPEND,
+        payload: { comment },
+      }),
+    );
+
+    await vi.waitFor(() => {
+      expect(enqueueMock).toHaveBeenCalledTimes(1);
+      expect(onComment).toHaveBeenCalledWith(comment);
+    });
+
+    warnSpy.mockRestore();
+    await runtime.stop(false);
+  });
+});
+
+const createComment = (id: string): CommentViewDto => ({
+  id,
+  source: COMMENT_SOURCES.YOUTUBE,
+  author: { id: "user-1", name: "alice" },
+  text: "hello",
+  publishedAt: "2026-05-16T00:00:00.000Z",
+  eventType: COMMENT_EVENT_TYPES.NORMAL,
 });
