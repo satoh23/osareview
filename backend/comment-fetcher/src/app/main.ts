@@ -63,6 +63,9 @@ type ResolvedPipelineRunOptions = Required<
 type CommentFetchPipeline = {
   provider: CommentProvider & SessionPlatform;
   resolveTargetChannelId: () => Promise<string | null>;
+  findCurrentLiveStream: (
+    input: FindLiveStreamInput,
+  ) => Promise<FindLiveStreamResult | null>;
   findActiveLiveStream: (
     input: FindLiveStreamInput,
     options?: { signal?: AbortSignal },
@@ -71,6 +74,13 @@ type CommentFetchPipeline = {
     input: CollectCommentsInput,
   ) => CollectCommentsStream;
 };
+
+class LiveStreamEndedError extends Error {
+  constructor() {
+    super("Live stream has ended.");
+    this.name = "LiveStreamEndedError";
+  }
+}
 
 const isAuthorizationMissingError = (error: unknown): boolean => {
   if (!(error instanceof Error)) {
@@ -84,11 +94,61 @@ const isAuthorizationMissingError = (error: unknown): boolean => {
   );
 };
 
+const isLiveStreamEndedError = (error: unknown): boolean =>
+  error instanceof LiveStreamEndedError;
+
 const isAbortError = (error: unknown): boolean => {
   if (!(error instanceof Error)) {
     return false;
   }
   return error.name === "AbortError";
+};
+
+const linkAbortSignal = (
+  source: AbortSignal | undefined,
+  target: AbortController,
+): (() => void) => {
+  if (!source) {
+    return () => {};
+  }
+
+  if (source.aborted) {
+    target.abort(source.reason);
+    return () => {};
+  }
+
+  const onAbort = (): void => {
+    target.abort(source.reason);
+  };
+  source.addEventListener("abort", onAbort, { once: true });
+  return () => {
+    source.removeEventListener("abort", onAbort);
+  };
+};
+
+const monitorLiveStreamEnd = async (
+  pipeline: CommentFetchPipeline,
+  input: {
+    channelId: string;
+    liveStreamId: string;
+  },
+  intervalMs: number,
+  signal: AbortSignal,
+): Promise<void> => {
+  while (true) {
+    await waitForRetry(intervalMs, signal);
+    signal.throwIfAborted();
+
+    const currentLiveStream = await pipeline.findCurrentLiveStream({
+      channelId: input.channelId,
+    });
+    if (
+      !currentLiveStream ||
+      currentLiveStream.liveStreamId !== input.liveStreamId
+    ) {
+      throw new LiveStreamEndedError();
+    }
+  }
 };
 
 const emitStateChange = async (
@@ -188,6 +248,8 @@ const createYouTubePipeline = (
       );
       return ownChannelId;
     },
+    findCurrentLiveStream: (input) =>
+      liveStreamRepository.findLiveStream(input),
     findActiveLiveStream: (input, findOptions) =>
       detectLiveStreamUseCase.findActiveLiveStream(input, findOptions),
     streamCommentsFromLiveChat: (input) =>
@@ -217,6 +279,8 @@ const createTwitchPipeline = (): CommentFetchPipeline => {
       }
       return channelId;
     },
+    findCurrentLiveStream: (input) =>
+      liveStreamRepository.findLiveStream(input),
     findActiveLiveStream: (input, findOptions) =>
       detectLiveStreamUseCase.findActiveLiveStream(input, findOptions),
     streamCommentsFromLiveChat: (input) =>
@@ -265,11 +329,30 @@ const collectComments = async (
         retryOnStreamEnd: options.retryOnLiveStreamNotFound,
       });
       const commentIterator = commentStream[Symbol.asyncIterator]();
+      const streamMonitorController = new AbortController();
+      const unlinkAbortSignal = linkAbortSignal(
+        controls.signal,
+        streamMonitorController,
+      );
+      const streamMonitor = monitorLiveStreamEnd(
+        pipeline,
+        {
+          channelId,
+          liveStreamId: activeLiveStream.liveStreamId,
+        },
+        options.liveStreamRetryIntervalMs,
+        streamMonitorController.signal,
+      ).catch((error: unknown) => {
+        if (streamMonitorController.signal.aborted) {
+          return;
+        }
+        streamMonitorController.abort(error);
+      });
       try {
         while (true) {
           const nextComments = await nextWithAbort(
             commentIterator,
-            controls.signal,
+            streamMonitorController.signal,
           );
           if (nextComments.done) {
             break;
@@ -279,7 +362,18 @@ const collectComments = async (
           await outputPort.outputComments(nextComments.value);
         }
       } finally {
-        await commentIterator.return?.();
+        const streamEnded = isLiveStreamEndedError(
+          streamMonitorController.signal.reason,
+        );
+        streamMonitorController.abort();
+        unlinkAbortSignal();
+        await streamMonitor;
+        const closeCommentIterator = commentIterator.return?.();
+        if (streamEnded) {
+          void closeCommentIterator?.catch(() => {});
+        } else {
+          await closeCommentIterator;
+        }
       }
 
       // 配信終了などでストリームが自然終了した場合は待機して再検知する。
@@ -290,6 +384,10 @@ const collectComments = async (
       }
       await waitForRetry(options.liveStreamRetryIntervalMs, controls.signal);
     } catch (error) {
+      if (isLiveStreamEndedError(error)) {
+        await emitStateChange(pipeline, controls, SESSION_STATES.IDLE);
+        return;
+      }
       if (controls.signal?.aborted || isAbortError(error)) {
         await emitStateChange(pipeline, controls, SESSION_STATES.IDLE);
         return;

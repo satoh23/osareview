@@ -92,6 +92,60 @@ test("runYouTubePipeline は単発実行で状態遷移を通知する", async (
   ]);
 });
 
+test("runYouTubePipeline は接続中に配信終了を検知したら idle を通知する", async () => {
+  const events: unknown[] = [];
+  let findLiveStreamCalls = 0;
+
+  await withMockedResolve(
+    ((token: unknown) => {
+      if (token === YouTubeLiveStreamRepository) {
+        return {
+          async findLiveStream() {
+            findLiveStreamCalls += 1;
+            if (findLiveStreamCalls === 1) {
+              return {
+                liveStreamId: "live-video-1",
+                liveChatId: "chat-1",
+              };
+            }
+            return null;
+          },
+        } as unknown as ReturnType<ResolveFn>;
+      }
+      if (token === YouTubeLiveStreamClient) {
+        return {
+          resolveOwnChannelId: async () => "channel-1",
+        } as unknown as ReturnType<ResolveFn>;
+      }
+      if (token === YouTubeCommentRepository) {
+        return {
+          async *streamComments() {
+            await new Promise<void>(() => {});
+          },
+        } as unknown as ReturnType<ResolveFn>;
+      }
+      throw new Error("unexpected token");
+    }) as ResolveFn,
+    async () => {
+      await runYouTubePipeline(
+        { liveStreamRetryIntervalMs: 0 },
+        noopOutputPort,
+        {
+          onStateChange: (event) => {
+            events.push(event);
+          },
+        },
+      );
+    },
+  );
+
+  assert.deepEqual(events, [
+    { platform: "youtube", state: SESSION_STATES.CONNECTING },
+    { platform: "youtube", state: SESSION_STATES.CONNECTED },
+    { platform: "youtube", state: SESSION_STATES.IDLE },
+  ]);
+});
+
 test("runTwitchPipeline は配信未検出時に failed を通知して終了する", async () => {
   const originalTwitchChannelId = process.env.TWITCH_TARGET_CHANNEL_ID;
   process.env.TWITCH_TARGET_CHANNEL_ID = "target-channel";
