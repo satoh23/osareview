@@ -14,6 +14,14 @@
   -webkit-text-size-adjust: 100%;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
 .home-page {
   box-sizing: border-box;
   display: grid;
@@ -66,6 +74,7 @@ button:active {
 }
 
 .home-page__comments {
+  display: flex;
   grid-area: comments;
   min-height: 0;
 }

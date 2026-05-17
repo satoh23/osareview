@@ -1,6 +1,8 @@
 .panel {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  height: 100%;
   min-height: 0;
   position: relative;
 }
@@ -28,6 +30,8 @@
   flex-direction: column;
   gap: 0.75rem;
   min-height: 0;
+  overscroll-behavior: contain;
+  padding-bottom: 4rem;
   overflow-y: auto;
   padding-right: 0.25rem;
 }
@@ -45,6 +49,9 @@
 
 .latestButton {
   align-self: center;
-  bottom: 1rem;
-  position: absolute;
+  bottom: 1.25rem;
+  left: 50%;
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 20;
 }

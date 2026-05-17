@@ -1,4 +1,10 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type WheelEvent,
+} from "react";
 import { CommentItem } from "../../../entities/comment";
 import { useCommentStream } from "../../../features/comment-stream";
 import styles from "./comment-stream-panel.module.css";
@@ -8,36 +14,65 @@ const SCROLL_BOTTOM_THRESHOLD_PX = 24;
 export function CommentStreamPanel() {
   const comments = useCommentStream();
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+  const isFollowingLatestRef = useRef(true);
+  const isProgrammaticScrollRef = useRef(false);
   const [isFollowingLatest, setIsFollowingLatest] = useState(true);
+  const latestCommentId = comments[comments.length - 1]?.id;
+
+  const updateIsFollowingLatest = useCallback((next: boolean) => {
+    isFollowingLatestRef.current = next;
+    setIsFollowingLatest(next);
+  }, []);
+
+  const isScrolledToBottom = useCallback((): boolean => {
+    const scrollArea = scrollAreaRef.current;
+    if (!scrollArea) {
+      return true;
+    }
+    const distanceToBottom =
+      scrollArea.scrollHeight - scrollArea.scrollTop - scrollArea.clientHeight;
+    return distanceToBottom <= SCROLL_BOTTOM_THRESHOLD_PX;
+  }, []);
 
   const scrollToLatest = useCallback(() => {
     const scrollArea = scrollAreaRef.current;
     if (!scrollArea) {
       return;
     }
-    scrollArea.scrollTop = scrollArea.scrollHeight;
-  }, []);
+    isProgrammaticScrollRef.current = true;
+    scrollArea.scrollTop = scrollArea.scrollHeight - scrollArea.clientHeight;
+    requestAnimationFrame(() => {
+      isProgrammaticScrollRef.current = false;
+      updateIsFollowingLatest(isScrolledToBottom());
+    });
+  }, [isScrolledToBottom, updateIsFollowingLatest]);
 
   const handleScroll = useCallback(() => {
-    const scrollArea = scrollAreaRef.current;
-    if (!scrollArea) {
+    if (isProgrammaticScrollRef.current) {
       return;
     }
-    const distanceToBottom =
-      scrollArea.scrollHeight - scrollArea.scrollTop - scrollArea.clientHeight;
-    setIsFollowingLatest(distanceToBottom <= SCROLL_BOTTOM_THRESHOLD_PX);
-  }, []);
+    updateIsFollowingLatest(isScrolledToBottom());
+  }, [isScrolledToBottom, updateIsFollowingLatest]);
+
+  const handleWheel = useCallback(
+    (event: WheelEvent<HTMLDivElement>) => {
+      if (event.deltaY < 0) {
+        updateIsFollowingLatest(false);
+      }
+    },
+    [updateIsFollowingLatest],
+  );
 
   const handleLatestClick = useCallback(() => {
-    setIsFollowingLatest(true);
+    updateIsFollowingLatest(true);
     scrollToLatest();
-  }, [scrollToLatest]);
+  }, [scrollToLatest, updateIsFollowingLatest]);
 
   useLayoutEffect(() => {
-    if (isFollowingLatest) {
+    if (isFollowingLatestRef.current) {
       scrollToLatest();
     }
-  }, [comments.length, isFollowingLatest, scrollToLatest]);
+  }, [latestCommentId, scrollToLatest]);
 
   return (
     <section className={styles.panel} aria-labelledby="comment-stream-title">
@@ -51,6 +86,7 @@ export function CommentStreamPanel() {
       <div
         className={styles.scrollArea}
         onScroll={handleScroll}
+        onWheel={handleWheel}
         ref={scrollAreaRef}
       >
         {comments.length > 0 ? (
