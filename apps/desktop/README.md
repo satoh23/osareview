@@ -58,6 +58,7 @@ desktop は backend の個別パッケージへ直接接続せず、`api-gateway
 
 - HTTP: `VITE_API_GATEWAY_HTTP_URL`（既定 `http://127.0.0.1:17332`）
 - WebSocket: `VITE_API_GATEWAY_WS_URL`（既定 `ws://127.0.0.1:17331`）
+- コメント表示上限: `VITE_COMMENT_STREAM_BUFFER_SIZE`（既定 `500` 件）
 
 HTTP は `src/shared/api/control/` の SDK ファサードから利用し、配信開始・停止・状態取得を行います。WebSocket は `features/comment-ingestion` が購読し、コメントはキューへ、`session.state` は `features/streaming-session` の Context へ流します。
 
