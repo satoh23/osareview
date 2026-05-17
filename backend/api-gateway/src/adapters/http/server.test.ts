@@ -3,10 +3,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:net";
 import {
+  ACCOUNT_LINK_STATES,
   SESSION_PLATFORMS,
   SESSION_STATES,
+  type AccountLinkProvider,
   type SessionPlatform,
 } from "@comment-dock/shared";
+import type { ManageAccountLinksUseCase } from "../../usecases/manage-account-links.usecase.js";
 import type { ManageStreamingSessionsUseCase } from "../../usecases/manage-streaming-sessions.usecase.js";
 import { HttpControlServer } from "./server.js";
 
@@ -41,6 +44,16 @@ type ControlServerFixture = {
 
 const createFixture = async (): Promise<ControlServerFixture> => {
   const calls: string[] = [];
+  const accounts = {
+    [SESSION_PLATFORMS.YOUTUBE]: {
+      provider: SESSION_PLATFORMS.YOUTUBE,
+      state: ACCOUNT_LINK_STATES.UNLINKED,
+    },
+    [SESSION_PLATFORMS.TWITCH]: {
+      provider: SESSION_PLATFORMS.TWITCH,
+      state: ACCOUNT_LINK_STATES.LINKED,
+    },
+  };
   const sessions = {
     [SESSION_PLATFORMS.YOUTUBE]: {
       platform: SESSION_PLATFORMS.YOUTUBE,
@@ -71,7 +84,27 @@ const createFixture = async (): Promise<ControlServerFixture> => {
       };
     },
   } as unknown as ManageStreamingSessionsUseCase;
-  const server = new HttpControlServer(useCase);
+  const manageAccountLinksUseCase = {
+    getSnapshot() {
+      calls.push("getAccounts");
+      return accounts;
+    },
+    async link(provider: AccountLinkProvider) {
+      calls.push(`link:${provider}`);
+      return {
+        provider,
+        state: ACCOUNT_LINK_STATES.LINKING,
+      };
+    },
+    async unlink(provider: AccountLinkProvider) {
+      calls.push(`unlink:${provider}`);
+      return {
+        provider,
+        state: ACCOUNT_LINK_STATES.UNLINKED,
+      };
+    },
+  } as unknown as ManageAccountLinksUseCase;
+  const server = new HttpControlServer(useCase, manageAccountLinksUseCase);
   const port = await reservePort();
 
   await server.start({ host: "127.0.0.1", port });
@@ -150,6 +183,73 @@ test("POST /sessions/:platform/stop は対象セッションを停止する", as
   }
 });
 
+test("GET /accounts は現在のアカウント連携状態一覧を返す", async () => {
+  const fixture = await createFixture();
+  try {
+    const response = await fetch(`${fixture.baseUrl}/accounts`);
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(body, {
+      accounts: {
+        youtube: {
+          provider: "youtube",
+          state: "unlinked",
+        },
+        twitch: {
+          provider: "twitch",
+          state: "linked",
+        },
+      },
+    });
+    assert.deepEqual(fixture.calls, ["getAccounts"]);
+  } finally {
+    await fixture.server.close();
+  }
+});
+
+test("POST /accounts/:provider/link は対象アカウント連携を開始する", async () => {
+  const fixture = await createFixture();
+  try {
+    const response = await fetch(`${fixture.baseUrl}/accounts/youtube/link`, {
+      method: "POST",
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(body, {
+      account: {
+        provider: "youtube",
+        state: "linking",
+      },
+    });
+    assert.deepEqual(fixture.calls, ["link:youtube"]);
+  } finally {
+    await fixture.server.close();
+  }
+});
+
+test("POST /accounts/:provider/unlink は対象アカウント連携を解除する", async () => {
+  const fixture = await createFixture();
+  try {
+    const response = await fetch(`${fixture.baseUrl}/accounts/twitch/unlink`, {
+      method: "POST",
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(body, {
+      account: {
+        provider: "twitch",
+        state: "unlinked",
+      },
+    });
+    assert.deepEqual(fixture.calls, ["unlink:twitch"]);
+  } finally {
+    await fixture.server.close();
+  }
+});
+
 test("未対応 platform は 400 を返す", async () => {
   const fixture = await createFixture();
   try {
@@ -162,6 +262,25 @@ test("未対応 platform は 400 を返す", async () => {
     assert.match(
       String((body as { error?: unknown }).error),
       /Unsupported session platform/,
+    );
+    assert.deepEqual(fixture.calls, []);
+  } finally {
+    await fixture.server.close();
+  }
+});
+
+test("未対応 account provider は 400 を返す", async () => {
+  const fixture = await createFixture();
+  try {
+    const response = await fetch(`${fixture.baseUrl}/accounts/unknown/link`, {
+      method: "POST",
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.match(
+      String((body as { error?: unknown }).error),
+      /Unsupported account provider/,
     );
     assert.deepEqual(fixture.calls, []);
   } finally {

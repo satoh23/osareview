@@ -2,6 +2,7 @@ import { inject, injectable } from "tsyringe";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { serve, type ServerType } from "@hono/node-server";
+import { ManageAccountLinksUseCase } from "../../usecases/manage-account-links.usecase.js";
 import { ManageStreamingSessionsUseCase } from "../../usecases/manage-streaming-sessions.usecase.js";
 import {
   getHttpApiEndpoint,
@@ -16,6 +17,8 @@ export class HttpControlServer {
   constructor(
     @inject(ManageStreamingSessionsUseCase)
     private readonly manageStreamingSessionsUseCase: ManageStreamingSessionsUseCase,
+    @inject(ManageAccountLinksUseCase)
+    private readonly manageAccountLinksUseCase: ManageAccountLinksUseCase,
   ) {}
 
   async start(endpoint: HttpApiEndpoint = getHttpApiEndpoint()): Promise<void> {
@@ -24,7 +27,13 @@ export class HttpControlServer {
     }
 
     const app = new Hono();
-    app.route("/", createHttpRoutes(this.manageStreamingSessionsUseCase));
+    app.route(
+      "/",
+      createHttpRoutes(
+        this.manageStreamingSessionsUseCase,
+        this.manageAccountLinksUseCase,
+      ),
+    );
     // /auth/... などのルータは後続でここへ追加する。
     app.notFound((context) => context.json({ error: "Not Found" }, 404));
     app.onError((error, context) => {

@@ -67,13 +67,10 @@ export class ManageAccountLinksUseCase {
   /**
    * 指定 provider の OAuth ログインをバックグラウンドで開始する。
    * 呼び出し元へは linking 状態を即時返し、完了/失敗は後続の状態 push で伝える。
+   * linking 中の再実行も許可し、古いログイン結果は linkAttemptId で無視する。
    */
   async link(provider: AccountLinkProvider): Promise<AccountLinkSnapshot> {
     const slot = this.getSlot(provider);
-    if (slot.state === ACCOUNT_LINK_STATES.LINKING) {
-      return this.toSnapshot(slot);
-    }
-
     const linkAttemptId = this.nextLinkAttemptId + 1;
     this.nextLinkAttemptId = linkAttemptId;
     slot.linkAttemptId = linkAttemptId;

@@ -151,22 +151,27 @@ test("link 失敗時は failed と reason を publish する", async () => {
   ]);
 });
 
-test("linking 中の二重 link は login を増やさず現在状態を返す", async () => {
+test("linking 中の再 link は新しい login を開始し古い結果を無視する", async () => {
   const { authClient, published, useCase } = createUseCase();
-  let resolveLogin: (() => void) | undefined;
+  const resolveLoginByCall: Array<() => void> = [];
   authClient.loginImpl = async () => {
     await new Promise<void>((resolve) => {
-      resolveLogin = resolve;
+      resolveLoginByCall.push(resolve);
     });
   };
 
   const first = await useCase.link(SESSION_PLATFORMS.YOUTUBE);
   const second = await useCase.link(SESSION_PLATFORMS.YOUTUBE);
-  resolveLogin?.();
+  resolveLoginByCall[0]?.();
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  resolveLoginByCall[1]?.();
   await new Promise<void>((resolve) => setImmediate(resolve));
 
   assert.deepEqual(first, second);
-  assert.deepEqual(authClient.loginCalls, [SESSION_PLATFORMS.YOUTUBE]);
+  assert.deepEqual(authClient.loginCalls, [
+    SESSION_PLATFORMS.YOUTUBE,
+    SESSION_PLATFORMS.YOUTUBE,
+  ]);
   assert.equal(
     published.filter(
       (event) =>
@@ -175,6 +180,10 @@ test("linking 中の二重 link は login を増やさず現在状態を返す",
     ).length,
     1,
   );
+  assert.deepEqual(published.at(-1), {
+    provider: SESSION_PLATFORMS.YOUTUBE,
+    state: ACCOUNT_LINK_STATES.LINKED,
+  });
 });
 
 test("unlink は auth.logout 後に unlinked を publish する", async () => {
