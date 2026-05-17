@@ -19,6 +19,10 @@ import {
   GetValidAccessTokenUsecase,
   NotAuthorizedError,
 } from "./usecases/get-valid-access-token.usecase.js";
+import {
+  GetLinkStatusUsecase,
+  type LinkStatus,
+} from "./usecases/get-link-status.usecase.js";
 import { RefreshAccessTokenUsecase } from "./usecases/refresh-access-token.usecase.js";
 import { AUTH_DI_TOKENS } from "./shared/di-tokens.js";
 import { DEFAULT_ACCESS_TOKEN_CLOCK_SKEW_MS } from "./entities/token/token-set.js";
@@ -29,10 +33,12 @@ import type {
 } from "./usecases/interfaces/index.js";
 
 export type { Provider };
+export type { LinkStatus };
 export { NotAuthorizedError };
 
 export interface AuthClient {
   login(provider: Provider): Promise<void>;
+  getLinkStatus(provider: Provider): Promise<LinkStatus>;
   getValidAccessToken(provider: Provider): Promise<string>;
   refresh(provider: Provider): Promise<string>;
   logout(provider: Provider): Promise<void>;
@@ -112,6 +118,7 @@ export function createAuthClient(
 
   const tokenStore = c.resolve<TokenStore>(AUTH_DI_TOKENS.tokenStore);
   const loginUsecase = c.resolve(LoginUsecase);
+  const getLinkStatusUsecase = c.resolve(GetLinkStatusUsecase);
   const getValidAccessTokenUsecase = c.resolve(GetValidAccessTokenUsecase);
   const refreshAccessTokenUsecase = c.resolve(RefreshAccessTokenUsecase);
 
@@ -119,6 +126,11 @@ export function createAuthClient(
     async login(provider: Provider): Promise<void> {
       assertSupportedProvider(provider);
       await loginUsecase.login(provider);
+    },
+
+    async getLinkStatus(provider: Provider): Promise<LinkStatus> {
+      assertSupportedProvider(provider);
+      return getLinkStatusUsecase.getLinkStatus(provider);
     },
 
     async getValidAccessToken(provider: Provider): Promise<string> {

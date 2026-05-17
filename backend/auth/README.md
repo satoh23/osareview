@@ -5,6 +5,7 @@ YouTube / Twitch OAuth とトークン保管を担当するライブラリです
 ## 役割
 
 - ログインフロー (`login`)
+- 連携状態の取得 (`getLinkStatus`)
 - 有効なアクセストークンの取得 (`getValidAccessToken`)
 - 明示 refresh (`refresh`)
 - ログアウト (`logout`)
@@ -37,6 +38,7 @@ import { createAuthClient } from "@comment-dock/auth";
 
 const authClient = createAuthClient();
 await authClient.login("youtube");
+const status = await authClient.getLinkStatus("youtube");
 const accessToken = await authClient.getValidAccessToken("youtube");
 ```
 
@@ -78,3 +80,7 @@ pnpm --filter @comment-dock/auth login twitch
 
 - `NotAuthorizedError`
   - 未ログイン、または refresh 失敗で再ログインが必要な状態
+
+## YouTube refresh token の運用注意
+
+Google Cloud Console の OAuth consent screen が Testing のままだと、YouTube の `refresh_token` は 7 日で失効します。実装で延長できないため、継続利用には OAuth consent screen を Production に公開してください。
