@@ -5,6 +5,7 @@ import { once } from "node:events";
 import { createServer } from "node:net";
 import { WebSocket } from "ws";
 import {
+  ACCOUNT_LINK_STATES,
   COMMENT_DELIVERY_MESSAGE_TYPES,
   COMMENT_EVENT_TYPES,
   COMMENT_SOURCES,
@@ -71,7 +72,7 @@ const connectClient = async (port: number): Promise<WebSocketClientFixture> => {
   };
 };
 
-test("新規接続時に現在の session.state スナップショットを送信する", async () => {
+test("新規接続時に現在の session.state と account.state スナップショットを送信する", async () => {
   const port = await reservePort();
   const outputPort = new WebSocketCommentOutputPort();
 
@@ -80,9 +81,11 @@ test("新規接続時に現在の session.state スナップショットを送�
 
   const first = await readMessage();
   const second = await readMessage();
+  const third = await readMessage();
+  const fourth = await readMessage();
 
   assert.deepEqual(
-    [first, second],
+    [first, second, third, fourth],
     [
       {
         type: COMMENT_DELIVERY_MESSAGE_TYPES.SESSION_STATE,
@@ -98,6 +101,20 @@ test("新規接続時に現在の session.state スナップショットを送�
           state: SESSION_STATES.IDLE,
         },
       },
+      {
+        type: COMMENT_DELIVERY_MESSAGE_TYPES.ACCOUNT_LINK_STATE,
+        payload: {
+          provider: SESSION_PLATFORMS.YOUTUBE,
+          state: ACCOUNT_LINK_STATES.UNLINKED,
+        },
+      },
+      {
+        type: COMMENT_DELIVERY_MESSAGE_TYPES.ACCOUNT_LINK_STATE,
+        payload: {
+          provider: SESSION_PLATFORMS.TWITCH,
+          state: ACCOUNT_LINK_STATES.UNLINKED,
+        },
+      },
     ],
   );
 
@@ -111,6 +128,8 @@ test("publishSessionState は接続中クライアントへ状態を配信し、
 
   await outputPort.start({ host: "127.0.0.1", port });
   const firstConnection = await connectClient(port);
+  await firstConnection.readMessage();
+  await firstConnection.readMessage();
   await firstConnection.readMessage();
   await firstConnection.readMessage();
 
@@ -132,6 +151,8 @@ test("publishSessionState は接続中クライアントへ状態を配信し、
   const snapshots = [
     await secondConnection.readMessage(),
     await secondConnection.readMessage(),
+    await secondConnection.readMessage(),
+    await secondConnection.readMessage(),
   ];
 
   assert.deepEqual(snapshots[0], {
@@ -146,12 +167,59 @@ test("publishSessionState は接続中クライアントへ状態を配信し、
   await outputPort.close();
 });
 
+test("publishAccountState は接続中クライアントへ状態を配信し、次回接続スナップショットにも反映する", async () => {
+  const port = await reservePort();
+  const outputPort = new WebSocketCommentOutputPort();
+
+  await outputPort.start({ host: "127.0.0.1", port });
+  const firstConnection = await connectClient(port);
+  await firstConnection.readMessage();
+  await firstConnection.readMessage();
+  await firstConnection.readMessage();
+  await firstConnection.readMessage();
+
+  const liveUpdatePromise = firstConnection.readMessage();
+  await outputPort.publishAccountState({
+    provider: SESSION_PLATFORMS.YOUTUBE,
+    state: ACCOUNT_LINK_STATES.LINKED,
+  });
+  assert.deepEqual(await liveUpdatePromise, {
+    type: COMMENT_DELIVERY_MESSAGE_TYPES.ACCOUNT_LINK_STATE,
+    payload: {
+      provider: SESSION_PLATFORMS.YOUTUBE,
+      state: ACCOUNT_LINK_STATES.LINKED,
+    },
+  });
+  firstConnection.client.close();
+
+  const secondConnection = await connectClient(port);
+  const snapshots = [
+    await secondConnection.readMessage(),
+    await secondConnection.readMessage(),
+    await secondConnection.readMessage(),
+    await secondConnection.readMessage(),
+  ];
+
+  assert.deepEqual(snapshots[2], {
+    type: COMMENT_DELIVERY_MESSAGE_TYPES.ACCOUNT_LINK_STATE,
+    payload: {
+      provider: SESSION_PLATFORMS.YOUTUBE,
+      state: ACCOUNT_LINK_STATES.LINKED,
+    },
+  });
+
+  secondConnection.client.close();
+  await outputPort.close();
+});
+
 test("コメントを WebSocket クライアントへ append メッセージで配信できる", async () => {
   const port = await reservePort();
   const outputPort = new WebSocketCommentOutputPort();
 
   await outputPort.start({ host: "127.0.0.1", port });
   const { client, readMessage } = await connectClient(port);
+  await readMessage();
+  await readMessage();
   await readMessage();
   await readMessage();
 

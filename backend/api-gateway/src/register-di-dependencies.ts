@@ -21,7 +21,6 @@ import {
 import { API_GATEWAY_DI_TOKENS } from "./infrastructure/shared/di-tokens.js";
 import { HttpControlServer } from "./adapters/http/server.js";
 import { WebSocketCommentOutputPort } from "./adapters/ws/websocket-comment.output-port.js";
-import { NoopAccountStateOutputPort } from "./adapters/output-ports/noop-account-state.output-port.js";
 import {
   ManageStreamingSessionsUseCase,
   type SessionPipelineRunner,
@@ -99,7 +98,8 @@ const registerGatewayCommentDeliveryDependencies = (): void => {
   container.register<AccountStateOutputPort>(
     API_GATEWAY_DI_TOKENS.accountStateOutputPort,
     {
-      useClass: NoopAccountStateOutputPort,
+      useFactory: (dependencyContainer) =>
+        dependencyContainer.resolve(WebSocketCommentOutputPort),
     },
   );
 };
