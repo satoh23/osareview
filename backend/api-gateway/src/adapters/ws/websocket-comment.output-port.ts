@@ -5,6 +5,7 @@ import {
   COMMENT_DELIVERY_MESSAGE_TYPES,
   SESSION_PLATFORMS,
   SESSION_STATES,
+  type AccountLinkSnapshots,
   type AccountLinkStateMessage,
   type CommentDeliveryMessage,
   type CommentViewDto,
@@ -22,7 +23,6 @@ import type {
   SessionStateOutputPort,
 } from "../../usecases/interfaces/session-state-output-port.interface.js";
 import type {
-  AccountLinkSnapshots,
   AccountStateOutputEvent,
   AccountStateOutputPort,
 } from "../../usecases/interfaces/account-state-output-port.interface.js";

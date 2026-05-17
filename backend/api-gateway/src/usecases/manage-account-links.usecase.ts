@@ -4,13 +4,11 @@ import {
   ACCOUNT_LINK_STATES,
   SESSION_PLATFORMS,
   type AccountLinkProvider,
+  type AccountLinkSnapshot,
+  type AccountLinkSnapshots,
 } from "@comment-dock/shared";
 import { API_GATEWAY_DI_TOKENS } from "../infrastructure/shared/di-tokens.js";
-import type {
-  AccountLinkSnapshot,
-  AccountLinkSnapshots,
-  AccountStateOutputPort,
-} from "./interfaces/account-state-output-port.interface.js";
+import type { AccountStateOutputPort } from "./interfaces/account-state-output-port.interface.js";
 
 type AccountLinkSlot = AccountLinkSnapshot & {
   linkAttemptId: number;

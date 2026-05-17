@@ -10,6 +10,14 @@ export type {
   CreateApiGatewayHttpClientOptions,
 } from "./http-client";
 export {
+  accountLinkClient,
+  createAccountLinkClient,
+  getAccountLinkStates,
+  linkAccount,
+  unlinkAccount,
+} from "./account-link.client";
+export type { AccountLinkClient } from "./account-link.client";
+export {
   createStreamingSessionClient,
   getSessionStates,
   startSession,

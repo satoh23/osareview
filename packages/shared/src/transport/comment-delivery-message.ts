@@ -75,6 +75,25 @@ export type AccountLinkStateMessage = {
   };
 };
 
+export type AccountLinkSnapshot = {
+  provider: AccountLinkProvider;
+  state: AccountLinkState;
+  reason?: string;
+};
+
+export type AccountLinkSnapshots = Record<
+  AccountLinkProvider,
+  AccountLinkSnapshot
+>;
+
+export type AccountLinkResponse = {
+  account: AccountLinkSnapshot;
+};
+
+export type AccountLinksResponse = {
+  accounts: AccountLinkSnapshots;
+};
+
 export type StreamingSessionSnapshot = {
   platform: SessionPlatform;
   state: SessionState;

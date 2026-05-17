@@ -24,8 +24,12 @@ export {
 } from "./transport/comment-delivery-message.js";
 export type {
   AccountLinkProvider,
+  AccountLinkResponse,
   AccountLinkState,
   AccountLinkStateMessage,
+  AccountLinkSnapshot,
+  AccountLinkSnapshots,
+  AccountLinksResponse,
   CommentDeliveryMessage,
   CommentDeliveryMessageType,
   CommentsAppendMessage,
