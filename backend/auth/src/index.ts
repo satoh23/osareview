@@ -24,6 +24,11 @@ import {
   type LinkStatus,
 } from "./usecases/get-link-status.usecase.js";
 import { RefreshAccessTokenUsecase } from "./usecases/refresh-access-token.usecase.js";
+import {
+  WithAuthorizedRequestUsecase,
+  type AuthorizedRequestFn,
+} from "./usecases/with-authorized-request.usecase.js";
+import { AuthorizationLostNotifier } from "./shared/authorization-lost-notifier.js";
 import { AUTH_DI_TOKENS } from "./shared/di-tokens.js";
 import { DEFAULT_ACCESS_TOKEN_CLOCK_SKEW_MS } from "./entities/token/token-set.js";
 import type {
@@ -31,15 +36,20 @@ import type {
   OAuthTokenRefresher,
   TokenStore,
 } from "./usecases/interfaces/index.js";
+import { UnauthorizedRequestError } from "./errors/unauthorized-request.error.js";
 
 export type { Provider };
 export type { LinkStatus };
-export { NotAuthorizedError };
+export { NotAuthorizedError, UnauthorizedRequestError };
 
 export interface AuthClient {
   login(provider: Provider): Promise<void>;
   getLinkStatus(provider: Provider): Promise<LinkStatus>;
   getValidAccessToken(provider: Provider): Promise<string>;
+  withAuthorizedRequest<T>(
+    provider: Provider,
+    requestFn: AuthorizedRequestFn<T>,
+  ): Promise<T>;
   refresh(provider: Provider): Promise<string>;
   logout(provider: Provider): Promise<void>;
 }
@@ -74,6 +84,7 @@ export function createAuthClient(
 
   const youtubeLoginPolicy = new YouTubeLoginPolicy(youtubeConfigProvider);
   const twitchLoginPolicy = new TwitchLoginPolicy(twitchConfigProvider);
+  const authorizationLostNotifier = new AuthorizationLostNotifier();
 
   const youtubeLoginStrategy = new AuthorizationCodeLoopbackLoginStrategy(
     youtubeOAuthClient,
@@ -115,12 +126,22 @@ export function createAuthClient(
     AUTH_DI_TOKENS.accessTokenClockSkewMs,
     options.accessTokenClockSkewMs ?? DEFAULT_ACCESS_TOKEN_CLOCK_SKEW_MS,
   );
+  c.registerInstance<AuthorizationLostNotifier>(
+    AUTH_DI_TOKENS.authorizationLostNotifier,
+    authorizationLostNotifier,
+  );
+  c.registerInstance<() => number>(AUTH_DI_TOKENS.nowFn, Date.now);
 
   const tokenStore = c.resolve<TokenStore>(AUTH_DI_TOKENS.tokenStore);
   const loginUsecase = c.resolve(LoginUsecase);
   const getLinkStatusUsecase = c.resolve(GetLinkStatusUsecase);
   const getValidAccessTokenUsecase = c.resolve(GetValidAccessTokenUsecase);
   const refreshAccessTokenUsecase = c.resolve(RefreshAccessTokenUsecase);
+  c.registerInstance<RefreshAccessTokenUsecase>(
+    AUTH_DI_TOKENS.refreshAccessTokenUsecase,
+    refreshAccessTokenUsecase,
+  );
+  const withAuthorizedRequestUsecase = c.resolve(WithAuthorizedRequestUsecase);
 
   return {
     async login(provider: Provider): Promise<void> {
@@ -136,6 +157,14 @@ export function createAuthClient(
     async getValidAccessToken(provider: Provider): Promise<string> {
       assertSupportedProvider(provider);
       return getValidAccessTokenUsecase.getValidAccessToken(provider);
+    },
+
+    async withAuthorizedRequest<T>(
+      provider: Provider,
+      requestFn: AuthorizedRequestFn<T>,
+    ): Promise<T> {
+      assertSupportedProvider(provider);
+      return withAuthorizedRequestUsecase.execute(provider, requestFn);
     },
 
     async refresh(provider: Provider): Promise<string> {

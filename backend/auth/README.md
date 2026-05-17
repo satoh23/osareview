@@ -7,6 +7,7 @@ YouTube / Twitch OAuth とトークン保管を担当するライブラリです
 - ログインフロー (`login`)
 - 連携状態の取得 (`getLinkStatus`)
 - 有効なアクセストークンの取得 (`getValidAccessToken`)
+- 認証付き REST 呼び出しの refresh + retry (`withAuthorizedRequest`)
 - 明示 refresh (`refresh`)
 - ログアウト (`logout`)
 
@@ -40,6 +41,26 @@ const authClient = createAuthClient();
 await authClient.login("youtube");
 const status = await authClient.getLinkStatus("youtube");
 const accessToken = await authClient.getValidAccessToken("youtube");
+```
+
+REST API 呼び出しでは、呼び出し側が 401 を検知したら `UnauthorizedRequestError` を投げます。`withAuthorizedRequest` は refresh して 1 回だけリトライし、refresh も失敗した場合は `NotAuthorizedError` に正規化します。
+
+```ts
+import { UnauthorizedRequestError, createAuthClient } from "@comment-dock/auth";
+
+const authClient = createAuthClient();
+const result = await authClient.withAuthorizedRequest(
+  "youtube",
+  async (token) => {
+    const response = await fetch("https://www.googleapis.com/youtube/v3/...", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (response.status === 401) {
+      throw new UnauthorizedRequestError();
+    }
+    return response.json();
+  },
+);
 ```
 
 Twitch も同じ API で利用できます。
