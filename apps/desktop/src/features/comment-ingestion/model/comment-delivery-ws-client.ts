@@ -1,5 +1,7 @@
 import {
   COMMENT_DELIVERY_MESSAGE_TYPES,
+  type AccountLinkSnapshot,
+  type AccountLinkStateMessage,
   type CommentDeliveryMessage,
   type CommentsAppendMessage,
   type CommentsBatchMessage,
@@ -19,6 +21,7 @@ import { CommentWriteQueue } from "./comment-write-queue";
 const COMMENTS_APPEND = COMMENT_DELIVERY_MESSAGE_TYPES.COMMENTS_APPEND;
 const COMMENTS_BATCH = COMMENT_DELIVERY_MESSAGE_TYPES.COMMENTS_BATCH;
 const SESSION_STATE = COMMENT_DELIVERY_MESSAGE_TYPES.SESSION_STATE;
+const ACCOUNT_LINK_STATE = COMMENT_DELIVERY_MESSAGE_TYPES.ACCOUNT_LINK_STATE;
 
 type CommentDeliveryCommentMessage =
   | CommentsAppendMessage
@@ -26,12 +29,14 @@ type CommentDeliveryCommentMessage =
 
 type SupportedCommentDeliveryMessage =
   | CommentDeliveryCommentMessage
-  | SessionStateMessage;
+  | SessionStateMessage
+  | AccountLinkStateMessage;
 
 export type CommentDeliveryWsClientOptions = {
   wsUrl?: string;
   queueIntervalMs?: number;
   onSessionState?: (session: StreamingSessionSnapshot) => void;
+  onAccountState?: (account: AccountLinkSnapshot) => void;
 };
 
 export type CommentIngestionRuntime = {
@@ -64,6 +69,14 @@ function parseMessage(raw: string): SupportedCommentDeliveryMessage | null {
     ) {
       return parsed as SessionStateMessage;
     }
+    if (
+      parsed.type === ACCOUNT_LINK_STATE &&
+      parsed.payload &&
+      "provider" in parsed.payload &&
+      "state" in parsed.payload
+    ) {
+      return parsed as AccountLinkStateMessage;
+    }
     return null;
   } catch {
     return null;
@@ -74,6 +87,7 @@ class CommentDeliveryWsClient implements CommentIngestionRuntime {
   private readonly queue: CommentWriteQueue;
   private readonly wsUrl: string;
   private readonly onSessionState?: (session: StreamingSessionSnapshot) => void;
+  private readonly onAccountState?: (account: AccountLinkSnapshot) => void;
   private readonly liveSessionIdByPlatform = new Map<DbPlatform, number>();
   private socket: WebSocket | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -82,6 +96,7 @@ class CommentDeliveryWsClient implements CommentIngestionRuntime {
   constructor(options: CommentDeliveryWsClientOptions = {}) {
     this.wsUrl = options.wsUrl ?? API_GATEWAY_WS_URL;
     this.onSessionState = options.onSessionState;
+    this.onAccountState = options.onAccountState;
     this.queue = new CommentWriteQueue({
       intervalMs: options.queueIntervalMs ?? 1000,
     });
@@ -147,6 +162,11 @@ class CommentDeliveryWsClient implements CommentIngestionRuntime {
 
     if (message.type === SESSION_STATE) {
       this.onSessionState?.(message.payload);
+      return;
+    }
+
+    if (message.type === ACCOUNT_LINK_STATE) {
+      this.onAccountState?.(message.payload);
       return;
     }
 

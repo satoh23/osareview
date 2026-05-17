@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  ACCOUNT_LINK_STATES,
   COMMENT_DELIVERY_MESSAGE_TYPES,
   COMMENT_EVENT_TYPES,
   COMMENT_SOURCES,
@@ -82,6 +83,35 @@ describe("CommentDeliveryWsClient", () => {
     expect(onSessionState).toHaveBeenCalledWith({
       platform: SESSION_PLATFORMS.YOUTUBE,
       state: SESSION_STATES.CONNECTED,
+    });
+    expect(enqueueMock).not.toHaveBeenCalled();
+
+    await runtime.stop(false);
+  });
+
+  it("account.state メッセージを onAccountState に渡す", async () => {
+    const onAccountState = vi.fn();
+    const runtime = createCommentIngestionRuntime({
+      wsUrl: "ws://localhost:17331",
+      onAccountState,
+    });
+
+    runtime.start();
+    FakeWebSocket.instances[0]?.emitMessage(
+      JSON.stringify({
+        type: COMMENT_DELIVERY_MESSAGE_TYPES.ACCOUNT_LINK_STATE,
+        payload: {
+          provider: SESSION_PLATFORMS.TWITCH,
+          state: ACCOUNT_LINK_STATES.UNLINKED,
+          reason: "再ログインが必要です",
+        },
+      }),
+    );
+
+    expect(onAccountState).toHaveBeenCalledWith({
+      provider: SESSION_PLATFORMS.TWITCH,
+      state: ACCOUNT_LINK_STATES.UNLINKED,
+      reason: "再ログインが必要です",
     });
     expect(enqueueMock).not.toHaveBeenCalled();
 
