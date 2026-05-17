@@ -4,6 +4,10 @@ export type SessionPlatform = "youtube" | "twitch";
 
 export type SessionState = "idle" | "connecting" | "connected" | "failed";
 
+export type AccountLinkProvider = SessionPlatform;
+
+export type AccountLinkState = "unlinked" | "linking" | "linked" | "failed";
+
 export const SESSION_PLATFORMS = {
   YOUTUBE: "youtube",
   TWITCH: "twitch",
@@ -16,14 +20,25 @@ export const SESSION_STATES = {
   FAILED: "failed",
 } as const satisfies Record<string, SessionState>;
 
+export const ACCOUNT_LINK_STATES = {
+  UNLINKED: "unlinked",
+  LINKING: "linking",
+  LINKED: "linked",
+  FAILED: "failed",
+} as const satisfies Record<string, AccountLinkState>;
+
 export const COMMENT_DELIVERY_MESSAGE_TYPES = {
   COMMENTS_APPEND: "comments.append",
   COMMENTS_BATCH: "comments.batch",
   SESSION_STATE: "session.state",
+  ACCOUNT_LINK_STATE: "account.state",
 } as const;
 
 export const SESSION_STATE_MESSAGE_TYPE =
   COMMENT_DELIVERY_MESSAGE_TYPES.SESSION_STATE;
+
+export const ACCOUNT_LINK_STATE_MESSAGE_TYPE =
+  COMMENT_DELIVERY_MESSAGE_TYPES.ACCOUNT_LINK_STATE;
 
 export type CommentDeliveryMessageType =
   (typeof COMMENT_DELIVERY_MESSAGE_TYPES)[keyof typeof COMMENT_DELIVERY_MESSAGE_TYPES];
@@ -51,6 +66,15 @@ export type SessionStateMessage = {
   };
 };
 
+export type AccountLinkStateMessage = {
+  type: typeof COMMENT_DELIVERY_MESSAGE_TYPES.ACCOUNT_LINK_STATE;
+  payload: {
+    provider: AccountLinkProvider;
+    state: AccountLinkState;
+    reason?: string;
+  };
+};
+
 export type StreamingSessionSnapshot = {
   platform: SessionPlatform;
   state: SessionState;
@@ -73,4 +97,5 @@ export type StreamingSessionsResponse = {
 export type CommentDeliveryMessage =
   | CommentsAppendMessage
   | CommentsBatchMessage
-  | SessionStateMessage;
+  | SessionStateMessage
+  | AccountLinkStateMessage;

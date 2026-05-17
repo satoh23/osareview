@@ -15,12 +15,17 @@ export type {
   CommentViewDto,
 } from "./comment/comment-view.dto.js";
 export {
+  ACCOUNT_LINK_STATE_MESSAGE_TYPE,
+  ACCOUNT_LINK_STATES,
   COMMENT_DELIVERY_MESSAGE_TYPES,
   SESSION_PLATFORMS,
   SESSION_STATE_MESSAGE_TYPE,
   SESSION_STATES,
 } from "./transport/comment-delivery-message.js";
 export type {
+  AccountLinkProvider,
+  AccountLinkState,
+  AccountLinkStateMessage,
   CommentDeliveryMessage,
   CommentDeliveryMessageType,
   CommentsAppendMessage,
