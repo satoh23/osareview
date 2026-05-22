@@ -46,6 +46,7 @@ export function HeaderBar({ onOpenSettings }: HeaderBarProps) {
 
       {selectedPlatformSetting ? (
         <PlatformQuickPopover
+          key={selectedPlatformSetting.platform}
           onChangeStreamId={changeStreamId}
           onChangeTargetMode={changeConnectionTargetMode}
           onClose={closePlatformPopover}

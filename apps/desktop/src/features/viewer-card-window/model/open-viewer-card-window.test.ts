@@ -13,6 +13,12 @@ vi.mock("@tauri-apps/api/webviewWindow", () => ({
     static getByLabel = getByLabelMock;
 
     navigate = navigateMock;
+    once = vi.fn((eventName: string, handler: () => void) => {
+      if (eventName === "tauri://created") {
+        handler();
+      }
+      return Promise.resolve(() => undefined);
+    });
     setFocus = setFocusMock;
 
     constructor(label: string, options: unknown) {
@@ -36,7 +42,14 @@ describe("openViewerCardWindow", () => {
   });
 
   it("viewer-card URL を HashRouter 用に生成する", () => {
-    expect(createViewerCardWindowUrl("user 1")).toBe("#/viewer-card/user%201");
+    expect(
+      createViewerCardWindowUrl("user 1", {
+        displayName: "ねこまる",
+        source: "youtube",
+      }),
+    ).toBe(
+      "#/viewer-card/user%201?displayName=%E3%81%AD%E3%81%93%E3%81%BE%E3%82%8B&source=youtube",
+    );
   });
 
   it("既存 window があれば遷移して focus する", async () => {
@@ -46,10 +59,12 @@ describe("openViewerCardWindow", () => {
     };
     getByLabelMock.mockResolvedValue(existingWindow);
 
-    await openViewerCardWindow({ userId: "u2" });
+    await openViewerCardWindow({ displayName: "mika_sub", userId: "u2" });
 
     expect(getByLabelMock).toHaveBeenCalledWith(VIEWER_CARD_WINDOW_LABEL);
-    expect(navigateMock).toHaveBeenCalledWith("#/viewer-card/u2");
+    expect(navigateMock).toHaveBeenCalledWith(
+      "#/viewer-card/u2?displayName=mika_sub",
+    );
     expect(setFocusMock).toHaveBeenCalledOnce();
     expect(constructorMock).not.toHaveBeenCalled();
   });
@@ -60,7 +75,7 @@ describe("openViewerCardWindow", () => {
     expect(constructorMock).toHaveBeenCalledWith(
       VIEWER_CARD_WINDOW_LABEL,
       expect.objectContaining({
-        url: "#/viewer-card/u1",
+        url: "#/viewer-card/u1?displayName=%E3%81%AD%E3%81%93%E3%81%BE%E3%82%8B",
         title: "ねこまる - 関係性カード",
         width: 420,
         height: 720,

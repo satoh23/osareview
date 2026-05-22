@@ -6,7 +6,7 @@ import type {
 } from "../../../entities/viewer-profile";
 
 export function useRelationshipTabs(profile: ViewerProfile) {
-  const [tab, setTab] = useState<RelationshipTab>("summary");
+  const [tab, setTab] = useState<RelationshipTab>("all");
   const [historyMode, setHistoryMode] = useState<HistoryMode>("all");
 
   const historyComments = useMemo(() => {

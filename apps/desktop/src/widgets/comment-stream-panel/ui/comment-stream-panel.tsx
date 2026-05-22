@@ -107,6 +107,7 @@ export function CommentStreamPanel() {
       openViewerCard({
         userId: comment.author.id,
         displayName: comment.author.name,
+        source: comment.source,
       });
     },
     [openViewerCard],
@@ -163,6 +164,7 @@ export function CommentStreamPanel() {
 
       {selectedPlatformSetting ? (
         <PlatformQuickPopover
+          key={selectedPlatformSetting.platform}
           onChangeStreamId={changeStreamId}
           onChangeTargetMode={changeConnectionTargetMode}
           onClose={closePlatformPopover}

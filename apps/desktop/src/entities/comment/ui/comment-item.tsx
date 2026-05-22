@@ -155,8 +155,8 @@ const toDisplayComment = (
         ? ["normal"]
         : ["support"],
     isLowSignal: false,
-    isImportant: Boolean(support),
-    isPinned: false,
+    isImportant: true,
+    isPinned: true,
     support,
     badges: [],
   };

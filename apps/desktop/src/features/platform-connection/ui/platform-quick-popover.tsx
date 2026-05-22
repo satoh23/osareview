@@ -39,6 +39,9 @@ export function PlatformQuickPopover({
 }: PlatformQuickPopoverProps) {
   const isLoggedIn = setting.authStatus === "linked";
   const isConnected = setting.connectionStatus === "connected";
+  const isConnecting =
+    setting.connectionStatus === "connecting" ||
+    (setting.isRequesting && isLoggedIn && !isConnected);
   const canConnect = canConnectPlatform(setting);
 
   return (
@@ -130,12 +133,16 @@ export function PlatformQuickPopover({
           </Button>
           <Button
             className={!canConnect && !isConnected ? "opacity-50" : undefined}
-            disabled={setting.isRequesting || (!canConnect && !isConnected)}
+            disabled={
+              isConnecting ||
+              setting.isRequesting ||
+              (!canConnect && !isConnected)
+            }
             onClick={() => onToggleConnection(setting.platform)}
             type="button"
             variant={isConnected ? "danger" : "secondary"}
           >
-            {isConnected ? "切断" : "接続"}
+            {isConnecting ? "接続中" : isConnected ? "切断" : "接続"}
           </Button>
         </div>
 

@@ -28,7 +28,8 @@ describe("enrichComment", () => {
 
     expect(enriched.commentTypes).toContain("low_signal");
     expect(enriched.isLowSignal).toBe(true);
-    expect(enriched.isImportant).toBe(false);
+    expect(enriched.isImportant).toBe(true);
+    expect(enriched.isPinned).toBe(true);
   });
 
   it("支援イベントを support として分類する", () => {

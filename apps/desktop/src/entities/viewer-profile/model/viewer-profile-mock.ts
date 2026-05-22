@@ -14,7 +14,7 @@ const mockComments: EnrichedComment[] = [
     commentTypes: ["first_time", "self_disclosure"],
     isLowSignal: false,
     isImportant: true,
-    isPinned: false,
+    isPinned: true,
     badges: [],
   },
   {
@@ -42,7 +42,7 @@ const mockComments: EnrichedComment[] = [
     commentTypes: ["question", "long_time_no_see"],
     isLowSignal: false,
     isImportant: true,
-    isPinned: false,
+    isPinned: true,
     badges: ["Member"],
   },
   {
@@ -55,8 +55,8 @@ const mockComments: EnrichedComment[] = [
     viewerStatus: "regular",
     commentTypes: ["low_signal"],
     isLowSignal: true,
-    isImportant: false,
-    isPinned: false,
+    isImportant: true,
+    isPinned: true,
     badges: [],
   },
   {
@@ -85,7 +85,7 @@ const mockComments: EnrichedComment[] = [
     commentTypes: ["self_disclosure", "support"],
     isLowSignal: false,
     isImportant: true,
-    isPinned: false,
+    isPinned: true,
     badges: [],
   },
   {
@@ -99,7 +99,7 @@ const mockComments: EnrichedComment[] = [
     commentTypes: ["long_time_no_see", "thanks"],
     isLowSignal: false,
     isImportant: true,
-    isPinned: false,
+    isPinned: true,
     badges: ["Mod"],
   },
 ];

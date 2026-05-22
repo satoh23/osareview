@@ -1,10 +1,12 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import type { CommentSource } from "@comment-dock/shared";
 
 export const VIEWER_CARD_WINDOW_LABEL = "viewer-card";
 
 export type OpenViewerCardWindowOptions = {
   userId: string;
   displayName?: string;
+  source?: CommentSource;
 };
 
 type NavigableWebviewWindow = WebviewWindow & {
@@ -13,9 +15,10 @@ type NavigableWebviewWindow = WebviewWindow & {
 
 export async function openViewerCardWindow({
   displayName,
+  source,
   userId,
 }: OpenViewerCardWindowOptions): Promise<WebviewWindow> {
-  const url = createViewerCardWindowUrl(userId);
+  const url = createViewerCardWindowUrl(userId, { displayName, source });
   const existingWindow = await WebviewWindow.getByLabel(
     VIEWER_CARD_WINDOW_LABEL,
   );
@@ -39,12 +42,24 @@ export async function openViewerCardWindow({
     visible: true,
   });
 
+  await waitForWebviewWindowCreated(viewerCardWindow);
   await viewerCardWindow.setFocus();
   return viewerCardWindow;
 }
 
-export function createViewerCardWindowUrl(userId: string): string {
-  return `#/viewer-card/${encodeURIComponent(userId)}`;
+export function createViewerCardWindowUrl(
+  userId: string,
+  options: Pick<OpenViewerCardWindowOptions, "displayName" | "source"> = {},
+): string {
+  const params = new URLSearchParams();
+  if (options.displayName) {
+    params.set("displayName", options.displayName);
+  }
+  if (options.source) {
+    params.set("source", options.source);
+  }
+  const query = params.toString();
+  return `#/viewer-card/${encodeURIComponent(userId)}${query ? `?${query}` : ""}`;
 }
 
 const createViewerCardWindowTitle = (displayName?: string): string => {
@@ -61,3 +76,13 @@ const navigateViewerCardWindow = async (
   const navigableWindow = window as NavigableWebviewWindow;
   await navigableWindow.navigate?.(url);
 };
+
+const waitForWebviewWindowCreated = (window: WebviewWindow): Promise<void> =>
+  new Promise((resolve, reject) => {
+    void window.once("tauri://created", () => {
+      resolve();
+    });
+    void window.once<string>("tauri://error", (event) => {
+      reject(new Error(event.payload));
+    });
+  });

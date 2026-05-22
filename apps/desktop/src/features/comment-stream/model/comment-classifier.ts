@@ -49,29 +49,14 @@ export const enrichComment = (comment: CommentViewDto): EnrichedComment => {
   const support = classifySupport(comment);
   const viewerStatus = classifyViewerStatus(comment, commentTypes, support);
   const isLowSignal = commentTypes.includes("low_signal");
-  const isImportant =
-    !isLowSignal &&
-    (Boolean(support) ||
-      commentTypes.some((type) =>
-        [
-          "question",
-          "first_time",
-          "long_time_no_see",
-          "support",
-          "thanks",
-          "praise",
-          "self_disclosure",
-          "caution",
-        ].includes(type),
-      ));
 
   return {
     ...comment,
     viewerStatus,
     commentTypes,
     isLowSignal,
-    isImportant,
-    isPinned: Boolean(support) || commentTypes.includes("caution"),
+    isImportant: true,
+    isPinned: true,
     support,
     badges: classifyBadges(comment, support),
   };
