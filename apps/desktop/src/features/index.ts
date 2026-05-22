@@ -5,3 +5,4 @@ export * from "./comment-stream";
 export * from "./comment-stream-filter";
 export * from "./streaming-session";
 export * from "./theme";
+export * from "./viewer-relationship";
