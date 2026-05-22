@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: Inter, Avenir, Helvetica, Arial, sans-serif;
+
+  --color-base: var(--base);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-elevated: var(--elevated);
+  --color-overlay: var(--overlay);
+
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-inverse: var(--text-inverse);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ring: var(--ring);
+
+  --color-brand-pink: var(--brand-pink);
+  --color-brand-pink-strong: var(--brand-pink-strong);
+  --color-brand-purple: var(--brand-purple);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-gold: var(--brand-gold);
+
+  --color-success: var(--state-success);
+  --color-warning: var(--state-warning);
+  --color-danger: var(--state-danger);
+  --color-info: var(--state-info);
+
+  --color-youtube: var(--platform-youtube);
+  --color-twitch: var(--platform-twitch);
+
+  --shadow-soft: var(--app-shadow-soft);
+  --shadow-panel: var(--app-shadow-panel);
+}
