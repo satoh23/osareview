@@ -1,22 +1,23 @@
+import { useState } from "react";
 import {
   CommentStreamPanel,
-  ConnectionStatusPanel,
-  SettingsMenu,
+  HeaderBar,
+  SettingsPopover,
 } from "../../../widgets";
-import "./home-page.css";
 
 export function HomePage() {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   return (
-    <main className="home-page">
-      <div className="home-page__connection">
-        <ConnectionStatusPanel />
-      </div>
-      <div className="home-page__settings">
-        <SettingsMenu />
-      </div>
-      <div className="home-page__comments">
+    <div className="h-screen overflow-hidden bg-base text-primary transition">
+      <HeaderBar onOpenSettings={() => setIsSettingsOpen(true)} />
+      <main className="flex h-[calc(100vh-4rem)] min-h-0 p-4">
         <CommentStreamPanel />
-      </div>
-    </main>
+      </main>
+      <SettingsPopover
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
+    </div>
   );
 }
