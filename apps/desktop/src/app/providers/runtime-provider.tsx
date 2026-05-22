@@ -4,6 +4,7 @@ import {
   publishAccountLinkState,
 } from "../../features/account-link";
 import { createCommentIngestionRuntime } from "../../features/comment-ingestion";
+import { CommentStreamFilterProvider } from "../../features/comment-stream-filter";
 import {
   CommentStreamProvider,
   publishComment,
@@ -51,7 +52,9 @@ export function RuntimeProvider({ children }: RuntimeProviderProps) {
     <ThemeProvider>
       <AccountLinkProvider>
         <SessionStateProvider>
-          <CommentStreamProvider>{children}</CommentStreamProvider>
+          <CommentStreamFilterProvider>
+            <CommentStreamProvider>{children}</CommentStreamProvider>
+          </CommentStreamFilterProvider>
         </SessionStateProvider>
       </AccountLinkProvider>
     </ThemeProvider>
