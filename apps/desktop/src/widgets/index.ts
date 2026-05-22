@@ -5,3 +5,4 @@ export * from "./connection-status-panel";
 export * from "./header-bar";
 export * from "./relationship-window-content";
 export * from "./settings-menu";
+export * from "./settings-popover";
