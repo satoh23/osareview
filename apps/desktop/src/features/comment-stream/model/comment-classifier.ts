@@ -1,39 +1,15 @@
 import { COMMENT_EVENT_TYPES, type CommentViewDto } from "@comment-dock/shared";
-
-export type ViewerStatus =
-  | "first_time"
-  | "second_time"
-  | "regular"
-  | "long_time_no_see"
-  | "supporter";
-
-export type CommentType =
-  | "question"
-  | "first_time"
-  | "long_time_no_see"
-  | "support"
-  | "thanks"
-  | "praise"
-  | "self_disclosure"
-  | "low_signal"
-  | "caution"
-  | "normal";
-
-export type SupportType = "super_chat" | "member" | "bits" | "sub";
-
-export type EnrichedComment = CommentViewDto & {
-  viewerStatus?: ViewerStatus;
-  commentTypes: CommentType[];
-  isLowSignal: boolean;
-  isImportant: boolean;
-  isPinned: boolean;
-  support?: {
-    type: SupportType;
-    amountLabel?: string;
-    isFirstSupport?: boolean;
-  };
-  badges: string[];
-};
+import type {
+  CommentType,
+  EnrichedComment,
+  ViewerStatus,
+} from "../../../entities/comment";
+export type {
+  CommentType,
+  EnrichedComment,
+  SupportType,
+  ViewerStatus,
+} from "../../../entities/comment";
 
 const LOW_SIGNAL_PATTERNS = [
   /^w+$/i,
