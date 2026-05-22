@@ -12,6 +12,15 @@ type NewCommentBadgeState = {
   resetNewCommentCount: () => void;
 };
 
+export const countIncomingComments = (
+  knownCommentIds: ReadonlySet<string>,
+  comments: readonly Pick<CommentViewDto, "id">[],
+): number =>
+  comments.reduce(
+    (count, comment) => count + (knownCommentIds.has(comment.id) ? 0 : 1),
+    0,
+  );
+
 export function useNewCommentBadge({
   comments,
   isAutoFollowing,
@@ -28,10 +37,7 @@ export function useNewCommentBadge({
       return;
     }
 
-    const incomingCount = comments.reduce(
-      (count, comment) => count + (knownCommentIds.has(comment.id) ? 0 : 1),
-      0,
-    );
+    const incomingCount = countIncomingComments(knownCommentIds, comments);
 
     knownCommentIdsRef.current = nextCommentIds;
 
