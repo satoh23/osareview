@@ -33,7 +33,7 @@ export function RelationshipCard({ profile }: RelationshipCardProps) {
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="mb-1.5 flex items-center gap-2">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-border-strong to-elevated text-primary">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-border-strong to-elevated text-primary">
                 <PlatformIcon platform={profile.platform} />
               </div>
               <div className="min-w-0">
