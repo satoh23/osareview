@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 
 /** モバイル実機デバッグ時など、`TAURI_DEV_HOST` で HMR 先を指定する（未設定なら falsy）。 */
@@ -6,7 +7,7 @@ const host = process.env.TAURI_DEV_HOST;
 
 // 公式: https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
 
   // `tauri dev` / `tauri build` 向けの Vite 設定
   //
