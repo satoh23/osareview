@@ -2,4 +2,5 @@
 // 複数 feature をまとめる画面パーツが必要になった時点で slice を追加する。
 export * from "./comment-stream-panel";
 export * from "./connection-status-panel";
+export * from "./relationship-window-content";
 export * from "./settings-menu";
