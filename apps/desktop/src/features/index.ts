@@ -3,6 +3,7 @@
 export * from "./account-link";
 export * from "./comment-stream";
 export * from "./comment-stream-filter";
+export * from "./platform-connection";
 export * from "./streaming-session";
 export * from "./theme";
 export * from "./viewer-card-window";
