@@ -2,25 +2,26 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --base: #f6f7fb;
+  --base: #e4e4e7;
   --surface: #ffffff;
-  --surface-muted: #f1f5f9;
-  --elevated: #ffffff;
+  --surface-muted: #f4f4f5;
+  --elevated: #fafafa;
   --overlay: rgba(15, 23, 42, 0.48);
 
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
+  --text-primary: #18181b;
+  --text-secondary: #3f3f46;
+  --text-muted: #71717a;
   --text-inverse: #ffffff;
 
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --ring: #ec4899;
+  --border: #d4d4d8;
+  --border-strong: #a1a1aa;
+  --ring: rgba(244, 114, 182, 0.4);
 
   --brand-pink: #ec4899;
-  --brand-pink-strong: #db2777;
+  --brand-pink-strong: #f472b6;
+  --brand-pink-shadow: rgba(131, 24, 67, 0.24);
   --brand-purple: #8b5cf6;
-  --brand-blue: #3b82f6;
+  --brand-blue: #0ea5e9;
   --brand-gold: #f59e0b;
 
   --state-success: #16a34a;
@@ -38,31 +39,32 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --base: #09090b;
-  --surface: #18181b;
+  --base: #101114;
+  --surface: #14151a;
   --surface-muted: #27272a;
-  --elevated: #1f1f23;
+  --elevated: #09090b;
   --overlay: rgba(0, 0, 0, 0.62);
 
-  --text-primary: #fafafa;
+  --text-primary: #f4f4f5;
   --text-secondary: #d4d4d8;
-  --text-muted: #a1a1aa;
-  --text-inverse: #09090b;
+  --text-muted: #71717a;
+  --text-inverse: #ffffff;
 
-  --border: #3f3f46;
-  --border-strong: #52525b;
-  --ring: #f472b6;
+  --border: #27272a;
+  --border-strong: #3f3f46;
+  --ring: rgba(244, 114, 182, 0.4);
 
-  --brand-pink: #f472b6;
-  --brand-pink-strong: #ec4899;
+  --brand-pink: #ec4899;
+  --brand-pink-strong: #f472b6;
+  --brand-pink-shadow: rgba(80, 7, 36, 0.4);
   --brand-purple: #a78bfa;
-  --brand-blue: #60a5fa;
-  --brand-gold: #fbbf24;
+  --brand-blue: #7dd3fc;
+  --brand-gold: #fde68a;
 
-  --state-success: #22c55e;
-  --state-warning: #fbbf24;
-  --state-danger: #f87171;
-  --state-info: #38bdf8;
+  --state-success: #6ee7b7;
+  --state-warning: #fcd34d;
+  --state-danger: #fca5a5;
+  --state-info: #7dd3fc;
 
   --platform-youtube: #ff4d6d;
   --platform-twitch: #a970ff;

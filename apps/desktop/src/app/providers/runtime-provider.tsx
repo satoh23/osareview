@@ -13,6 +13,7 @@ import {
   publishSessionState,
   SessionStateProvider,
 } from "../../features/streaming-session";
+import { ThemeProvider } from "../../features/theme";
 import {
   bindRuntimeCloseLifecycle,
   type RuntimeLifecycleBinding,
@@ -47,10 +48,12 @@ export function RuntimeProvider({ children }: RuntimeProviderProps) {
   }, []);
 
   return (
-    <AccountLinkProvider>
-      <SessionStateProvider>
-        <CommentStreamProvider>{children}</CommentStreamProvider>
-      </SessionStateProvider>
-    </AccountLinkProvider>
+    <ThemeProvider>
+      <AccountLinkProvider>
+        <SessionStateProvider>
+          <CommentStreamProvider>{children}</CommentStreamProvider>
+        </SessionStateProvider>
+      </AccountLinkProvider>
+    </ThemeProvider>
   );
 }

@@ -3,3 +3,4 @@
 export * from "./account-link";
 export * from "./comment-stream";
 export * from "./streaming-session";
+export * from "./theme";

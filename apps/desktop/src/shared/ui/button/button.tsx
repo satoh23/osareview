@@ -11,22 +11,21 @@ export type ButtonProps = ComponentPropsWithoutRef<"button"> & {
 };
 
 const BASE_CLASS_NAME =
-  "inline-flex items-center justify-center gap-2 rounded-xl border font-medium transition disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-base";
+  "inline-flex items-center justify-center gap-1.5 rounded-xl text-sm font-medium transition active:scale-[0.98] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-base";
 
 const VARIANT_CLASS_NAMES: Record<ButtonVariant, string> = {
   primary:
-    "border-brand-pink bg-brand-pink text-inverse shadow-soft hover:bg-brand-pink-strong hover:border-brand-pink-strong",
+    "bg-brand-pink text-inverse shadow-lg shadow-brand-pink-shadow hover:bg-brand-pink-strong",
   secondary:
-    "border-border bg-surface text-primary shadow-sm hover:border-border-strong hover:bg-surface-muted",
-  ghost:
-    "border-transparent bg-transparent text-secondary hover:bg-surface-muted hover:text-primary",
-  danger: "border-danger bg-danger text-inverse shadow-sm hover:brightness-95",
+    "border border-border-strong bg-surface-muted text-primary hover:bg-border-strong",
+  ghost: "text-secondary hover:bg-surface-muted hover:text-primary",
+  danger: "border border-danger/30 bg-danger/10 text-danger hover:bg-danger/20",
 };
 
 const SIZE_CLASS_NAMES: Record<ButtonSize, string> = {
-  sm: "h-8 px-3 text-sm",
-  md: "h-10 px-4 text-sm",
-  lg: "h-12 px-5 text-base",
+  sm: "px-2.5 py-1.5",
+  md: "px-3 py-2",
+  lg: "px-4 py-2.5",
 };
 
 export function Button({
