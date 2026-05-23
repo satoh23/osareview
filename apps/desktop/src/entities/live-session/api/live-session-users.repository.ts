@@ -23,7 +23,9 @@ export async function upsertLiveSessionUser(
   );
   const row = firstRow(rows);
   if (row === undefined || typeof row.id !== "number") {
-    throw new Error("upsertLiveSessionUser: expected RETURNING id row");
+    throw new Error(
+      "配信中の視聴者情報を保存できませんでした。保存結果を確認できません。",
+    );
   }
   return row.id;
 }

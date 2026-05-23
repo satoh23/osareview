@@ -28,7 +28,9 @@ export async function upsertUser(input: UpsertUserInput): Promise<number> {
   );
   const row = firstRow(rows);
   if (row === undefined || typeof row.id !== "number") {
-    throw new Error("upsertUser: expected RETURNING id row");
+    throw new Error(
+      "ユーザー情報を保存できませんでした。保存結果を確認できません。",
+    );
   }
   return row.id;
 }

@@ -30,7 +30,9 @@ export async function upsertLiveSession(
   );
   const row = firstRow(rows);
   if (row === undefined || typeof row.id !== "number") {
-    throw new Error("upsertLiveSession: expected RETURNING id row");
+    throw new Error(
+      "配信セッションを保存できませんでした。保存結果を確認できません。",
+    );
   }
   return row.id;
 }

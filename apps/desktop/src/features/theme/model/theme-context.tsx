@@ -65,7 +65,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 export function useTheme(): ThemeContextValue {
   const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error("useTheme must be used within ThemeProvider.");
+    throw new Error(
+      "テーマ設定機能の初期化が完了していません。アプリを再読み込みしてください。",
+    );
   }
   return context;
 }

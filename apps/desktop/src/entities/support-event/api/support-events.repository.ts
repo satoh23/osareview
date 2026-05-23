@@ -29,7 +29,9 @@ export async function insertSupportEvent(
   );
   const row = firstRow(rows);
   if (row === undefined || typeof row.id !== "number") {
-    throw new Error("insertSupportEvent: expected RETURNING id row");
+    throw new Error(
+      "支援イベントを保存できませんでした。保存結果を確認できません。",
+    );
   }
 
   await db.execute(

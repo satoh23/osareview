@@ -111,7 +111,7 @@ const commentById = new Map(
 const getComment = (id: string): EnrichedComment => {
   const comment = commentById.get(id);
   if (!comment) {
-    throw new Error(`Mock comment not found: ${id}`);
+    throw new Error(`プロフィール用の仮コメントが見つかりません: ${id}`);
   }
   return comment;
 };

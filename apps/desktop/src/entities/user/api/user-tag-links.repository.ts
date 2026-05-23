@@ -49,7 +49,9 @@ export async function unlinkUserTag(input: LinkUserTagInput): Promise<number> {
   );
   const row = firstRow(rows);
   if (row === undefined || typeof row.count !== "number") {
-    throw new Error("unlinkUserTag: expected changes() row");
+    throw new Error(
+      "視聴者タグを解除できませんでした。削除結果を確認できません。",
+    );
   }
   return row.count;
 }

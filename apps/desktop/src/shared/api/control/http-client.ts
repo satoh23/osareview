@@ -86,7 +86,7 @@ const readJsonBody = async (response: Response): Promise<unknown> => {
     return JSON.parse(text) as unknown;
   } catch {
     throw new ApiGatewayHttpError(
-      "API Gateway returned invalid JSON",
+      "サーバーからの応答を読み取れませんでした。少し待ってからもう一度お試しください。",
       response.status,
       text,
     );
@@ -97,7 +97,7 @@ const getErrorMessage = (body: unknown, status: number): string => {
   if (isJsonObject(body) && typeof body.error === "string") {
     return body.error;
   }
-  return `API Gateway request failed with status ${status}`;
+  return `サーバーとの通信に失敗しました（HTTP ${status}）。少し待ってからもう一度お試しください。`;
 };
 
 const isJsonObject = (value: unknown): value is JsonObject =>

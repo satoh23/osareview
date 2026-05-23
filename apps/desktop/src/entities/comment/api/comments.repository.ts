@@ -56,5 +56,5 @@ export async function insertComment(
     return { inserted: true, id: row.id };
   }
 
-  throw new Error("insertComment: expected row id but INSERT returned no row");
+  throw new Error("コメントを保存できませんでした。保存結果を確認できません。");
 }

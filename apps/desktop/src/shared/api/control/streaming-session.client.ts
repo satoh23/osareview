@@ -76,20 +76,26 @@ export const stopSession = streamingSessionClient.stopSession.bind(
 
 const parseSessionResponse = (value: unknown): StreamingSessionResponse => {
   if (!isJsonObject(value) || !isSessionSnapshot(value.session)) {
-    throw new Error("Invalid session response from API Gateway");
+    throw new Error(
+      "コメント接続状態の応答を読み取れませんでした。少し待ってからもう一度お試しください。",
+    );
   }
   return { session: value.session };
 };
 
 const parseSessionsResponse = (value: unknown): StreamingSessionsResponse => {
   if (!isJsonObject(value) || !isJsonObject(value.sessions)) {
-    throw new Error("Invalid sessions response from API Gateway");
+    throw new Error(
+      "コメント接続一覧の応答を読み取れませんでした。少し待ってからもう一度お試しください。",
+    );
   }
 
   const youtube = value.sessions.youtube;
   const twitch = value.sessions.twitch;
   if (!isSessionSnapshot(youtube) || !isSessionSnapshot(twitch)) {
-    throw new Error("Invalid sessions response from API Gateway");
+    throw new Error(
+      "コメント接続一覧の応答を読み取れませんでした。少し待ってからもう一度お試しください。",
+    );
   }
 
   return {

@@ -22,7 +22,9 @@ export async function upsertUserMemo(
   );
   const row = firstRow(rows);
   if (row === undefined || typeof row.id !== "number") {
-    throw new Error("upsertUserMemo: expected RETURNING id row");
+    throw new Error(
+      "視聴者メモを保存できませんでした。保存結果を確認できません。",
+    );
   }
   return row.id;
 }

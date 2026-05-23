@@ -53,7 +53,7 @@ export function useCommentStreamFilter(): CommentStreamFilterContextValue {
   const context = useContext(CommentStreamFilterContext);
   if (!context) {
     throw new Error(
-      "useCommentStreamFilter must be used within CommentStreamFilterProvider.",
+      "コメントフィルター機能の初期化が完了していません。アプリを再読み込みしてください。",
     );
   }
   return context;

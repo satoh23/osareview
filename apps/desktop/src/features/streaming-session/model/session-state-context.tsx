@@ -180,7 +180,7 @@ const useSessionStateContext = (): SessionStateContextValue => {
   const context = useContext(SessionStateContext);
   if (!context) {
     throw new Error(
-      "streaming-session hooks must be used within SessionStateProvider",
+      "コメント接続機能の初期化が完了していません。アプリを再読み込みしてください。",
     );
   }
   return context;

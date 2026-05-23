@@ -39,7 +39,9 @@ export async function createTag(
   );
   const existing = firstRow(existingRows);
   if (existing === undefined || typeof existing.id !== "number") {
-    throw new Error("createTag: expected existing tag id row");
+    throw new Error(
+      "タグを作成できませんでした。既存タグの確認に失敗しました。",
+    );
   }
   return { inserted: false, id: existing.id, reason: "duplicate_name" };
 }
@@ -64,7 +66,7 @@ export async function deleteTag(input: DeleteTagInput): Promise<number> {
   );
   const row = firstRow(rows);
   if (row === undefined || typeof row.count !== "number") {
-    throw new Error("deleteTag: expected changes() row");
+    throw new Error("タグを削除できませんでした。削除結果を確認できません。");
   }
   return row.count;
 }
