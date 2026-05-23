@@ -50,11 +50,7 @@ export function selectPlatformSetting({
     connectionTargetMode,
     streamIdInput,
     isRequesting: account.isRequesting || session.isRequesting,
-    error:
-      account.error ??
-      session.error ??
-      account.snapshot.reason ??
-      session.snapshot.reason,
+    error: account.snapshot.reason ?? session.snapshot.reason,
   };
 }
 

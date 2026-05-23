@@ -20,5 +20,9 @@ export type PlatformSettingState = {
   connectionTargetMode: ConnectionTargetMode;
   streamIdInput?: string;
   isRequesting: boolean;
+  /**
+   * 画面に載せるのはゲートウェイ等が返した `snapshot.reason` のみとし、
+   * クライアント HTTP 失敗時のロードフェイル／Failed to fetch などの文言は含めない。
+   */
   error?: string;
 };
