@@ -48,7 +48,7 @@ function parseOptions(argv: readonly string[]): Options {
 
   return {
     host: args.get("host") ?? "127.0.0.1",
-    port: parseIntOption(args.get("port"), 17331),
+    port: parseIntOption(args.get("port"), 17340),
     mps: parseIntOption(args.get("mps"), 50),
     batchSize: parseIntOption(args.get("batch"), 1),
     maxMessages: parseIntOption(args.get("max"), 5000),
