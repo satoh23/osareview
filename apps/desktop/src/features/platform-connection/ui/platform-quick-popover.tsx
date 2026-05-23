@@ -62,10 +62,10 @@ export function PlatformQuickPopover({
         ? "blue"
         : "muted";
 
-  /** 接続・切断のリクエスト中は接続先を変えられないようにする（状態と操作の食い違いを防ぐ） */
+  /** コメントが接続済み（表示は「接続中」）のときは接続先を変えさせない。接続処理中も同様。 */
   const lockConnectionTargetPicker =
-    setting.connectionStatus === "connecting" ||
-    (isLoggedIn && setting.isRequesting);
+    setting.connectionStatus === "connected" ||
+    setting.connectionStatus === "connecting";
 
   return (
     <>
