@@ -56,7 +56,7 @@ const parsePlatform = (value: string | undefined): SessionPlatform => {
   }
 
   throw new HTTPException(400, {
-    message: `Unsupported session platform: ${String(value)}`,
+    message: `対応していないコメント接続先です: ${String(value)}`,
   });
 };
 

@@ -16,10 +16,8 @@ export type FindActiveLiveStreamOptions = {
 };
 
 export class LiveStreamNotFoundError extends Error {
-  constructor(channelId: string, maxAttempts: number) {
-    super(
-      `Live stream was not found for channel "${channelId}" after ${maxAttempts} attempts.`,
-    );
+  constructor() {
+    super(`配信が見つかりませんでした`);
     this.name = "LiveStreamNotFoundError";
   }
 }
@@ -49,6 +47,6 @@ export class DetectLiveStreamUseCase {
       }
     }
 
-    throw new LiveStreamNotFoundError(input.channelId, this.maxAttempts);
+    throw new LiveStreamNotFoundError();
   }
 }

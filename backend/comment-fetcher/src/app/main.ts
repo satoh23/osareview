@@ -77,7 +77,7 @@ type CommentFetchPipeline = {
 
 class LiveStreamEndedError extends Error {
   constructor() {
-    super("Live stream has ended.");
+    super("配信が終了しました。");
     this.name = "LiveStreamEndedError";
   }
 }
@@ -88,7 +88,12 @@ const isAuthorizationMissingError = (error: unknown): boolean => {
   }
   return (
     error instanceof NotAuthorizedError ||
+    /ログインが必要です/.test(error.message) ||
+    /ログイン状態を確認してください/.test(error.message) ||
     /access token is missing from AccessTokenProvider\./.test(error.message) ||
+    /Twitch API との通信に失敗しました（HTTP 401 Unauthorized）/.test(
+      error.message,
+    ) ||
     /Twitch Helix request failed: 401 Unauthorized/.test(error.message) ||
     /Invalid OAuth token/.test(error.message)
   );
@@ -238,12 +243,12 @@ const createYouTubePipeline = (
       const ownChannelId = await liveStreamClient.resolveOwnChannelId();
       if (!ownChannelId) {
         console.warn(
-          "[comment-fetcher] youtube is skipped because own channel could not be resolved from authenticated account.",
+          "[comment-fetcher] ログイン中の YouTube アカウントからチャンネルを特定できなかったため、YouTube コメント取得をスキップします。",
         );
         return null;
       }
       console.info(
-        "[comment-fetcher] youtube channel is resolved from authenticated account.",
+        "[comment-fetcher] ログイン中の YouTube アカウントからチャンネルを特定しました。",
         { channelId: ownChannelId },
       );
       return ownChannelId;
@@ -273,7 +278,7 @@ const createTwitchPipeline = (): CommentFetchPipeline => {
       const channelId = process.env.TWITCH_TARGET_CHANNEL_ID;
       if (!channelId) {
         console.warn(
-          "[comment-fetcher] twitch is skipped because TWITCH_TARGET_CHANNEL_ID is not set.",
+          "[comment-fetcher] TWITCH_TARGET_CHANNEL_ID が未設定のため、Twitch コメント取得をスキップします。",
         );
         return null;
       }
@@ -304,7 +309,7 @@ const collectComments = async (
           pipeline,
           controls,
           SESSION_STATES.FAILED,
-          "Target channel could not be resolved.",
+          "コメント取得対象のチャンネルを特定できませんでした。アカウント連携や配信ID設定を確認してください。",
         );
         return;
       }
@@ -394,7 +399,7 @@ const collectComments = async (
       }
       if (isAuthorizationMissingError(error)) {
         console.warn(
-          `[comment-fetcher] ${pipeline.provider} is skipped because authorization is missing.`,
+          `[comment-fetcher] ${pipeline.provider} はログイン情報がないためスキップします。`,
         );
         await emitStateChange(
           pipeline,
@@ -406,7 +411,7 @@ const collectComments = async (
       }
       if (error instanceof LiveStreamNotFoundError) {
         console.warn(
-          `[comment-fetcher] ${pipeline.provider} live stream not found`,
+          `[comment-fetcher] ${pipeline.provider} の配信が見つかりませんでした。`,
           error.message,
         );
         await emitStateChange(

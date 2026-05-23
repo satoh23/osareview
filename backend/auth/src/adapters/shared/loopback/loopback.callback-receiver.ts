@@ -29,7 +29,10 @@ class LoopbackCallbackSession implements OAuthCallbackSession {
       return await this.server.authorizationCode;
     } catch (err) {
       if (err instanceof LoopbackOAuthError) {
-        throw new Error("OAuth callback failed.", { cause: err });
+        throw new Error(
+          "ログインのコールバック受信に失敗しました。もう一度お試しください。",
+          { cause: err },
+        );
       }
       throw err;
     }

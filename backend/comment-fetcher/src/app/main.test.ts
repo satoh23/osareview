@@ -160,7 +160,7 @@ test("runTwitchPipeline は配信未検出時に failed を通知して終了す
         if (token === TwitchLiveStreamRepository) {
           return {
             async findLiveStream() {
-              throw new LiveStreamNotFoundError("target-channel", 5);
+              throw new LiveStreamNotFoundError();
             },
           } as unknown as ReturnType<ResolveFn>;
         }
@@ -193,8 +193,7 @@ test("runTwitchPipeline は配信未検出時に failed を通知して終了す
     {
       platform: "twitch",
       state: SESSION_STATES.FAILED,
-      reason:
-        'Live stream was not found for channel "target-channel" after 5 attempts.',
+      reason: "配信が見つかりませんでした",
     },
   ]);
 });
@@ -296,8 +295,17 @@ test("YouTube自身の channelId を解決できない場合は provider をス�
   }
 
   assert.equal(warnings.length, 2);
-  assert.match(String(warnings[0]?.[0] ?? ""), /is skipped because/);
-  assert.match(String(warnings[1]?.[0] ?? ""), /is skipped because/);
+  const warningTexts = warnings.map((entry) => String(entry[0] ?? ""));
+  assert.ok(
+    warningTexts.some((text) =>
+      /ログイン中の YouTube アカウントからチャンネルを特定できなかった/.test(
+        text,
+      ),
+    ),
+  );
+  assert.ok(
+    warningTexts.some((text) => /TWITCH_TARGET_CHANNEL_ID が未設定/.test(text)),
+  );
 });
 
 test("YouTube 未認可時は provider をスキップして継続する", async () => {
@@ -364,11 +372,11 @@ test("YouTube 未認可時は provider をスキップして継続する", async
   const warningTexts = warnings.map((entry) => String(entry[0] ?? ""));
   assert.ok(
     warningTexts.some((text) =>
-      /youtube is skipped because authorization is missing/.test(text),
+      /youtube はログイン情報がないためスキップ/.test(text),
     ),
   );
   assert.ok(
-    warningTexts.some((text) => /twitch is skipped because/.test(text)),
+    warningTexts.some((text) => /TWITCH_TARGET_CHANNEL_ID が未設定/.test(text)),
   );
 });
 
@@ -435,12 +443,14 @@ test("Twitch 未認可時は provider をスキップして継続する", async 
   const warningTexts = warnings.map((entry) => String(entry[0] ?? ""));
   assert.ok(
     warningTexts.some((text) =>
-      /youtube is skipped because own channel could not be resolved/.test(text),
+      /ログイン中の YouTube アカウントからチャンネルを特定できなかった/.test(
+        text,
+      ),
     ),
   );
   assert.ok(
     warningTexts.some((text) =>
-      /twitch is skipped because authorization is missing/.test(text),
+      /twitch はログイン情報がないためスキップ/.test(text),
     ),
   );
 });
@@ -508,7 +518,7 @@ test("Twitch トークン失効(401)時は provider をスキップして継続�
   const warningTexts = warnings.map((entry) => String(entry[0] ?? ""));
   assert.ok(
     warningTexts.some((text) =>
-      /twitch is skipped because authorization is missing/.test(text),
+      /twitch はログイン情報がないためスキップ/.test(text),
     ),
   );
 });
@@ -529,7 +539,7 @@ test("LiveStreamNotFoundError は再試行無効時に警告を出して終了�
         if (token === YouTubeLiveStreamRepository) {
           return {
             async findLiveStream() {
-              throw new LiveStreamNotFoundError("channel-1", 1);
+              throw new LiveStreamNotFoundError();
             },
           } as unknown as ReturnType<ResolveFn>;
         }
@@ -573,7 +583,9 @@ test("LiveStreamNotFoundError は再試行無効時に警告を出して終了�
 
   const warningTexts = warnings.map((entry) => String(entry[0] ?? ""));
   assert.ok(
-    warningTexts.some((text) => /youtube live stream not found/.test(text)),
+    warningTexts.some((text) =>
+      /youtube の配信が見つかりませんでした/.test(text),
+    ),
   );
 });
 
@@ -592,8 +604,8 @@ test("options で渡した YouTube channelId を優先して使う", async () =>
       ((token: unknown) => {
         if (token === YouTubeLiveStreamRepository) {
           return {
-            async findLiveStream(input: { channelId: string }) {
-              throw new LiveStreamNotFoundError(input.channelId, 1);
+            async findLiveStream(_input: { channelId: string }) {
+              throw new LiveStreamNotFoundError();
             },
           } as unknown as ReturnType<ResolveFn>;
         }
@@ -639,8 +651,8 @@ test("options で渡した YouTube channelId を優先して使う", async () =>
   }
 
   const notFoundWarning = warnings.find((entry) =>
-    /youtube live stream not found/.test(String(entry[0] ?? "")),
+    /youtube の配信が見つかりませんでした/.test(String(entry[0] ?? "")),
   );
   assert.ok(notFoundWarning);
-  assert.match(String(notFoundWarning[1] ?? ""), /input-channel/);
+  assert.match(String(notFoundWarning[1] ?? ""), /配信が見つかりませんでした/);
 });

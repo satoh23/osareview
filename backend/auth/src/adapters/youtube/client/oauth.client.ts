@@ -99,7 +99,9 @@ export class YouTubeOAuthClient implements OAuthClient {
     try {
       json = await response.json();
     } catch {
-      throw new YouTubeOAuthClientError("YouTube token response is not JSON.");
+      throw new YouTubeOAuthClientError(
+        "YouTube からのログイン応答を読み取れませんでした。もう一度お試しください。",
+      );
     }
     if (!response.ok) {
       throw this.errorFromErrorResponse(json, response.status);
@@ -114,18 +116,18 @@ export class YouTubeOAuthClient implements OAuthClient {
           ? ` (${json.error_description})`
           : "";
       return new YouTubeOAuthClientError(
-        `YouTube token endpoint error: ${json.error}${description}`,
+        `YouTube ログインでエラーが発生しました: ${json.error}${description}`,
       );
     }
     return new YouTubeOAuthClientError(
-      `YouTube token endpoint error: HTTP ${status}`,
+      `YouTube ログインで通信エラーが発生しました（HTTP ${status}）。`,
     );
   }
 
   private parseTokenResponse(json: unknown): YouTubeTokenSuccessResponse {
     if (!isYouTubeTokenSuccessResponse(json)) {
       throw new YouTubeOAuthClientError(
-        "YouTube token response has unexpected shape.",
+        "YouTube からのログイン応答の形式が正しくありません。もう一度お試しください。",
       );
     }
     return json;
@@ -136,7 +138,9 @@ export class YouTubeOAuthClient implements OAuthClient {
     refreshToken: string | undefined,
   ): TokenSet {
     if (refreshToken === undefined || refreshToken === "") {
-      throw new YouTubeOAuthClientError("refresh_token is missing.");
+      throw new YouTubeOAuthClientError(
+        "YouTube のログイン更新情報が見つかりません。もう一度アカウント連携を行ってください。",
+      );
     }
 
     const obtainedAt = Date.now();

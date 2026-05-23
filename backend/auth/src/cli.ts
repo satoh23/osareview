@@ -23,7 +23,7 @@ function parseProvider(raw: string | undefined): Provider {
   if (raw === "youtube" || raw === "twitch") {
     return raw;
   }
-  throw new Error(`Unsupported provider: ${raw ?? "(empty)"}`);
+  throw new Error(`対応していない連携先です: ${raw ?? "未指定"}`);
 }
 
 function printUsage(): void {
@@ -62,9 +62,9 @@ main().catch((error: unknown) => {
     return;
   }
   if (error instanceof Error) {
-    console.error("[auth] fatal error", error.message);
+    console.error("[auth] 致命的なエラーが発生しました", error.message);
   } else {
-    console.error("[auth] fatal error", error);
+    console.error("[auth] 致命的なエラーが発生しました", error);
   }
   process.exitCode = 1;
 });

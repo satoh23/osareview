@@ -35,7 +35,9 @@ export class HttpControlServer {
       ),
     );
     // /auth/... などのルータは後続でここへ追加する。
-    app.notFound((context) => context.json({ error: "Not Found" }, 404));
+    app.notFound((context) =>
+      context.json({ error: "指定された API が見つかりません。" }, 404),
+    );
     app.onError((error, context) => {
       const statusCode = error instanceof HTTPException ? error.status : 500;
       const message = error instanceof Error ? error.message : String(error);

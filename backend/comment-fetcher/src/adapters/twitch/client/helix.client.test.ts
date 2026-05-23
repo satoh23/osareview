@@ -56,7 +56,7 @@ test("クライアントIDが無い場合はエラーを投げる", async () => 
 
   await assert.rejects(
     () => client.resolveUserIdByLogin("twitchdev"),
-    /Twitch client ID is missing from TwitchConfigProvider/,
+    /クライアント ID が未設定です/,
   );
 });
 
@@ -408,6 +408,6 @@ test("self user が取得できない場合はエラーを投げる", async () =
 
   await assert.rejects(
     () => client.getSelfUserId(),
-    /Twitch self user was not found from \/helix\/users/,
+    /ログイン中ユーザーを確認できませんでした/,
   );
 });

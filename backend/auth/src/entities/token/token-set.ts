@@ -71,11 +71,11 @@ export class TokenSet {
   ): number {
     if (!Number.isFinite(obtainedAtMs) || !Number.isFinite(expiresInSeconds)) {
       throw new Error(
-        "obtainedAtMs and expiresInSeconds must be finite numbers.",
+        "トークンの取得時刻と有効期限は有効な数値である必要があります。",
       );
     }
     if (expiresInSeconds < 0) {
-      throw new Error("expiresInSeconds must be non-negative.");
+      throw new Error("トークンの有効期限は 0 秒以上である必要があります。");
     }
     return obtainedAtMs + expiresInSeconds * 1000;
   }

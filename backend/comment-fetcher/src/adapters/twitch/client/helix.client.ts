@@ -56,7 +56,9 @@ export class TwitchHelixClient {
     const response = await this.request<TwitchUsersResponseDto>(url, "GET");
     const userId = response.data[0]?.id;
     if (!userId) {
-      throw new Error("Twitch self user was not found from /helix/users.");
+      throw new Error(
+        "Twitch のログイン中ユーザーを確認できませんでした。もう一度アカウント連携を行ってください。",
+      );
     }
     this.selfUserId = userId;
     return userId;
@@ -118,7 +120,9 @@ export class TwitchHelixClient {
   ): Promise<T> {
     const clientId = this.configProvider.getClientId();
     if (!clientId) {
-      throw new Error("Twitch client ID is missing from TwitchConfigProvider.");
+      throw new Error(
+        "Twitch のクライアント ID が未設定です。環境変数を確認してください。",
+      );
     }
 
     if (accessToken) {
@@ -169,7 +173,7 @@ export class TwitchHelixClient {
     if (!response.ok) {
       const errorBody = await response.text();
       throw new Error(
-        `Twitch Helix request failed: ${response.status} ${response.statusText} ${errorBody}`,
+        `Twitch API との通信に失敗しました（HTTP ${response.status} ${response.statusText}）: ${errorBody}`,
       );
     }
 

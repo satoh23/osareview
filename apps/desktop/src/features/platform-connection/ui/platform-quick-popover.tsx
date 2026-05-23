@@ -48,6 +48,25 @@ export function PlatformQuickPopover({
     (setting.isRequesting && isLoggedIn && !isConnected);
   const canConnect = canConnectPlatform(setting);
 
+  const authTone = isLoggedIn
+    ? "blue"
+    : setting.authStatus === "expired"
+      ? "gold"
+      : "muted";
+
+  const connectionTone = isConnected
+    ? "green"
+    : setting.connectionStatus === "error"
+      ? "red"
+      : setting.connectionStatus === "connecting" || isConnecting
+        ? "blue"
+        : "muted";
+
+  /** 接続・切断のリクエスト中は接続先を変えられないようにする（状態と操作の食い違いを防ぐ） */
+  const lockConnectionTargetPicker =
+    setting.connectionStatus === "connecting" ||
+    (isLoggedIn && setting.isRequesting);
+
   return (
     <>
       <div
@@ -102,38 +121,25 @@ export function PlatformQuickPopover({
             <StatusPanel
               detail={formatLoginDetail(setting.tokenStatus)}
               label="ログイン状況"
+              tone={authTone}
             >
-              <Badge
-                tone={
-                  isLoggedIn
-                    ? "blue"
-                    : setting.authStatus === "expired"
-                      ? "gold"
-                      : "muted"
-                }
-              >
+              <Badge tone={authTone}>
                 {formatAuthStatus(setting.authStatus)}
               </Badge>
             </StatusPanel>
             <StatusPanel
               detail={formatConnectionTargetMode(setting.connectionTargetMode)}
               label="コメント接続"
+              tone={connectionTone}
             >
-              <Badge
-                tone={
-                  isConnected
-                    ? "green"
-                    : setting.connectionStatus === "error"
-                      ? "red"
-                      : "muted"
-                }
-              >
+              <Badge tone={connectionTone}>
                 {formatConnectionStatus(setting.connectionStatus)}
               </Badge>
             </StatusPanel>
           </div>
 
           <ConnectionTargetPicker
+            disabled={lockConnectionTargetPicker}
             onChangeStreamId={onChangeStreamId}
             onChangeTargetMode={onChangeTargetMode}
             setting={setting}
@@ -184,17 +190,32 @@ export function PlatformQuickPopover({
   );
 }
 
+/** Border/background tones aligned with `Badge` (`shared/ui/badge/badge.tsx`). */
+const STATUS_PANEL_TONE_CLASSES = {
+  blue: "border-info/30 bg-info/10",
+  gold: "border-brand-gold/40 bg-brand-gold/10",
+  green: "border-success/40 bg-success/10",
+  red: "border-danger/40 bg-danger/10",
+  muted: "border-border-strong bg-elevated/60",
+} as const;
+
+type StatusTone = keyof typeof STATUS_PANEL_TONE_CLASSES;
+
 function StatusPanel({
   children,
   detail,
   label,
+  tone,
 }: {
   children: ReactNode;
   detail: string;
   label: string;
+  tone: StatusTone;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-elevated/50 p-3">
+    <div
+      className={cx("rounded-2xl border p-3", STATUS_PANEL_TONE_CLASSES[tone])}
+    >
       <p className="text-[11px] text-muted">{label}</p>
       <div className="mt-1">{children}</div>
       <p className="mt-2 text-[11px] text-muted/80">{detail}</p>

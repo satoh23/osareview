@@ -26,7 +26,7 @@ export class YouTubeAccessTokenProvider
     } catch (error) {
       if (error instanceof NotAuthorizedError) {
         console.warn(
-          "[comment-fetcher] YouTube is not authorized. Run auth login first.",
+          "[comment-fetcher] YouTube にログインしていません。先にアカウント連携を行ってください。",
         );
         return "";
       }

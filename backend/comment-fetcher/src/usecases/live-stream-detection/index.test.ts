@@ -82,8 +82,7 @@ test("規定回数で見つからない場合は LiveStreamNotFoundError を投�
       }),
     (error: unknown) =>
       error instanceof LiveStreamNotFoundError &&
-      error.message.includes('channel "channel-1"') &&
-      error.message.includes("3 attempts"),
+      error.message.includes("配信が見つかりませんでした"),
   );
   assert.equal(waitCalls, 2);
 });

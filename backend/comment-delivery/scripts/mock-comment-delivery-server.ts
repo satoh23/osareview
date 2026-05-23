@@ -183,6 +183,9 @@ async function main(): Promise<void> {
 }
 
 void main().catch((error: unknown) => {
-  console.error("[mock-comment-delivery] fatal", error);
+  console.error(
+    "[mock-comment-delivery] 致命的なエラーが発生しました。",
+    error,
+  );
   process.exitCode = 1;
 });

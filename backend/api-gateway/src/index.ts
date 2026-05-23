@@ -14,6 +14,6 @@ dotenv.config({
 registerApiGatewayDependencies();
 
 runApiGateway().catch((error: unknown) => {
-  console.error("[api-gateway] fatal error", error);
+  console.error("[api-gateway] 致命的なエラーが発生しました。", error);
   process.exitCode = 1;
 });

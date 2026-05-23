@@ -75,7 +75,7 @@ export type CreateAuthClientOptions = {
 
 function assertSupportedProvider(provider: Provider): void {
   if (provider !== "youtube" && provider !== "twitch") {
-    throw new Error(`Unsupported provider: ${provider}`);
+    throw new Error(`対応していない連携先です: ${provider}`);
   }
 }
 

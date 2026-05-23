@@ -22,7 +22,7 @@ export class MultiCommentOutputPort implements CommentOutputPort {
     for (const result of results) {
       if (result.status === "rejected") {
         console.warn(
-          "[comment-delivery] an output port failed, but processing continues",
+          "[comment-delivery] コメント出力先の処理に失敗しましたが、他の出力処理は継続します。",
           result.reason,
         );
       }
@@ -39,7 +39,7 @@ export class MultiCommentOutputPort implements CommentOutputPort {
     for (const result of results) {
       if (result.status === "rejected") {
         console.warn(
-          "[comment-delivery] an output port close failed, but shutdown continues",
+          "[comment-delivery] コメント出力先の終了処理に失敗しましたが、シャットダウンは継続します。",
           result.reason,
         );
       }

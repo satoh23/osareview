@@ -113,13 +113,13 @@ export async function createLoopbackOAuthCallbackServer(
       );
     } catch {
       res.writeHead(400);
-      res.end("Bad Request");
+      res.end("不正なリクエストです。");
       return;
     }
 
     if (url.pathname !== callbackPath) {
       res.writeHead(404);
-      res.end("Not Found");
+      res.end("ページが見つかりません。");
       return;
     }
 
@@ -134,11 +134,13 @@ export async function createLoopbackOAuthCallbackServer(
         sendHtml(
           res,
           400,
-          "Invalid state",
+          "認可の検証に失敗しました",
           "認可の検証に失敗しました。もう一度お試しください。",
         );
         void close();
-        rejectCode(new LoopbackOAuthError("OAuth callback state mismatch"));
+        rejectCode(
+          new LoopbackOAuthError("OAuth コールバックの state が一致しません。"),
+        );
       });
       return;
     }
@@ -150,11 +152,17 @@ export async function createLoopbackOAuthCallbackServer(
           ? oauthErrorDescription
           : undefined;
       finish(() => {
-        sendHtml(res, 400, "Authorization failed", desc ?? oauthError);
+        sendHtml(
+          res,
+          400,
+          "ログインに失敗しました",
+          desc ??
+            "認可サービスからエラーが返されました。もう一度お試しください。",
+        );
         void close();
         rejectCode(
           new LoopbackOAuthError(
-            `OAuth error: ${oauthError}`,
+            `OAuth エラーが返されました: ${oauthError}`,
             oauthError,
             desc,
           ),
@@ -165,9 +173,18 @@ export async function createLoopbackOAuthCallbackServer(
 
     if (code === null || code === "") {
       finish(() => {
-        sendHtml(res, 400, "Missing code", "認可コードがありません。");
+        sendHtml(
+          res,
+          400,
+          "認可コードがありません",
+          "認可コードがありません。",
+        );
         void close();
-        rejectCode(new LoopbackOAuthError("OAuth callback missing code"));
+        rejectCode(
+          new LoopbackOAuthError(
+            "OAuth コールバックに認可コードがありません。",
+          ),
+        );
       });
       return;
     }
@@ -176,7 +193,7 @@ export async function createLoopbackOAuthCallbackServer(
       sendHtml(
         res,
         200,
-        "Success",
+        "ログインに成功しました",
         "ログイン処理を続けています。このウィンドウは閉じて構いません。",
       );
       void close();
@@ -192,7 +209,9 @@ export async function createLoopbackOAuthCallbackServer(
   const addr = server!.address();
   if (addr === null || typeof addr === "string") {
     await close();
-    throw new Error("Failed to bind loopback OAuth callback server");
+    throw new Error(
+      "ログイン用の一時サーバーを起動できませんでした。もう一度お試しください。",
+    );
   }
 
   const redirectUri = `http://${LOOPBACK_HOST}:${addr.port}${callbackPath}`;

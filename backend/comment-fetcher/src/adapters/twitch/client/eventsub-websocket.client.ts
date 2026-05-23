@@ -113,7 +113,9 @@ export class TwitchEventSubWebSocketClient {
 
     const handleClose = () => {
       if (!done) {
-        streamError = new Error("Twitch EventSub socket was closed.");
+        streamError = new Error(
+          "Twitch のコメント受信接続が切断されました。再接続をお試しください。",
+        );
       }
       done = true;
       notify();
@@ -280,7 +282,9 @@ export class TwitchEventSubWebSocketClient {
     const parsed = this.parseJson(payload);
 
     if (!this.isEventSubEnvelope(parsed)) {
-      throw new Error("Invalid Twitch EventSub envelope format.");
+      throw new Error(
+        "Twitch から受信したメッセージ形式を読み取れませんでした。",
+      );
     }
 
     return parsed;
@@ -360,7 +364,9 @@ export class TwitchEventSubWebSocketClient {
       const handleClose = () => {
         cleanup();
         reject(
-          new Error("Twitch EventSub socket closed before session_welcome."),
+          new Error(
+            "Twitch のコメント受信接続が初期化前に切断されました。再接続をお試しください。",
+          ),
         );
       };
 
@@ -402,7 +408,7 @@ export class TwitchEventSubWebSocketClient {
     try {
       return JSON.parse(payload);
     } catch {
-      throw new Error("Failed to parse Twitch EventSub message as JSON.");
+      throw new Error("Twitch から受信したメッセージを読み取れませんでした。");
     }
   }
 

@@ -46,7 +46,7 @@ export class EnvTwitchOAuthConfigProvider implements TwitchOAuthConfigProvider {
     const clientId = process.env[ENV_CLIENT_ID]?.trim() ?? "";
     if (clientId === "") {
       throw new Error(
-        `${ENV_CLIENT_ID} is required (set it in your environment or .env)`,
+        `${ENV_CLIENT_ID} が未設定です。環境変数または .env に設定してください。`,
       );
     }
 

@@ -25,7 +25,7 @@ export class LoginUsecase {
   async login(provider: Provider): Promise<void> {
     const loginStrategy = this.loginStrategyByProvider.get(provider);
     if (loginStrategy === undefined) {
-      throw new Error(`Unsupported provider: ${provider}`);
+      throw new Error(`対応していない連携先です: ${provider}`);
     }
 
     try {

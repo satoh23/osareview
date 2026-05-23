@@ -26,7 +26,7 @@ export class TwitchAccessTokenProvider
     } catch (error) {
       if (error instanceof NotAuthorizedError) {
         console.warn(
-          "[comment-fetcher] Twitch is not authorized. Run auth login first.",
+          "[comment-fetcher] Twitch にログインしていません。先にアカウント連携を行ってください。",
         );
         return "";
       }

@@ -16,7 +16,7 @@ registerCommentFetcherDependencies();
 
 runCommentFetcherApp({}, new ConsoleCommentOutputPort()).catch(
   (error: unknown) => {
-    console.error("[comment-fetcher] fatal error", error);
+    console.error("[comment-fetcher] 致命的なエラーが発生しました。", error);
     process.exitCode = 1;
   },
 );

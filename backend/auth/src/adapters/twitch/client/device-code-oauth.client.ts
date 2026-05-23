@@ -55,7 +55,7 @@ async function defaultSleepMs(ms: number, signal?: AbortSignal): Promise<void> {
     }
     const onAbort = () => {
       clearTimeout(id);
-      reject(new Error("Polling aborted."));
+      reject(new Error("ログイン確認を中断しました。"));
     };
     if (signal.aborted) {
       onAbort();
@@ -99,7 +99,7 @@ export class TwitchDeviceCodeOAuthClient implements DeviceCodeOAuthClient {
     const json = await this.readJson(response, "device authorization");
     if (!isValidTwitchDeviceAuthorizationResponse(json)) {
       throw new TwitchDeviceCodeOAuthClientError(
-        "Twitch device authorization response has unexpected shape.",
+        "Twitch からのログイン開始応答の形式が正しくありません。もう一度お試しください。",
       );
     }
 
@@ -148,7 +148,9 @@ export class TwitchDeviceCodeOAuthClient implements DeviceCodeOAuthClient {
       throw this.errorFromErrorResponse(json, response.status, "token polling");
     }
 
-    throw new TwitchDeviceCodeOAuthClientError("Device authorization expired.");
+    throw new TwitchDeviceCodeOAuthClientError(
+      "Twitch のログイン確認が時間切れになりました。もう一度アカウント連携を行ってください。",
+    );
   }
 
   async refresh(input: RefreshAccessTokenInput): Promise<TokenSet> {
@@ -211,7 +213,7 @@ export class TwitchDeviceCodeOAuthClient implements DeviceCodeOAuthClient {
       return await response.json();
     } catch {
       throw new TwitchDeviceCodeOAuthClientError(
-        `Twitch ${context} response is not JSON.`,
+        `Twitch からの応答を読み取れませんでした（${context}）。もう一度お試しください。`,
       );
     }
   }
@@ -225,19 +227,19 @@ export class TwitchDeviceCodeOAuthClient implements DeviceCodeOAuthClient {
       const message = json.message ?? json.error;
       if (message) {
         return new TwitchDeviceCodeOAuthClientError(
-          `Twitch ${context} error: ${message}`,
+          `Twitch 連携でエラーが発生しました（${context}）: ${message}`,
         );
       }
     }
     return new TwitchDeviceCodeOAuthClientError(
-      `Twitch ${context} error: HTTP ${status}`,
+      `Twitch 連携で通信エラーが発生しました（${context}, HTTP ${status}）。`,
     );
   }
 
   private parseTokenResponse(json: unknown): TwitchTokenSuccessResponse {
     if (typeof json !== "object" || json === null) {
       throw new TwitchDeviceCodeOAuthClientError(
-        "Twitch token response has unexpected shape.",
+        "Twitch からのログイン応答の形式が正しくありません。もう一度お試しください。",
       );
     }
     const v = json as Record<string, unknown>;
@@ -254,7 +256,7 @@ export class TwitchDeviceCodeOAuthClient implements DeviceCodeOAuthClient {
       (v.refresh_token === undefined || typeof v.refresh_token === "string");
     if (!valid) {
       throw new TwitchDeviceCodeOAuthClientError(
-        "Twitch token response has unexpected shape.",
+        "Twitch からのログイン応答の形式が正しくありません。もう一度お試しください。",
       );
     }
     return json as TwitchTokenSuccessResponse;
@@ -265,7 +267,9 @@ export class TwitchDeviceCodeOAuthClient implements DeviceCodeOAuthClient {
     refreshToken: string | undefined,
   ): TokenSet {
     if (refreshToken === undefined || refreshToken === "") {
-      throw new TwitchDeviceCodeOAuthClientError("refresh_token is missing.");
+      throw new TwitchDeviceCodeOAuthClientError(
+        "Twitch のログイン更新情報が見つかりません。もう一度アカウント連携を行ってください。",
+      );
     }
 
     const obtainedAt = this.nowFn();

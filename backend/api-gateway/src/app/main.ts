@@ -76,7 +76,7 @@ export const runApiGateway = async (
         .markAsUnlinked(event.provider, event.reason)
         .catch((error: unknown) => {
           console.error(
-            "[api-gateway] failed to handle authorization lost",
+            "[api-gateway] ログイン期限切れの処理に失敗しました。",
             error,
           );
         });

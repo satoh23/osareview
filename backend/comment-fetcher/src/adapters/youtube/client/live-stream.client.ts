@@ -97,7 +97,7 @@ export class YouTubeLiveStreamClient {
       if (!response.ok) {
         const errorBody = await response.text();
         throw new Error(
-          `YouTube API request failed: ${response.status} ${response.statusText} ${errorBody}`,
+          `YouTube API との通信に失敗しました（HTTP ${response.status} ${response.statusText}）: ${errorBody}`,
         );
       }
 

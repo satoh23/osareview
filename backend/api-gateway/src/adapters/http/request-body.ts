@@ -12,12 +12,14 @@ export const readOptionalJsonObjectBody = async (
   try {
     body = await context.req.json();
   } catch {
-    throw new HTTPException(400, { message: "Invalid JSON body" });
+    throw new HTTPException(400, {
+      message: "リクエスト本文の JSON を読み取れませんでした。",
+    });
   }
 
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     throw new HTTPException(400, {
-      message: "Request body must be a JSON object",
+      message: "リクエスト本文は JSON オブジェクトで送信してください。",
     });
   }
 

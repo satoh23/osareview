@@ -6,6 +6,8 @@ import type {
 } from "../model/types";
 
 type ConnectionTargetPickerProps = {
+  /** 接続・切断リクエスト中など、接続先を変えてはいけないとき true */
+  disabled?: boolean;
   setting: PlatformSettingState;
   onChangeTargetMode: (
     platform: SessionPlatform,
@@ -15,23 +17,31 @@ type ConnectionTargetPickerProps = {
 };
 
 export function ConnectionTargetPicker({
+  disabled = false,
   onChangeStreamId,
   onChangeTargetMode,
   setting,
 }: ConnectionTargetPickerProps) {
   return (
-    <div className="rounded-2xl border border-border bg-elevated/40 p-3">
+    <div
+      className={cx(
+        "rounded-2xl border border-border bg-elevated/40 p-3",
+        disabled && "opacity-80",
+      )}
+    >
       <p className="mb-2 text-xs font-semibold text-secondary">接続先</p>
       <div className="grid grid-cols-1 gap-2">
         <TargetButton
           active={setting.connectionTargetMode === "own_account"}
           description="自分の配信コメントに接続します。"
+          disabled={disabled}
           label="ログイン中のアカウントの配信"
           onClick={() => onChangeTargetMode(setting.platform, "own_account")}
         />
         <TargetButton
           active={setting.connectionTargetMode === "stream_id"}
           description="別アカウントの配信に接続したい場合はこちら。"
+          disabled={disabled}
           label="配信IDを入力して接続"
           onClick={() => onChangeTargetMode(setting.platform, "stream_id")}
         />
@@ -39,7 +49,8 @@ export function ConnectionTargetPicker({
       {setting.connectionTargetMode === "stream_id" ? (
         <div className="mt-3">
           <input
-            className="w-full rounded-2xl border border-border bg-elevated px-3 py-2 text-sm text-primary outline-none ring-brand-pink/30 placeholder:text-muted focus:ring-2"
+            className="w-full rounded-2xl border border-border bg-elevated px-3 py-2 text-sm text-primary outline-none ring-brand-pink/30 placeholder:text-muted focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={disabled}
             onChange={(event) =>
               onChangeStreamId(setting.platform, event.target.value)
             }
@@ -62,11 +73,13 @@ export function ConnectionTargetPicker({
 function TargetButton({
   active,
   description,
+  disabled,
   label,
   onClick,
 }: {
   active: boolean;
   description: string;
+  disabled?: boolean;
   label: string;
   onClick: () => void;
 }) {
@@ -77,7 +90,9 @@ function TargetButton({
         active
           ? "border-brand-pink-strong/50 bg-brand-pink/10"
           : "border-border bg-surface-muted/60 hover:bg-surface-muted",
+        disabled && "cursor-not-allowed opacity-60 hover:bg-surface-muted/60",
       )}
+      disabled={disabled}
       onClick={onClick}
       type="button"
     >

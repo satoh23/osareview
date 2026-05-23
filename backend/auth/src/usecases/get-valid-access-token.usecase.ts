@@ -44,7 +44,7 @@ export class GetValidAccessTokenUsecase {
     const oauthTokenRefresher =
       this.oauthTokenRefresherByProvider.get(provider);
     if (oauthTokenRefresher === undefined) {
-      throw new Error(`Unsupported provider: ${provider}`);
+      throw new Error(`対応していない連携先です: ${provider}`);
     }
 
     const tokenSet = await this.tokenStore.get(provider);

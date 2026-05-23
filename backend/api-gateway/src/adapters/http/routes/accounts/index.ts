@@ -45,6 +45,6 @@ const parseProvider = (value: string | undefined): AccountLinkProvider => {
   }
 
   throw new HTTPException(400, {
-    message: `Unsupported account provider: ${String(value)}`,
+    message: `対応していないアカウント連携先です: ${String(value)}`,
   });
 };
