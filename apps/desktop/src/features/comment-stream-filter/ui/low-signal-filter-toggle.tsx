@@ -18,7 +18,7 @@ export function LowSignalFilterToggle() {
       type="button"
     >
       <Filter aria-hidden="true" className="h-3.5 w-3.5" />
-      リアクション除外 {hideLowSignal ? "ON" : "OFF"}
+      短文リアクション除外 {hideLowSignal ? "ON" : "OFF"}
     </button>
   );
 }
