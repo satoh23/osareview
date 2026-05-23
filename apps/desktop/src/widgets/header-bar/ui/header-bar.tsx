@@ -6,6 +6,8 @@ import {
   usePlatformPopoverState,
   usePlatformSettings,
 } from "../../../features";
+import { HEADER_BAR_VERTICAL_LAYOUT } from "../../../shared/const/app-layout";
+import { cx } from "../../../shared/lib";
 import { Button } from "../../../shared/ui";
 
 type HeaderBarProps = {
@@ -29,7 +31,12 @@ export function HeaderBar({ onOpenSettings }: HeaderBarProps) {
 
   return (
     <>
-      <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-base/95 px-5">
+      <header
+        className={cx(
+          "flex shrink-0 items-center justify-between gap-3 border-b border-border bg-base/95 px-5",
+          HEADER_BAR_VERTICAL_LAYOUT.heightClass,
+        )}
+      >
         <PlatformConnectionSummary
           onSelectPlatform={selectPlatform}
           platformSettings={platformSettings}

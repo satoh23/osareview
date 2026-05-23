@@ -18,6 +18,8 @@ import {
   usePlatformPopoverState,
   usePlatformSettings,
 } from "../../../features/platform-connection";
+import { PLATFORM_CONNECTION_POPOVER_Z } from "../../../shared/const/app-layout";
+import { cx } from "../../../shared/lib";
 import { Button, PlatformIcon } from "../../../shared/ui";
 
 const SCROLL_BOTTOM_THRESHOLD_PX = 24;
@@ -191,8 +193,13 @@ function NoConnectionEmptyState({
   platformSettings,
 }: NoConnectionEmptyStateProps) {
   return (
-    <div className="flex h-full min-h-[420px] items-center justify-center p-6 text-center">
-      <div className="max-w-md rounded-3xl border border-border bg-elevated/50 p-7 shadow-xl shadow-black/20">
+    <div className="flex h-full min-h-[420px] items-center justify-center p-6 text-center pointer-events-none">
+      <div
+        className={cx(
+          "relative max-w-md rounded-3xl border border-border bg-elevated/50 p-7 shadow-xl shadow-black/20 pointer-events-auto",
+          PLATFORM_CONNECTION_POPOVER_Z.contentAboveBackdrop,
+        )}
+      >
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-3xl bg-brand-pink/10 text-brand-pink-strong">
           <Sparkles aria-hidden="true" className="h-7 w-7" />
         </div>
