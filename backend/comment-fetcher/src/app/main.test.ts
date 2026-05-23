@@ -121,6 +121,7 @@ test("runYouTubePipeline は接続中に配信終了を検知したら idle を�
         return {
           async *streamComments() {
             await new Promise<void>(() => {});
+            yield undefined as never;
           },
         } as unknown as ReturnType<ResolveFn>;
       }

@@ -261,7 +261,7 @@ test("未対応 platform は 400 を返す", async () => {
     assert.equal(response.status, 400);
     assert.match(
       String((body as { error?: unknown }).error),
-      /Unsupported session platform/,
+      /対応していないコメント接続先です/,
     );
     assert.deepEqual(fixture.calls, []);
   } finally {
@@ -280,7 +280,7 @@ test("未対応 account provider は 400 を返す", async () => {
     assert.equal(response.status, 400);
     assert.match(
       String((body as { error?: unknown }).error),
-      /Unsupported account provider/,
+      /対応していないアカウント連携先です/,
     );
     assert.deepEqual(fixture.calls, []);
   } finally {
@@ -295,7 +295,7 @@ test("未定義 route は 404 を返す", async () => {
     const body = await response.json();
 
     assert.equal(response.status, 404);
-    assert.deepEqual(body, { error: "Not Found" });
+    assert.deepEqual(body, { error: "指定された API が見つかりません。" });
   } finally {
     await fixture.server.close();
   }
