@@ -25,7 +25,7 @@
 - desktop + api-gateway 開発: `pnpm dev`
 - desktop 開発（Tauri のみ）: `pnpm dev:desktop-tauri`
 - api-gateway 開発: `pnpm dev:api-gateway`
-- backend 配信モック: `pnpm dev:comment-delivery-mock-ws`
+- テストコメント注入: `pnpm dev:inject-test-comments`（詳細: [backend/api-gateway/README.md](backend/api-gateway/README.md#テストコメント注入)）
 - 型チェック（全体）: `pnpm check-types`
 
 ## 詳細ドキュメント

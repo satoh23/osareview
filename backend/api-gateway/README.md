@@ -80,6 +80,82 @@ Gateway は platform ごとに状態を管理します。
 5. 非配信または未ログインなら `接続失敗` になり、その後 `未接続` に戻ることを確認
 6. 「停止」で即時 `未接続` に戻ることを確認
 
+## テストコメント注入
+
+本番の `comment-fetcher` なしで、desktop が受け取るコメントをローカルから注入できます。`DeliverCommentsUseCase` → `DecorationPipeline` → WebSocket という本番と同じ経路を通るため、Decorator の動作確認や負荷試験にも使えます。
+
+### 有効化
+
+ルート `.env` に次の行を追加します（既定は `false`）。
+
+```env
+API_GATEWAY_ENABLE_TEST_INJECT=true
+```
+
+有効化されると起動ログに通知が出ます。**本番環境では `false` のままにしてください。**
+
+### エンドポイント
+
+```
+POST http://<API_GATEWAY_HTTP_HOST>:<API_GATEWAY_HTTP_PORT>/test/comments
+Content-Type: application/json
+
+{ "comments": [ ...Comment[] ] }
+```
+
+レスポンス: `{ "accepted": <number> }`
+
+フラグが `false` の場合はルート自体が存在しないため 404 になります。
+
+### 注入スクリプト
+
+リポジトリルート:
+
+```bash
+pnpm dev:inject-test-comments
+```
+
+`backend/api-gateway` 直下:
+
+```bash
+pnpm dev:inject
+```
+
+オプションは `--` の後に `--key=value` 形式で渡します。
+
+```bash
+pnpm dev:inject-test-comments -- --mps=10 --batch=1 --max=100
+```
+
+### オプション一覧
+
+| オプション | 既定                             | 説明                                                                                 |
+| ---------- | -------------------------------- | ------------------------------------------------------------------------------------ |
+| `host`     | `127.0.0.1`                      | api-gateway の HTTP ホスト                                                           |
+| `port`     | `17332`                          | api-gateway の HTTP ポート                                                           |
+| `path`     | `/test/comments`                 | 注入エンドポイントのパス                                                             |
+| `mps`      | `50`                             | 1秒あたりの送信回数（メッセージ単位）                                                |
+| `batch`    | `1`                              | 1メッセージ内のコメント数。`1` のとき `comments.append`、`2` 以上で `comments.batch` |
+| `max`      | `5000`                           | 送るコメント総数の上限                                                               |
+| `sources`  | `youtube,twitch`                 | カンマ区切り。`youtube` と / または `twitch`                                         |
+| `events`   | `normal,super_chat,subscription` | カンマ区切り。`normal` / `super_chat` / `subscription`                               |
+
+### 例
+
+YouTube のみ・通常コメントのみ・低速:
+
+```bash
+pnpm dev:inject-test-comments -- --sources=youtube --events=normal --mps=5
+```
+
+高速・バッチ・大量:
+
+```bash
+pnpm dev:inject-test-comments -- --mps=200 --batch=5 --max=10000
+```
+
+実配信と並行して流す場合は、api-gateway を起動したまま別ターミナルでスクリプトを実行します。テストコメントと実コメントが混在して desktop に表示されます。
+
 ## テスト / 型チェック
 
 ```bash

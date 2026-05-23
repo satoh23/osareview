@@ -12,7 +12,6 @@
     }
   },
   "scripts": {
-    "dev:mock-ws": "tsx scripts/mock-comment-delivery-server.ts",
     "build": "tsc",
     "check-types": "tsc --noEmit",
     "test": "tsx --test \"src/**/*.test.ts\""
