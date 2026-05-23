@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import {
   COMMENT_EVENT_TYPES,
   COMMENT_SOURCES,

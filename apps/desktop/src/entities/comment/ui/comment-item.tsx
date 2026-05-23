@@ -128,15 +128,11 @@ function ViewerStatusBadge({
 }: {
   status?: EnrichedComment["viewerStatus"];
 }) {
-  if (!status || (status !== "first_time" && status !== "supporter")) {
+  if (status !== "first_time") {
     return null;
   }
 
-  return (
-    <Badge tone={status === "supporter" ? "gold" : "blue"}>
-      {formatViewerStatus(status)}
-    </Badge>
-  );
+  return <Badge tone="blue">{formatViewerStatus(status)}</Badge>;
 }
 
 const toDisplayComment = (
