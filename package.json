@@ -5,7 +5,7 @@
     "dev": "pnpm run dev:desktop-tauri & pnpm run dev:api-gateway & wait",
     "dev:comment-fetcher": "pnpm --filter @comment-dock/comment-fetcher dev",
     "dev:api-gateway": "pnpm --filter @comment-dock/api-gateway dev",
-    "dev:comment-delivery-mock-ws": "pnpm --filter @comment-dock/comment-delivery dev:mock-ws",
+    "dev:inject-test-comments": "pnpm --filter @comment-dock/api-gateway dev:inject",
     "dev:desktop-tauri": "pnpm --filter @comment-dock/desktop tauri dev",
     "dev:desktop": "pnpm --filter @comment-dock/desktop dev",
     "build": "pnpm -r --if-present run build",

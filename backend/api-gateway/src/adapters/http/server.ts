@@ -2,12 +2,14 @@ import { inject, injectable } from "tsyringe";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { serve, type ServerType } from "@hono/node-server";
+import { DeliverCommentsUseCase } from "@comment-dock/comment-delivery";
 import { ManageAccountLinksUseCase } from "../../usecases/manage-account-links.usecase.js";
 import { ManageStreamingSessionsUseCase } from "../../usecases/manage-streaming-sessions.usecase.js";
 import {
   getHttpApiEndpoint,
   type HttpApiEndpoint,
 } from "../../infrastructure/http/config/api-config.js";
+import { getTestInjectEnabled } from "../../infrastructure/shared/config/test-inject.js";
 import { createHttpRoutes } from "./routes/index.js";
 
 @injectable()
@@ -19,11 +21,20 @@ export class HttpControlServer {
     private readonly manageStreamingSessionsUseCase: ManageStreamingSessionsUseCase,
     @inject(ManageAccountLinksUseCase)
     private readonly manageAccountLinksUseCase: ManageAccountLinksUseCase,
+    @inject(DeliverCommentsUseCase)
+    private readonly deliverCommentsUseCase: DeliverCommentsUseCase,
   ) {}
 
   async start(endpoint: HttpApiEndpoint = getHttpApiEndpoint()): Promise<void> {
     if (this.server) {
       return;
+    }
+
+    const testInjectEnabled = getTestInjectEnabled();
+    if (testInjectEnabled) {
+      console.warn(
+        "[api-gateway] ⚠️  テストコメント注入エンドポイントが有効化されています (POST /test/comments)。本番環境では API_GATEWAY_ENABLE_TEST_INJECT=true を設定しないでください。",
+      );
     }
 
     const app = new Hono();
@@ -32,6 +43,8 @@ export class HttpControlServer {
       createHttpRoutes(
         this.manageStreamingSessionsUseCase,
         this.manageAccountLinksUseCase,
+        this.deliverCommentsUseCase,
+        testInjectEnabled,
       ),
     );
     // /auth/... などのルータは後続でここへ追加する。
