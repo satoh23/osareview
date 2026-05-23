@@ -20,13 +20,14 @@ export function CommentHistoryFilterTabs({
       {HISTORY_MODES.map((item) => (
         <button
           className={cx(
-            "rounded-xl px-2 py-1.5 text-xs font-medium transition",
+            "flex min-w-0 items-center justify-center truncate rounded-xl px-3 py-1.5 text-center text-[10px] font-medium leading-tight transition",
             mode === item
               ? "bg-brand-pink text-inverse"
               : "text-muted hover:text-secondary",
           )}
           key={item}
           onClick={() => onChange(item)}
+          title={formatHistoryMode(item)}
           type="button"
         >
           {formatHistoryMode(item)}

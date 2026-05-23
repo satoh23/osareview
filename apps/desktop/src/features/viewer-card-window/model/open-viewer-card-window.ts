@@ -32,7 +32,7 @@ export async function openViewerCardWindow({
   const viewerCardWindow = new WebviewWindow(VIEWER_CARD_WINDOW_LABEL, {
     url,
     title: createViewerCardWindowTitle(displayName),
-    width: 420,
+    width: 490,
     height: 720,
     minWidth: 360,
     minHeight: 520,

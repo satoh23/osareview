@@ -39,7 +39,7 @@ export function formatCommentType(type: CommentType): string {
     case "self_disclosure":
       return "自己開示";
     case "low_signal":
-      return "低シグナル";
+      return "リアクション";
     case "caution":
       return "注意";
     default:

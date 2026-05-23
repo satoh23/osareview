@@ -31,7 +31,7 @@ export function formatHistoryMode(mode: HistoryMode): string {
     case "all":
       return "すべて";
     case "filtered":
-      return "低シグナル除外";
+      return "リアクション除外";
     case "important":
       return "重要のみ";
   }

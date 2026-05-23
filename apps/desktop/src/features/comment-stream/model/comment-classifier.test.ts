@@ -23,7 +23,7 @@ describe("enrichComment", () => {
     expect(enriched.isLowSignal).toBe(false);
   });
 
-  it("短いリアクションを低シグナルとして分類する", () => {
+  it("短いリアクションをリアクションとして分類する", () => {
     const enriched = enrichComment(createComment("comment-2", "www"));
 
     expect(enriched.commentTypes).toContain("low_signal");

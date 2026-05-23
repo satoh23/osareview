@@ -7,7 +7,7 @@ import {
 import { getFilteredEnrichedComments } from "./use-enriched-comments";
 
 describe("getFilteredEnrichedComments", () => {
-  it("hideLowSignal=false のとき低シグナルも含める", () => {
+  it("hideLowSignal=false のときリアクションも含める", () => {
     const comments = [createComment("comment-1", "www")];
 
     const enrichedComments = getFilteredEnrichedComments(comments, false);
@@ -16,7 +16,7 @@ describe("getFilteredEnrichedComments", () => {
     expect(enrichedComments[0]?.isLowSignal).toBe(true);
   });
 
-  it("hideLowSignal=true のとき低シグナルを除外する", () => {
+  it("hideLowSignal=true のときリアクションを除外する", () => {
     const comments = [
       createComment("comment-1", "www"),
       createComment("comment-2", "この曲歌える？"),
