@@ -16,11 +16,11 @@ export function CommentHistoryFilterTabs({
   onChange,
 }: CommentHistoryFilterTabsProps) {
   return (
-    <div className="mb-3 grid grid-cols-3 rounded-2xl border border-border bg-elevated p-1">
+    <div className="mb-3 grid grid-cols-3 rounded-4xl border border-border bg-elevated">
       {HISTORY_MODES.map((item) => (
         <button
           className={cx(
-            "flex min-w-0 items-center justify-center truncate rounded-xl px-3 py-1.5 text-center text-[10px] font-medium leading-tight transition",
+            "flex min-w-0 items-center justify-center truncate rounded-4xl px-2 py-1 text-center text-[8px] font-medium leading-tight transition",
             mode === item
               ? "bg-brand-pink text-inverse"
               : "text-muted hover:text-secondary",
