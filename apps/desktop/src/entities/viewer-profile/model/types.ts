@@ -3,6 +3,12 @@ import type { EnrichedComment, ViewerStatus } from "../../comment";
 
 export type RelationshipTab = "summary" | "memo" | "all";
 
+/** 関係性カードを開くときのユーザー特定キー。`(platform, platformUserId)` の複合キー。 */
+export type ViewerProfileLookupKey = {
+  platform: CommentSource;
+  platformUserId: string;
+};
+
 export type HistoryMode = "important" | "filtered" | "all";
 
 export type ViewerProfile = {

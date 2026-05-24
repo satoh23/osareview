@@ -1,22 +1,70 @@
-import { viewerProfiles } from "../model/viewer-profile-mock";
+import { COMMENT_EVENT_TYPES } from "@comment-dock/shared";
+import type { CommentSource } from "@comment-dock/shared";
+import { listCommentsByUserId } from "../../comment/api/comments.repository";
+import type { CommentHistoryRow } from "../../comment/api/comments.repository";
 import type { EnrichedComment } from "../../comment";
-import type { ViewerProfile } from "../model/types";
+import { listPinnedCommentsByUserId } from "../../pinned-comment/api/pinned-comments.repository";
+import type { PinnedCommentRow } from "../../pinned-comment/model/types";
+import { findUserByPlatformUserId } from "../../user/api/users.repository";
+import type { UserRow } from "../../user/model/types";
+import {
+  PINNED_COMMENTS_LIMIT,
+  VIEWER_PROFILE_HISTORY_LIMIT,
+} from "../config/limits";
+import type { ViewerProfile, ViewerProfileLookupKey } from "../model/types";
 
 export type ViewerProfileRepository = {
-  getViewerProfile: (userId: string) => Promise<ViewerProfile | undefined>;
-  listViewerProfiles: () => Promise<ViewerProfile[]>;
+  getViewerProfile: (
+    key: ViewerProfileLookupKey,
+  ) => Promise<ViewerProfile | null>;
 };
 
-// TODO(backend): 現在はプロトタイプ由来の mock を返す。
-// 将来は SQLite / API から user, comments, tags, memo, support を集約して ViewerProfile を組み立てる。
 export const viewerProfilesRepository: ViewerProfileRepository = {
-  async getViewerProfile(userId) {
-    return cloneViewerProfile(
-      viewerProfiles.find((profile) => profile.userId === userId),
+  async getViewerProfile(key) {
+    const user = await findUserByPlatformUserId(key);
+    if (!user) return null;
+
+    const [commentRows, pinnedRows] = await Promise.all([
+      listCommentsByUserId({
+        userId: user.id,
+        limit: VIEWER_PROFILE_HISTORY_LIMIT,
+      }),
+      listPinnedCommentsByUserId({
+        userId: user.id,
+        limit: PINNED_COMMENTS_LIMIT,
+      }),
+    ]);
+
+    const pinnedCommentDbIds = new Set(
+      pinnedRows
+        .map((r) => r.commentId)
+        .filter((id): id is number => id !== null),
     );
-  },
-  async listViewerProfiles() {
-    return viewerProfiles.map(cloneExistingViewerProfile);
+
+    const recentComments = commentRows.map((row) =>
+      commentRowToEnrichedComment(row, user, pinnedCommentDbIds),
+    );
+    const pinnedComments = pinnedRows.map((row) =>
+      pinnedRowToEnrichedComment(row, user),
+    );
+
+    return {
+      userId: `${user.platform}:${user.platformUserId}`,
+      platform: user.platform as CommentSource,
+      displayName: user.displayName,
+      firstSeenAt: user.firstSeenAt,
+      lastSeenAt: user.lastSeenAt,
+      visitCount: user.visitCount,
+      commentCount: user.observedCommentCount,
+      supportCount: user.supportCount,
+      lastSupportAt: user.lastSupportAt ?? undefined,
+      statuses: [], // TODO(backend): サーバ判定が入ったら反映
+      tags: [], // TODO(backend): タグ実装後に反映
+      memo: "", // TODO(backend): メモ実装後に反映
+      pinnedComments,
+      importantComments: [], // TODO(backend): 重要コメント判定が入ったら反映
+      recentComments,
+    };
   },
 };
 
@@ -24,37 +72,45 @@ export const getViewerProfile = viewerProfilesRepository.getViewerProfile.bind(
   viewerProfilesRepository,
 );
 
-export const listViewerProfiles =
-  viewerProfilesRepository.listViewerProfiles.bind(viewerProfilesRepository);
-
-const cloneViewerProfile = (
-  profile: ViewerProfile | undefined,
-): ViewerProfile | undefined => {
-  if (!profile) {
-    return undefined;
-  }
-
-  return cloneExistingViewerProfile(profile);
-};
-
-const cloneExistingViewerProfile = (profile: ViewerProfile): ViewerProfile => {
+function commentRowToEnrichedComment(
+  row: CommentHistoryRow,
+  user: UserRow,
+  pinnedCommentDbIds: Set<number>,
+): EnrichedComment {
   return {
-    ...profile,
-    statuses: [...profile.statuses],
-    tags: [...profile.tags],
-    pinnedComments: profile.pinnedComments.map(cloneComment),
-    importantComments: profile.importantComments.map(cloneComment),
-    recentComments: profile.recentComments.map(cloneComment),
+    id: String(row.id),
+    source: row.platform as CommentSource,
+    author: { id: user.platformUserId, name: user.displayName },
+    text: row.commentText,
+    publishedAt: row.commentedAt,
+    eventType: COMMENT_EVENT_TYPES.NORMAL,
+    viewerStatus: undefined,
+    commentTypes: [], // TODO(backend): 分類判定が入ったら反映
+    isLowSignal: row.isLowSignal,
+    isImportant: false, // TODO(backend): 重要度判定が入ったら反映
+    isPinned: pinnedCommentDbIds.has(row.id),
+    badges: [], // TODO(backend): バッジ情報が入ったら反映
+    liveSessionTitle: row.liveSessionTitle ?? undefined,
   };
-};
+}
 
-const cloneComment = (comment: EnrichedComment): EnrichedComment => ({
-  ...comment,
-  author: { ...comment.author },
-  monetaryAmount: comment.monetaryAmount
-    ? { ...comment.monetaryAmount }
-    : undefined,
-  commentTypes: [...comment.commentTypes],
-  support: comment.support ? { ...comment.support } : undefined,
-  badges: [...comment.badges],
-});
+function pinnedRowToEnrichedComment(
+  row: PinnedCommentRow,
+  user: UserRow,
+): EnrichedComment {
+  return {
+    id: row.commentId !== null ? String(row.commentId) : `pinned-${row.id}`,
+    source: (row.commentPlatform ?? user.platform) as CommentSource,
+    author: { id: user.platformUserId, name: user.displayName },
+    text: row.commentText ?? row.pinnedText,
+    publishedAt: row.commentedAt ?? "",
+    eventType: COMMENT_EVENT_TYPES.NORMAL,
+    viewerStatus: undefined,
+    commentTypes: [], // TODO(backend): 分類判定が入ったら反映
+    isLowSignal: false,
+    isImportant: false,
+    isPinned: true,
+    badges: [], // TODO(backend): バッジ情報が入ったら反映
+    liveSessionTitle: row.liveSessionTitle ?? undefined,
+  };
+}

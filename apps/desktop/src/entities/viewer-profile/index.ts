@@ -1,7 +1,6 @@
 // entities/viewer-profile slice の Public API。
 export {
   getViewerProfile,
-  listViewerProfiles,
   viewerProfilesRepository,
   type ViewerProfileRepository,
 } from "./api/viewer-profiles.repository";
@@ -16,5 +15,6 @@ export type {
   HistoryMode,
   RelationshipTab,
   ViewerProfile,
+  ViewerProfileLookupKey,
 } from "./model/types";
-export { tagCandidates, viewerProfiles } from "./model/viewer-profile-mock";
+// viewer-profile-mock はテスト・開発参照用に残すが Public API には含めない。
