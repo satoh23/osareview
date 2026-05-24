@@ -1,5 +1,6 @@
 import { firstRow, getDatabase } from "../../../shared/api/sqlite";
-import type { UpsertUserInput } from "../model/types";
+import type { UpsertUserInput, UserRow } from "../model/types";
+import type { DbPlatform } from "../../live-session/model/types";
 
 /**
  * `(platform, platform_user_id)` で INSERT または UPDATE。
@@ -33,6 +34,64 @@ export async function upsertUser(input: UpsertUserInput): Promise<number> {
     );
   }
   return row.id;
+}
+
+/**
+ * `(platform, platform_user_id)` の複合キーでユーザーを検索する。
+ * 見つからない場合は `null` を返す。
+ */
+export async function findUserByPlatformUserId({
+  platform,
+  platformUserId,
+}: {
+  platform: DbPlatform;
+  platformUserId: string;
+}): Promise<UserRow | null> {
+  const db = await getDatabase();
+  const rows = await db.select<{
+    id: number;
+    platform: string;
+    platform_user_id: string;
+    display_name: string;
+    first_seen_at: string;
+    last_seen_at: string;
+    visit_count: number;
+    observed_comment_count: number;
+    support_count: number;
+    last_support_at: string | null;
+  }>(
+    `
+    SELECT
+      id,
+      platform,
+      platform_user_id,
+      display_name,
+      first_seen_at,
+      last_seen_at,
+      visit_count,
+      observed_comment_count,
+      support_count,
+      last_support_at
+    FROM users
+    WHERE platform = $1 AND platform_user_id = $2
+    LIMIT 1
+    `,
+    [platform, platformUserId],
+  );
+  const row = firstRow(rows);
+  if (row === undefined) return null;
+  return {
+    id: row.id,
+    platform: row.platform as DbPlatform,
+    platformUserId: row.platform_user_id,
+    displayName: row.display_name,
+    firstSeenAt: row.first_seen_at,
+    lastSeenAt: row.last_seen_at,
+    visitCount: row.visit_count,
+    observedCommentCount: row.observed_comment_count,
+    supportCount: row.support_count,
+    lastSupportAt: row.last_support_at,
+  };
 }
 
 export async function incrementObservedCommentCount(

@@ -47,4 +47,5 @@ export type EnrichedComment = CommentViewDto & {
   isPinned: boolean;
   support?: CommentSupport;
   badges: string[];
+  liveSessionTitle?: string;
 };

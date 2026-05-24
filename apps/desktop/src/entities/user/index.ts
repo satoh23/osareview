@@ -5,8 +5,10 @@ export type {
   LinkUserTagInput,
   UpsertUserInput,
   UpsertUserMemoInput,
+  UserRow,
 } from "./model/types";
 export {
+  findUserByPlatformUserId,
   incrementObservedCommentCount,
   upsertUser,
 } from "./api/users.repository";
