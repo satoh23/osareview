@@ -1,5 +1,5 @@
 import { COMMENT_EVENT_TYPES, type CommentViewDto } from "@comment-dock/shared";
-import { isLowSignalText } from "../../../entities/comment";
+import { classifyCommentTextTypes } from "../../../entities/comment";
 import type {
   CommentType,
   EnrichedComment,
@@ -11,31 +11,6 @@ export type {
   SupportType,
   ViewerStatus,
 } from "../../../entities/comment";
-
-const FIRST_TIME_PATTERNS = [/初見/, /はじめまして/, /初めて/];
-const LONG_TIME_NO_SEE_PATTERNS = [
-  /久しぶり/,
-  /ひさしぶり/,
-  /[0-9０-９]+(?:か月|ヶ月|週間|日)ぶり/,
-];
-const THANKS_PATTERNS = [/ありがとう/, /感謝/, /助かる/, /助かりました/];
-const PRAISE_PATTERNS = [
-  /かわいい/,
-  /可愛い/,
-  /すごい/,
-  /最高/,
-  /うまい/,
-  /上手/,
-];
-const SELF_DISCLOSURE_PATTERNS = [
-  /仕事/,
-  /学校/,
-  /試験/,
-  /買った/,
-  /来れた/,
-  /見てる/,
-];
-const CAUTION_PATTERNS = [/荒らし/, /ネタバレ/, /spam/i, /スパム/];
 
 // TODO(backend): viewerStatus/commentTypes/isLowSignal/isImportant/isPinned/support/badges は将来サーバ算出 DTO に統合する。
 export const enrichComment = (comment: CommentViewDto): EnrichedComment => {
@@ -61,35 +36,10 @@ export const enrichComments = (
 ): EnrichedComment[] => comments.map(enrichComment);
 
 const classifyCommentTypes = (comment: CommentViewDto): CommentType[] => {
-  const text = comment.text.trim();
-  const types = new Set<CommentType>();
+  const types = new Set<CommentType>(classifyCommentTextTypes(comment.text));
 
   if (comment.eventType !== COMMENT_EVENT_TYPES.NORMAL) {
     types.add("support");
-  }
-  if (isLowSignalText(text)) {
-    types.add("low_signal");
-  }
-  if (text.includes("?") || text.includes("？")) {
-    types.add("question");
-  }
-  if (matchesAny(text, FIRST_TIME_PATTERNS)) {
-    types.add("first_time");
-  }
-  if (matchesAny(text, LONG_TIME_NO_SEE_PATTERNS)) {
-    types.add("long_time_no_see");
-  }
-  if (matchesAny(text, THANKS_PATTERNS)) {
-    types.add("thanks");
-  }
-  if (matchesAny(text, PRAISE_PATTERNS)) {
-    types.add("praise");
-  }
-  if (matchesAny(text, SELF_DISCLOSURE_PATTERNS)) {
-    types.add("self_disclosure");
-  }
-  if (matchesAny(text, CAUTION_PATTERNS)) {
-    types.add("caution");
   }
 
   return types.size > 0 ? [...types] : ["normal"];
@@ -122,13 +72,13 @@ const classifySupport = (
     return {
       type: "super_chat",
       amountLabel: formatMonetaryAmount(comment.monetaryAmount),
-      isFirstSupport: matchesAny(comment.text, [/初/, /first/i]),
+      isFirstSupport: /初|first/i.test(comment.text),
     };
   }
   if (comment.eventType === COMMENT_EVENT_TYPES.SUBSCRIPTION) {
     return {
       type: comment.source === "twitch" ? "sub" : "member",
-      isFirstSupport: matchesAny(comment.text, [/初/, /first/i]),
+      isFirstSupport: /初|first/i.test(comment.text),
     };
   }
   return undefined;
@@ -149,9 +99,6 @@ const classifyBadges = (
   }
   return [];
 };
-
-const matchesAny = (text: string, patterns: readonly RegExp[]): boolean =>
-  patterns.some((pattern) => pattern.test(text));
 
 const formatMonetaryAmount = (
   monetaryAmount: CommentViewDto["monetaryAmount"],
