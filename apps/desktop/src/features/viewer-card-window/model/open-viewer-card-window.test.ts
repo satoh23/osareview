@@ -28,9 +28,9 @@ vi.mock("@tauri-apps/api/webviewWindow", () => ({
 }));
 
 import {
+  createViewerCardWindowLabel,
   createViewerCardWindowUrl,
   openViewerCardWindow,
-  VIEWER_CARD_WINDOW_LABEL,
 } from "./open-viewer-card-window";
 
 describe("openViewerCardWindow", () => {
@@ -42,13 +42,17 @@ describe("openViewerCardWindow", () => {
   });
 
   it("viewer-card URL を HashRouter 用に生成する", () => {
-    expect(
-      createViewerCardWindowUrl("user 1", {
-        displayName: "ねこまる",
-        source: "youtube",
-      }),
-    ).toBe(
-      "#/viewer-card/user%201?displayName=%E3%81%AD%E3%81%93%E3%81%BE%E3%82%8B&source=youtube",
+    expect(createViewerCardWindowUrl("youtube", "user 1")).toBe(
+      "#/viewer-card/youtube/user%201",
+    );
+  });
+
+  it("viewer-card ウィンドウラベルを platform/platformUserId から生成する", () => {
+    expect(createViewerCardWindowLabel("youtube", "u1")).toBe(
+      "viewer-card-youtube-u1",
+    );
+    expect(createViewerCardWindowLabel("twitch", "abc xyz")).toBe(
+      "viewer-card-twitch-abc xyz",
     );
   });
 
@@ -59,25 +63,31 @@ describe("openViewerCardWindow", () => {
     };
     getByLabelMock.mockResolvedValue(existingWindow);
 
-    await openViewerCardWindow({ displayName: "mika_sub", userId: "u2" });
+    await openViewerCardWindow({
+      platform: "youtube",
+      platformUserId: "u2",
+      displayName: "mika_sub",
+    });
 
-    expect(getByLabelMock).toHaveBeenCalledWith(VIEWER_CARD_WINDOW_LABEL);
-    expect(navigateMock).toHaveBeenCalledWith(
-      "#/viewer-card/u2?displayName=mika_sub",
-    );
+    expect(getByLabelMock).toHaveBeenCalledWith("viewer-card-youtube-u2");
+    expect(navigateMock).toHaveBeenCalledWith("#/viewer-card/youtube/u2");
     expect(setFocusMock).toHaveBeenCalledOnce();
     expect(constructorMock).not.toHaveBeenCalled();
   });
 
-  it("既存 window がなければプロトタイプ相当の別 window を作成して focus する", async () => {
-    await openViewerCardWindow({ displayName: "ねこまる", userId: "u1" });
+  it("既存 window がなければ新しい window を作成して focus する", async () => {
+    await openViewerCardWindow({
+      platform: "youtube",
+      platformUserId: "u1",
+      displayName: "ねこまる",
+    });
 
     expect(constructorMock).toHaveBeenCalledWith(
-      VIEWER_CARD_WINDOW_LABEL,
+      "viewer-card-youtube-u1",
       expect.objectContaining({
-        url: "#/viewer-card/u1?displayName=%E3%81%AD%E3%81%93%E3%81%BE%E3%82%8B",
+        url: "#/viewer-card/youtube/u1",
         title: "ねこまる - 関係性カード",
-        width: 420,
+        width: 490,
         height: 720,
         minWidth: 360,
         minHeight: 520,

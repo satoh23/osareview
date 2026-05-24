@@ -133,7 +133,7 @@ describe("createStreamingSessionClient", () => {
     );
 
     await expect(client.getSessionStates()).rejects.toThrow(
-      "Invalid sessions response from API Gateway",
+      "コメント接続一覧の応答を読み取れませんでした。少し待ってからもう一度お試しください。",
     );
   });
 });

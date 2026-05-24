@@ -1,27 +1,31 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import type { CommentSource } from "@comment-dock/shared";
 
-export const VIEWER_CARD_WINDOW_LABEL = "viewer-card";
-
 export type OpenViewerCardWindowOptions = {
-  userId: string;
+  platform: CommentSource;
+  platformUserId: string;
   displayName?: string;
-  source?: CommentSource;
 };
 
 type NavigableWebviewWindow = WebviewWindow & {
   navigate?: (url: string) => Promise<void>;
 };
 
+export function createViewerCardWindowLabel(
+  platform: CommentSource,
+  platformUserId: string,
+): string {
+  return `viewer-card-${platform}-${platformUserId}`;
+}
+
 export async function openViewerCardWindow({
+  platform,
+  platformUserId,
   displayName,
-  source,
-  userId,
 }: OpenViewerCardWindowOptions): Promise<WebviewWindow> {
-  const url = createViewerCardWindowUrl(userId, { displayName, source });
-  const existingWindow = await WebviewWindow.getByLabel(
-    VIEWER_CARD_WINDOW_LABEL,
-  );
+  const label = createViewerCardWindowLabel(platform, platformUserId);
+  const url = createViewerCardWindowUrl(platform, platformUserId);
+  const existingWindow = await WebviewWindow.getByLabel(label);
 
   if (existingWindow) {
     await navigateViewerCardWindow(existingWindow, url);
@@ -29,7 +33,7 @@ export async function openViewerCardWindow({
     return existingWindow;
   }
 
-  const viewerCardWindow = new WebviewWindow(VIEWER_CARD_WINDOW_LABEL, {
+  const viewerCardWindow = new WebviewWindow(label, {
     url,
     title: createViewerCardWindowTitle(displayName),
     width: 490,
@@ -48,18 +52,10 @@ export async function openViewerCardWindow({
 }
 
 export function createViewerCardWindowUrl(
-  userId: string,
-  options: Pick<OpenViewerCardWindowOptions, "displayName" | "source"> = {},
+  platform: CommentSource,
+  platformUserId: string,
 ): string {
-  const params = new URLSearchParams();
-  if (options.displayName) {
-    params.set("displayName", options.displayName);
-  }
-  if (options.source) {
-    params.set("source", options.source);
-  }
-  const query = params.toString();
-  return `#/viewer-card/${encodeURIComponent(userId)}${query ? `?${query}` : ""}`;
+  return `#/viewer-card/${encodeURIComponent(platform)}/${encodeURIComponent(platformUserId)}`;
 }
 
 const createViewerCardWindowTitle = (displayName?: string): string => {

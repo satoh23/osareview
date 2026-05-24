@@ -107,9 +107,9 @@ export function CommentStreamPanel() {
     (comment: (typeof comments)[number]) => {
       setSelectedCommentId(comment.id);
       openViewerCard({
-        userId: comment.author.id,
+        platform: comment.source,
+        platformUserId: comment.author.id,
         displayName: comment.author.name,
-        source: comment.source,
       });
     },
     [openViewerCard],

@@ -12,7 +12,10 @@ export function useOpenViewerCard() {
         "[desktop] 関係性カードの別ウィンドウを開けませんでした。同じウィンドウで表示します。",
         error,
       );
-      window.location.hash = createViewerCardWindowUrl(options.userId, options);
+      window.location.hash = createViewerCardWindowUrl(
+        options.platform,
+        options.platformUserId,
+      );
     });
   }, []);
 }

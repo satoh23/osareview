@@ -2,25 +2,26 @@ import { useEffect, useState } from "react";
 import {
   getViewerProfile,
   type ViewerProfile,
+  type ViewerProfileLookupKey,
 } from "../../../entities/viewer-profile";
 
 type ViewerProfileState = {
-  profile: ViewerProfile | undefined;
+  profile: ViewerProfile | null | undefined;
   isLoading: boolean;
   error: Error | undefined;
 };
 
 export function useViewerProfile(
-  userId: string | undefined,
+  key: ViewerProfileLookupKey | undefined,
 ): ViewerProfileState {
   const [state, setState] = useState<ViewerProfileState>({
     profile: undefined,
-    isLoading: Boolean(userId),
+    isLoading: Boolean(key),
     error: undefined,
   });
 
   useEffect(() => {
-    if (!userId) {
+    if (!key) {
       setState({ profile: undefined, isLoading: false, error: undefined });
       return;
     }
@@ -32,7 +33,7 @@ export function useViewerProfile(
       error: undefined,
     }));
 
-    void getViewerProfile(userId)
+    void getViewerProfile(key)
       .then((profile) => {
         if (!isActive) {
           return;
@@ -53,7 +54,7 @@ export function useViewerProfile(
     return () => {
       isActive = false;
     };
-  }, [userId]);
+  }, [key?.platform, key?.platformUserId]);
 
   return state;
 }
