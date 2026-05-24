@@ -9,6 +9,7 @@ test("初回で配信が見つかった場合は即時に返す", async () => {
       return {
         liveStreamId: "live-video-1",
         liveChatId: "chat-1",
+        title: "テスト配信",
       };
     },
   };
@@ -24,6 +25,7 @@ test("初回で配信が見つかった場合は即時に返す", async () => {
   assert.deepEqual(result, {
     liveStreamId: "live-video-1",
     liveChatId: "chat-1",
+    title: "テスト配信",
   });
   assert.equal(waitCalls, 0);
 });
@@ -39,6 +41,7 @@ test("途中で配信が見つかるまでポーリングする", async () => {
       return {
         liveStreamId: "live-video-2",
         liveChatId: "chat-2",
+        title: null,
       };
     },
   };
@@ -59,6 +62,7 @@ test("途中で配信が見つかるまでポーリングする", async () => {
   assert.deepEqual(result, {
     liveStreamId: "live-video-2",
     liveChatId: "chat-2",
+    title: null,
   });
   assert.equal(callCount, 3);
   assert.deepEqual(waitArguments, [1500, 1500]);

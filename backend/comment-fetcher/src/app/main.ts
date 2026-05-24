@@ -46,6 +46,10 @@ export type SessionStateChangeEvent = {
   platform: SessionPlatform;
   state: SessionState;
   reason?: string;
+  /** CONNECTED 時のみセット。プラットフォーム固有の配信ID。 */
+  liveStreamId?: string;
+  /** CONNECTED 時のみセット。配信タイトル。 */
+  title?: string;
 };
 
 export type PipelineControlOptions = {
@@ -160,12 +164,14 @@ const emitStateChange = async (
   pipeline: CommentFetchPipeline,
   controls: PipelineControlOptions,
   state: SessionState,
-  reason?: string,
+  extra?: { reason?: string; liveStreamId?: string; title?: string },
 ): Promise<void> => {
   await controls.onStateChange?.({
     platform: pipeline.provider,
     state,
-    ...(reason ? { reason } : {}),
+    ...(extra?.reason ? { reason: extra.reason } : {}),
+    ...(extra?.liveStreamId ? { liveStreamId: extra.liveStreamId } : {}),
+    ...(extra?.title ? { title: extra.title } : {}),
   });
 };
 
@@ -305,12 +311,10 @@ const collectComments = async (
       await emitStateChange(pipeline, controls, SESSION_STATES.CONNECTING);
       const channelId = await pipeline.resolveTargetChannelId();
       if (!channelId) {
-        await emitStateChange(
-          pipeline,
-          controls,
-          SESSION_STATES.FAILED,
-          "コメント取得対象のチャンネルを特定できませんでした。アカウント連携や配信ID設定を確認してください。",
-        );
+        await emitStateChange(pipeline, controls, SESSION_STATES.FAILED, {
+          reason:
+            "コメント取得対象のチャンネルを特定できませんでした。アカウント連携や配信ID設定を確認してください。",
+        });
         return;
       }
 
@@ -325,9 +329,14 @@ const collectComments = async (
         {
           channelId,
           liveChatId: activeLiveStream.liveChatId,
+          liveStreamId: activeLiveStream.liveStreamId,
+          title: activeLiveStream.title,
         },
       );
-      await emitStateChange(pipeline, controls, SESSION_STATES.CONNECTED);
+      await emitStateChange(pipeline, controls, SESSION_STATES.CONNECTED, {
+        liveStreamId: activeLiveStream.liveStreamId,
+        ...(activeLiveStream.title ? { title: activeLiveStream.title } : {}),
+      });
 
       const commentStream = pipeline.streamCommentsFromLiveChat({
         liveChatId: activeLiveStream.liveChatId,
@@ -401,12 +410,9 @@ const collectComments = async (
         console.warn(
           `[comment-fetcher] ${pipeline.provider} はログイン情報がないためスキップします。`,
         );
-        await emitStateChange(
-          pipeline,
-          controls,
-          SESSION_STATES.FAILED,
-          error instanceof Error ? error.message : String(error),
-        );
+        await emitStateChange(pipeline, controls, SESSION_STATES.FAILED, {
+          reason: error instanceof Error ? error.message : String(error),
+        });
         return;
       }
       if (error instanceof LiveStreamNotFoundError) {
@@ -414,12 +420,9 @@ const collectComments = async (
           `[comment-fetcher] ${pipeline.provider} の配信が見つかりませんでした。`,
           error.message,
         );
-        await emitStateChange(
-          pipeline,
-          controls,
-          SESSION_STATES.FAILED,
-          error.message,
-        );
+        await emitStateChange(pipeline, controls, SESSION_STATES.FAILED, {
+          reason: error.message,
+        });
         if (!options.retryOnLiveStreamNotFound) {
           return;
         }

@@ -112,6 +112,8 @@ export class WebSocketCommentOutputPort
       platform: event.platform,
       state: event.state,
       ...(event.reason ? { reason: event.reason } : {}),
+      ...(event.liveStreamId ? { liveStreamId: event.liveStreamId } : {}),
+      ...(event.title ? { title: event.title } : {}),
     };
 
     await this.ensureServerStarted();
@@ -203,6 +205,8 @@ export class WebSocketCommentOutputPort
         platform: event.platform,
         state: event.state,
         ...(event.reason ? { reason: event.reason } : {}),
+        ...(event.liveStreamId ? { liveStreamId: event.liveStreamId } : {}),
+        ...(event.title ? { title: event.title } : {}),
       },
     };
   }

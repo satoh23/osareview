@@ -3,3 +3,4 @@
 export { cx } from "./cx";
 export type { ClassValue } from "./cx";
 export { markPerf, measurePerf } from "./perf";
+export { formatDateTime } from "./date-time";

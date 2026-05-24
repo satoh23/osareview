@@ -24,20 +24,25 @@ export class YouTubeLiveStreamClient {
 
   async findLiveStream(input: {
     channelId: string;
-  }): Promise<{ liveStreamId: string; liveChatId: string } | null> {
+  }): Promise<{
+    liveStreamId: string;
+    liveChatId: string;
+    title: string | null;
+  } | null> {
     const liveStreamId = await this.findLiveStreamId(input.channelId);
     if (!liveStreamId) {
       return null;
     }
 
-    const liveChatId = await this.findLiveChatId(liveStreamId);
-    if (!liveChatId) {
+    const details = await this.findLiveDetails(liveStreamId);
+    if (!details.liveChatId) {
       return null;
     }
 
     return {
       liveStreamId,
-      liveChatId,
+      liveChatId: details.liveChatId,
+      title: details.title,
     };
   }
 
@@ -67,15 +72,21 @@ export class YouTubeLiveStreamClient {
     return response.items[0]?.id?.videoId ?? null;
   }
 
-  /** 指定したライブ配信IDに紐づくアクティブなライブチャットIDを1件取得する。 */
-  private async findLiveChatId(liveStreamId: string): Promise<string | null> {
+  /** 指定したライブ配信IDに紐づくライブチャットIDとタイトルを取得する。 */
+  private async findLiveDetails(
+    liveStreamId: string,
+  ): Promise<{ liveChatId: string | null; title: string | null }> {
     const query = new URLSearchParams({
-      part: "liveStreamingDetails",
+      part: "liveStreamingDetails,snippet",
       id: liveStreamId,
     });
     const url = `${this.configProvider.getDataApiBaseUrl()}/videos?${query.toString()}`;
     const response = await this.request<YouTubeVideosListResponseDto>(url);
-    return response.items[0]?.liveStreamingDetails?.activeLiveChatId ?? null;
+    const item = response.items[0];
+    return {
+      liveChatId: item?.liveStreamingDetails?.activeLiveChatId ?? null,
+      title: item?.snippet?.title ?? null,
+    };
   }
 
   private async request<T>(url: string): Promise<T> {

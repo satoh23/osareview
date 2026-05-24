@@ -194,18 +194,23 @@ export class ManageStreamingSessionsUseCase {
       platform: event.platform,
       state: event.state,
       ...(event.reason ? { reason: event.reason } : {}),
+      ...(event.liveStreamId ? { liveStreamId: event.liveStreamId } : {}),
+      ...(event.title ? { title: event.title } : {}),
     };
     const currentSnapshot = this.toSnapshot(session);
 
     if (
       currentSnapshot.state === nextSnapshot.state &&
-      currentSnapshot.reason === nextSnapshot.reason
+      currentSnapshot.reason === nextSnapshot.reason &&
+      currentSnapshot.liveStreamId === nextSnapshot.liveStreamId
     ) {
       return;
     }
 
     session.state = nextSnapshot.state;
     session.reason = nextSnapshot.reason;
+    session.liveStreamId = nextSnapshot.liveStreamId;
+    session.title = nextSnapshot.title;
     await this.sessionStateOutputPort.publishSessionState(nextSnapshot);
 
     if (nextSnapshot.state === SESSION_STATES.FAILED) {
@@ -252,6 +257,8 @@ export class ManageStreamingSessionsUseCase {
       platform: session.platform,
       state: session.state,
       ...(session.reason ? { reason: session.reason } : {}),
+      ...(session.liveStreamId ? { liveStreamId: session.liveStreamId } : {}),
+      ...(session.title ? { title: session.title } : {}),
     };
   }
 }

@@ -63,6 +63,10 @@ export type SessionStateMessage = {
     platform: SessionPlatform;
     state: SessionState;
     reason?: string;
+    /** CONNECTED 時のみセット。プラットフォーム固有の配信ID。 */
+    liveStreamId?: string;
+    /** CONNECTED 時のみセット。配信タイトル。 */
+    title?: string;
   };
 };
 
@@ -98,6 +102,10 @@ export type StreamingSessionSnapshot = {
   platform: SessionPlatform;
   state: SessionState;
   reason?: string;
+  /** CONNECTED 時のみセット。プラットフォーム固有の配信ID。 */
+  liveStreamId?: string;
+  /** CONNECTED 時のみセット。配信タイトル。 */
+  title?: string;
 };
 
 export type StreamingSessionSnapshots = Record<

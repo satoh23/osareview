@@ -12,7 +12,11 @@ export class TwitchLiveStreamClient {
   /** チャンネルlogin名から、現在配信中の配信IDとコメント取得対象IDを解決する。 */
   async findLiveStream(input: {
     channelId: string;
-  }): Promise<{ liveStreamId: string; liveChatId: string } | null> {
+  }): Promise<{
+    liveStreamId: string;
+    liveChatId: string;
+    title: string | null;
+  } | null> {
     const broadcasterUserId = await this.helixClient.resolveUserIdByLogin(
       input.channelId,
     );
@@ -30,6 +34,7 @@ export class TwitchLiveStreamClient {
       liveStreamId: activeStream.streamId,
       // Twitch では EventSub購読対象として broadcaster_user_id を使う。
       liveChatId: broadcasterUserId,
+      title: activeStream.title,
     };
   }
 }

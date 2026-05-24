@@ -5,6 +5,7 @@ export type FindLiveStreamInput = {
 export type FindLiveStreamResult = {
   liveStreamId: string;
   liveChatId: string;
+  title: string | null;
 };
 
 export interface LiveStreamRepository {

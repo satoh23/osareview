@@ -35,15 +35,17 @@ export class TwitchHelixClient {
     return response.data[0]?.id ?? null;
   }
 
-  /** user_id から現在配信中の stream id を1件取得する。 */
-  async findActiveStream(userId: string): Promise<{ streamId: string } | null> {
+  /** user_id から現在配信中の stream id とタイトルを1件取得する。 */
+  async findActiveStream(
+    userId: string,
+  ): Promise<{ streamId: string; title: string | null } | null> {
     const query = new URLSearchParams({ user_id: userId });
     const url = `${this.configProvider.getHelixApiBaseUrl()}/streams?${query.toString()}`;
     const response = await this.request<TwitchStreamsResponseDto>(url, "GET");
-    const streamId = response.data[0]?.id;
-    if (!streamId) return null;
+    const stream = response.data[0];
+    if (!stream?.id) return null;
 
-    return { streamId };
+    return { streamId: stream.id, title: stream.title ?? null };
   }
 
   /** 現在のアクセストークンに紐づく user_id を取得する。 */

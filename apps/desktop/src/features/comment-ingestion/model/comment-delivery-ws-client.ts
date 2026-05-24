@@ -168,7 +168,7 @@ export class CommentDeliveryWsClient implements CommentIngestionRuntime {
     }
 
     if (message.type === SESSION_STATE) {
-      this.onSessionState?.(message.payload);
+      await this.handleSessionState(message.payload);
       return;
     }
 
@@ -238,6 +238,41 @@ export class CommentDeliveryWsClient implements CommentIngestionRuntime {
     this.queue.enqueue(queued);
   }
 
+  /**
+   * SESSION_STATE を受け取り、UI 通知とセッションキャッシュの更新を行う。
+   * - CONNECTED + liveStreamId: 実IDで新しい live_sessions 行を作り直す。
+   * - idle/failed: キャッシュを破棄し、次回 CONNECTED で確実に新セッションを切る。
+   */
+  private async handleSessionState(
+    payload: SessionStateMessage["payload"],
+  ): Promise<void> {
+    this.onSessionState?.(payload);
+
+    const platform = toDbPlatform(payload.platform);
+    if (!platform) {
+      return;
+    }
+
+    if (payload.state === "connected" && payload.liveStreamId) {
+      // 配信が切り替わるたびに新しい live_sessions 行を作ることで
+      // live_session_users への初回 INSERT が発生し visitCount が正しく増える。
+      this.liveSessionIdByPlatform.delete(platform);
+      const sessionId = await upsertLiveSession({
+        platform,
+        platformLiveId: payload.liveStreamId,
+        ...(payload.title ? { title: payload.title } : {}),
+        startedAt: new Date().toISOString(),
+      });
+      this.liveSessionIdByPlatform.set(platform, sessionId);
+      return;
+    }
+
+    if (payload.state === "idle" || payload.state === "failed") {
+      // 次の CONNECTED で必ず新規セッションを切れるようキャッシュをクリア。
+      this.liveSessionIdByPlatform.delete(platform);
+    }
+  }
+
   private async getOrCreateLiveSessionId(
     platform: DbPlatform,
   ): Promise<number> {
@@ -246,10 +281,10 @@ export class CommentDeliveryWsClient implements CommentIngestionRuntime {
       return existing;
     }
 
+    // SESSION_STATE CONNECTED より先にコメントが届いた場合のフォールバック。
+    // 実ライブIDが確定したら handleSessionState でキャッシュが上書きされる。
     const created = await upsertLiveSession({
       platform,
-      // desktop が再起動しても同一配信を同じセッションとして扱うため、
-      // backend から実ライブIDを受け取るまでは platform ごとに固定キーを使う。
       platformLiveId: `ws-session-${platform}`,
     });
     this.liveSessionIdByPlatform.set(platform, created);

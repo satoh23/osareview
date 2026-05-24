@@ -10,7 +10,7 @@ import {
   type EnrichedComment,
 } from "../../../entities/comment";
 import type { UserRow } from "../../../entities/user";
-import { cx } from "../../../shared/lib";
+import { cx, formatDateTime } from "../../../shared/lib";
 import { PlatformIcon } from "../../../shared/ui";
 import { useRelationshipTabs } from "../model/use-relationship-tabs";
 import { CommentHistoryFilterTabs } from "./comment-history-filter-tabs";
@@ -210,11 +210,19 @@ function SummaryTab({ user, userLoading, pinnedState }: SummaryTabProps) {
           <>
             <StatCard
               label="初回訪問"
-              value={<span className="text-sm">{user.firstSeenAt}</span>}
+              value={
+                <span className="text-sm">
+                  {formatDateTime(user.firstSeenAt)}
+                </span>
+              }
             />
             <StatCard
               label="最終訪問"
-              value={<span className="text-sm">{user.lastSeenAt}</span>}
+              value={
+                <span className="text-sm">
+                  {formatDateTime(user.lastSeenAt)}
+                </span>
+              }
             />
           </>
         ) : (

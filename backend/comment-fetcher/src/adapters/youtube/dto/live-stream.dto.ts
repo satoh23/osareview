@@ -31,6 +31,9 @@ export type YouTubeVideosListResponseDto = {
 
 export type YouTubeVideoItemDto = {
   id: string;
+  snippet?: {
+    title?: string;
+  };
   liveStreamingDetails?: {
     /** コメント取得問い合わせに渡すライブチャットID */
     activeLiveChatId?: string;

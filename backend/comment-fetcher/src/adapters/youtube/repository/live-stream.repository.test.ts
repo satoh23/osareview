@@ -9,6 +9,7 @@ test("配信中なら配信IDとライブチャットIDを返す", async () => {
       return {
         liveStreamId: "live-video-1",
         liveChatId: "chat-1",
+        title: "テスト配信",
       };
     },
   };
@@ -21,6 +22,7 @@ test("配信中なら配信IDとライブチャットIDを返す", async () => {
   assert.deepEqual(result, {
     liveStreamId: "live-video-1",
     liveChatId: "chat-1",
+    title: "テスト配信",
   });
 });
 

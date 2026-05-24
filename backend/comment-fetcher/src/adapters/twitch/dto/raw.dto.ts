@@ -231,6 +231,7 @@ export type TwitchStreamsResponseDto = {
 export type TwitchStreamDto = {
   id: string;
   user_id: string;
+  title: string;
 };
 
 /** Helix EventSub subscription 作成レスポンス。 */
