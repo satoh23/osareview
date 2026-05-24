@@ -19,6 +19,10 @@ export type ViewerProfileRepository = {
   ) => Promise<ViewerProfile | null>;
 };
 
+/**
+ * @deprecated useViewerUser / useViewerComments / useViewerPinnedComments を直接使うこと。
+ * テスト・参照用として残す。
+ */
 export const viewerProfilesRepository: ViewerProfileRepository = {
   async getViewerProfile(key) {
     const user = await findUserByPlatformUserId(key);
@@ -68,6 +72,10 @@ export const viewerProfilesRepository: ViewerProfileRepository = {
   },
 };
 
+/**
+ * @deprecated useViewerUser / useViewerComments / useViewerPinnedComments を直接使うこと。
+ * テスト・参照用として残す。
+ */
 export const getViewerProfile = viewerProfilesRepository.getViewerProfile.bind(
   viewerProfilesRepository,
 );

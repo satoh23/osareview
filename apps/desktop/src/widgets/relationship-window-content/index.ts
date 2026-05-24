@@ -1,1 +1,4 @@
-export { RelationshipWindowContent } from "./ui/relationship-window-content";
+export {
+  RelationshipWindowContent,
+  type RelationshipWindowLookupKey,
+} from "./ui/relationship-window-content";

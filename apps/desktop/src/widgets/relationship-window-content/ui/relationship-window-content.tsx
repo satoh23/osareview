@@ -1,18 +1,37 @@
+import { useEffect } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { UserRound, X } from "lucide-react";
-import type { ViewerProfile } from "../../../entities/viewer-profile";
+import type { DbPlatform } from "../../../entities/live-session/model/types";
+import { useViewerUser } from "../../../features/viewer-relationship/model/use-viewer-user";
+import { useViewerComments } from "../../../features/viewer-relationship/model/use-viewer-comments";
+import { useViewerPinnedComments } from "../../../features/viewer-relationship/model/use-viewer-pinned-comments";
 import { RelationshipCard } from "../../../features/viewer-relationship";
+import { markPerf } from "../../../shared/lib";
+
+export type RelationshipWindowLookupKey = {
+  platform: DbPlatform;
+  platformUserId: string;
+};
 
 type RelationshipWindowContentProps = {
-  profile: ViewerProfile;
+  lookupKey: RelationshipWindowLookupKey;
 };
 
 export function RelationshipWindowContent({
-  profile,
+  lookupKey,
 }: RelationshipWindowContentProps) {
   const handleClose = () => {
     void getCurrentWebviewWindow().close();
   };
+
+  const userState = useViewerUser(lookupKey);
+  const userId = userState.user?.id;
+  const commentsState = useViewerComments(userId);
+  const pinnedState = useViewerPinnedComments(userId);
+
+  useEffect(() => {
+    markPerf("viewer-card:content-mounted");
+  }, []);
 
   return (
     <main className="flex h-screen overflow-hidden bg-surface text-primary">
@@ -34,7 +53,11 @@ export function RelationshipWindowContent({
             <X aria-hidden="true" className="h-4 w-4" />
           </button>
         </div>
-        <RelationshipCard profile={profile} />
+        <RelationshipCard
+          userState={userState}
+          commentsState={commentsState}
+          pinnedState={pinnedState}
+        />
       </section>
     </main>
   );

@@ -1,9 +1,6 @@
 // entities/viewer-profile slice の Public API。
-export {
-  getViewerProfile,
-  viewerProfilesRepository,
-  type ViewerProfileRepository,
-} from "./api/viewer-profiles.repository";
+// getViewerProfile / viewerProfilesRepository は deprecated のため Public API から除外。
+// テスト・参照用として viewer-profiles.repository.ts を直接 import すること。
 export {
   formatHistoryMode,
   formatPlatformLabel,

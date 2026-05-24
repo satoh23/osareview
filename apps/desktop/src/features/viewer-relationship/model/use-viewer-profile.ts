@@ -1,8 +1,12 @@
+/**
+ * @deprecated useViewerUser / useViewerComments / useViewerPinnedComments を組み合わせること。
+ * このファイルは後方互換性のために残しているが、参照箇所がなくなり次第削除する。
+ */
 import { useEffect, useState } from "react";
-import {
-  getViewerProfile,
-  type ViewerProfile,
-  type ViewerProfileLookupKey,
+import { getViewerProfile } from "../../../entities/viewer-profile/api/viewer-profiles.repository";
+import type {
+  ViewerProfile,
+  ViewerProfileLookupKey,
 } from "../../../entities/viewer-profile";
 
 type ViewerProfileState = {

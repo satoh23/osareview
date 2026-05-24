@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { HashRouter, Navigate, Route, Routes } from "react-router";
 import { RuntimeProvider } from "./app/index";
 import { HomePage, ViewerCardWindowPage } from "./pages";
+import { RelationshipCardSkeleton } from "./features/viewer-relationship/ui/skeleton";
 
 function AppRoot() {
   return (
@@ -9,7 +11,11 @@ function AppRoot() {
         <Routes>
           <Route element={<HomePage />} path="/" />
           <Route
-            element={<ViewerCardWindowPage />}
+            element={
+              <Suspense fallback={<RelationshipCardSkeleton />}>
+                <ViewerCardWindowPage />
+              </Suspense>
+            }
             path="/viewer-card/:platform/:platformUserId"
           />
           <Route element={<Navigate replace to="/" />} path="*" />
