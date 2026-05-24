@@ -84,7 +84,7 @@ export async function listPinnedCommentsByUserId({
     LEFT JOIN comments c ON c.id = pc.comment_id
     LEFT JOIN live_sessions ls ON ls.id = c.live_session_id
     WHERE pc.user_id = $1
-    ORDER BY pc.id DESC
+    ORDER BY pc.created_at DESC, pc.id DESC
     LIMIT $2
     `,
     [userId, limit],

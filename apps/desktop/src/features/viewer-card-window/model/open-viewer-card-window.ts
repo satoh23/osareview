@@ -1,5 +1,6 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import type { CommentSource } from "@comment-dock/shared";
+import { markPerf, measurePerf } from "../../../shared/lib";
 
 export type OpenViewerCardWindowOptions = {
   platform: CommentSource;
@@ -23,6 +24,7 @@ export async function openViewerCardWindow({
   platformUserId,
   displayName,
 }: OpenViewerCardWindowOptions): Promise<WebviewWindow> {
+  markPerf("viewer-card:open-start");
   const label = createViewerCardWindowLabel(platform, platformUserId);
   const url = createViewerCardWindowUrl(platform, platformUserId);
   const existingWindow = await WebviewWindow.getByLabel(label);
@@ -76,6 +78,12 @@ const navigateViewerCardWindow = async (
 const waitForWebviewWindowCreated = (window: WebviewWindow): Promise<void> =>
   new Promise((resolve, reject) => {
     void window.once("tauri://created", () => {
+      markPerf("viewer-card:webview-created");
+      measurePerf(
+        "viewer-card:webview-create",
+        "viewer-card:open-start",
+        "viewer-card:webview-created",
+      );
       resolve();
     });
     void window.once<string>("tauri://error", (event) => {

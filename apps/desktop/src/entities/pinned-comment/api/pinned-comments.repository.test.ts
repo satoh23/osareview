@@ -120,7 +120,7 @@ describe("listPinnedCommentsByUserId", () => {
     expect(sql).toContain(
       "LEFT JOIN live_sessions ls ON ls.id = c.live_session_id",
     );
-    expect(sql).toContain("ORDER BY pc.id DESC");
+    expect(sql).toContain("ORDER BY pc.created_at DESC, pc.id DESC");
   });
 
   it("comment_id が null のとき元コメント関連フィールドはすべて null", async () => {
