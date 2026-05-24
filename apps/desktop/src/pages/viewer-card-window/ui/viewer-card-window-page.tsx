@@ -14,7 +14,7 @@ export function ViewerCardWindowPage() {
         }
       : undefined;
 
-  const { isLoading, profile } = useViewerProfile(lookupKey);
+  const { isLoading, profile, error } = useViewerProfile(lookupKey);
 
   if (!platform || !platformUserId) {
     return <Navigate replace to="/" />;
@@ -25,6 +25,19 @@ export function ViewerCardWindowPage() {
       <ViewerCardWindowShell>
         <p className="rounded-2xl border border-border bg-elevated/50 p-4 text-sm text-muted">
           関係性カードを読み込んでいます...
+        </p>
+      </ViewerCardWindowShell>
+    );
+  }
+
+  if (error) {
+    console.error("[viewer-card] プロフィール取得エラー", error);
+    return (
+      <ViewerCardWindowShell>
+        <p className="rounded-2xl border border-border bg-elevated/50 p-4 text-sm text-muted">
+          データの読み込みに失敗しました
+          <br />
+          <span className="text-[11px] opacity-70">{error.message}</span>
         </p>
       </ViewerCardWindowShell>
     );

@@ -1,5 +1,5 @@
 import { Pin, Star } from "lucide-react";
-import { formatCommentTime } from "../lib/format";
+import { formatCommentDateTime } from "../lib/format";
 import type { EnrichedComment } from "../model/types";
 import { CommentTypeBadge } from "./comment-type-badge";
 
@@ -8,10 +8,20 @@ type MiniCommentProps = {
 };
 
 export function MiniComment({ comment }: MiniCommentProps) {
+  const sessionTitle = comment.liveSessionTitle ?? "（タイトル未取得）";
+  const hasBadges =
+    comment.isPinned || comment.isImportant || comment.commentTypes.length > 0;
+
   return (
     <div className="rounded-2xl border border-border bg-elevated/50 p-3">
-      <div className="mb-1.5 flex items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1.5">
+      <div className="mb-1 flex items-center gap-1.5 text-[10px] text-muted">
+        <span className="min-w-0 flex-1 truncate">{sessionTitle}</span>
+        <span className="shrink-0">
+          {formatCommentDateTime(comment.publishedAt)}
+        </span>
+      </div>
+      {hasBadges ? (
+        <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
           {comment.isPinned ? (
             <Pin
               aria-hidden="true"
@@ -25,10 +35,7 @@ export function MiniComment({ comment }: MiniCommentProps) {
             <CommentTypeBadge key={type} type={type} />
           ))}
         </div>
-        <span className="text-[11px] text-muted">
-          {formatCommentTime(comment.publishedAt)}
-        </span>
-      </div>
+      ) : null}
       <p className="text-sm leading-5 text-secondary">{comment.text}</p>
     </div>
   );

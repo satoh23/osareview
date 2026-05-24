@@ -17,4 +17,5 @@ export type {
   ViewerProfile,
   ViewerProfileLookupKey,
 } from "./model/types";
+export { tagCandidates } from "./config/tag-candidates";
 // viewer-profile-mock はテスト・開発参照用に残すが Public API には含めない。

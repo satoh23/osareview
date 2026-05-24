@@ -10,7 +10,7 @@ function AppRoot() {
           <Route element={<HomePage />} path="/" />
           <Route
             element={<ViewerCardWindowPage />}
-            path="/viewer-card/:userId"
+            path="/viewer-card/:platform/:platformUserId"
           />
           <Route element={<Navigate replace to="/" />} path="*" />
         </Routes>
