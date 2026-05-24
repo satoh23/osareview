@@ -2,7 +2,7 @@ import { COMMENT_EVENT_TYPES } from "@comment-dock/shared";
 import type { CommentSource } from "@comment-dock/shared";
 import { listCommentsByUserId } from "../../comment/api/comments.repository";
 import type { CommentHistoryRow } from "../../comment/api/comments.repository";
-import type { EnrichedComment } from "../../comment";
+import { isLowSignalText, type EnrichedComment } from "../../comment";
 import { listPinnedCommentsByUserId } from "../../pinned-comment/api/pinned-comments.repository";
 import type { PinnedCommentRow } from "../../pinned-comment/model/types";
 import { findUserByPlatformUserId } from "../../user/api/users.repository";
@@ -86,7 +86,7 @@ function commentRowToEnrichedComment(
     eventType: COMMENT_EVENT_TYPES.NORMAL,
     viewerStatus: undefined,
     commentTypes: [], // TODO(backend): 分類判定が入ったら反映
-    isLowSignal: row.isLowSignal,
+    isLowSignal: row.isLowSignal || isLowSignalText(row.commentText),
     isImportant: false, // TODO(backend): 重要度判定が入ったら反映
     isPinned: pinnedCommentDbIds.has(row.id),
     badges: [], // TODO(backend): バッジ情報が入ったら反映

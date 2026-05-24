@@ -7,7 +7,7 @@ import type {
 
 export function useRelationshipTabs(profile: ViewerProfile) {
   const [tab, setTab] = useState<RelationshipTab>("all");
-  const [historyMode, setHistoryMode] = useState<HistoryMode>("all");
+  const [historyMode, setHistoryMode] = useState<HistoryMode>("filtered");
 
   const historyComments = useMemo(() => {
     switch (historyMode) {

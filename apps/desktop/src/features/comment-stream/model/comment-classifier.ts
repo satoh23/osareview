@@ -1,4 +1,5 @@
 import { COMMENT_EVENT_TYPES, type CommentViewDto } from "@comment-dock/shared";
+import { isLowSignalText } from "../../../entities/comment";
 import type {
   CommentType,
   EnrichedComment,
@@ -10,13 +11,6 @@ export type {
   SupportType,
   ViewerStatus,
 } from "../../../entities/comment";
-
-const LOW_SIGNAL_PATTERNS = [
-  /^w+$/i,
-  /^草+$/,
-  /^[!！?？]+$/,
-  /^[\p{Emoji_Presentation}\p{Extended_Pictographic}]+$/u,
-];
 
 const FIRST_TIME_PATTERNS = [/初見/, /はじめまして/, /初めて/];
 const LONG_TIME_NO_SEE_PATTERNS = [
@@ -155,9 +149,6 @@ const classifyBadges = (
   }
   return [];
 };
-
-const isLowSignalText = (text: string): boolean =>
-  text.length <= 2 || LOW_SIGNAL_PATTERNS.some((pattern) => pattern.test(text));
 
 const matchesAny = (text: string, patterns: readonly RegExp[]): boolean =>
   patterns.some((pattern) => pattern.test(text));

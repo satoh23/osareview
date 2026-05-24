@@ -1,4 +1,5 @@
 import type { CommentViewDto } from "@comment-dock/shared";
+import { isLowSignalText } from "../../../../entities/comment";
 import type { DbPlatform } from "../../../../entities/live-session/model/types";
 import type { QueuedCommentWrite } from "../../model/types";
 
@@ -26,7 +27,7 @@ export function toQueuedCommentWrite(
     platformCommentId: item.id,
     commentText: item.text,
     commentType: item.eventType,
-    isLowSignal: false,
+    isLowSignal: isLowSignalText(item.text),
     commentedAt: item.publishedAt,
   };
 }

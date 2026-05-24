@@ -11,6 +11,7 @@ export {
   formatSupportType,
   formatViewerStatus,
 } from "./lib/format";
+export { isLowSignalText } from "./lib/low-signal";
 export type {
   CommentSupport,
   CommentType,
